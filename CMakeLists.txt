@@ -6,6 +6,10 @@ set(CMAKE_CXX_STANDARD 17)
 
 option(VECTOR_3D_BUILD_EXECUTABLE "Build the executable" ON)
 
+# Disable PLOG Tests
+SET(PLOG_BUILD_TESTS OFF)
+add_subdirectory(include/plog)
+
 find_package(Vulkan REQUIRED)
 
 add_subdirectory(libraries/glfw-3.4)
