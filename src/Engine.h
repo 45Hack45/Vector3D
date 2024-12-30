@@ -5,43 +5,35 @@
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
-#include <vulkan/vulkan.hpp>
+
+#include "graphics_backend/VulkanBackend.h"
 
 namespace v3d {
-const uint32_t WIDTH = 800;
-const uint32_t HEIGHT = 600;
+
 
 class Engine {
    public:
+    Engine() : m_width(800), m_height(600) {}
+    Engine(uint32_t width, uint32_t height) : m_width(width), m_height(height) {}
+
     void run() {
-        initWindow();
-        initVulkan();
+        init();
+        start();
         mainLoop();
         cleanup();
     }
 
    private:
     GLFWwindow *window;
+    VulkanBackend *vulkanBackend;
+    uint32_t m_width, m_height;
 
-    void initVulkan() {}
+    bool initialized = false;
 
-    void mainLoop() {
-        while (!glfwWindowShouldClose(window)) {
-            glfwPollEvents();
-        }
-    }
-
-    void cleanup() {
-        glfwDestroyWindow(window);
-
-        glfwTerminate();
-    }
-    void initWindow() {
-        glfwInit();
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-
-        window = glfwCreateWindow(WIDTH, HEIGHT, "Vector3D", nullptr, nullptr);
-    }
+    void init();
+    void initWindow();
+    void start();
+    void mainLoop();
+    void cleanup();
 };
 }  // namespace v3d

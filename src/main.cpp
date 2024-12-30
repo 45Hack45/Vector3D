@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
     // Parse command line arguments
 
     // Default logging options
-    plog::Severity severity = plog::debug;
+    plog::Severity severity = plog::verbose;
     const char* log_file_name = "vector3d_log.txt";
     size_t log_file_max_size = 1000000; // 1 MB
     int log_file_max_count = 5;
@@ -80,7 +80,7 @@ int main(int argc, char* argv[]) {
         app.run();
     } catch (const std::exception &e) {
         // std::cerr << e.what() << std::endl;
-        PLOGE << "Unhandled exception: " << e.what();
+        PLOGE << "Exception: " << e.what();
         return EXIT_FAILURE;
     }
 

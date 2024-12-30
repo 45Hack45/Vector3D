@@ -1,6 +1,16 @@
 
 message(STATUS "-- Generating Core Engine")
 
+set(vector_3d_graphics_backend_SOURCES
+    # ${CMAKE_CURRENT_SOURCE_DIR}/graphics_backend/GraphicsBackend.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/graphics_backend/VulkanBackend.cpp
+)
+
+set(vector_3d_graphics_backend_HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/graphics_backend/GraphicsBackend.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/graphics_backend/VulkanBackend.h
+)
+
 set(vector_3d_core_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/Engine.cpp
 )
@@ -12,9 +22,11 @@ set(vector_3d_core_HEADERS
 set(vector_3d_FILES
     ${vector_3d_core_SOURCES}
     ${vector_3d_core_HEADERS}
+    ${vector_3d_graphics_backend_SOURCES}
+    ${vector_3d_graphics_backend_HEADERS}
 )
 
-set(vector_3d_LIBS glfw ${GLFW_LIBRARIES} Vulkan::Vulkan glm::glm)
+set(vector_3d_LIBS glfw ${GLFW_LIBRARIES} Vulkan::Vulkan glm::glm plog)
 
 # Add the vector_3d library to the project
 message(STATUS "-- Adding Core Engine Library")
@@ -24,7 +36,6 @@ target_include_directories(vector_3d PUBLIC
     ${ENGINE_INCLUDE}
 )
 target_link_libraries(vector_3d PRIVATE ${vector_3d_LIBS})
-
 
 # Add the vector_3d executable to the project if specified
 if(VECTOR_3D_BUILD_EXECUTABLE)
