@@ -2,21 +2,23 @@
 message(STATUS "-- Generating Core Engine")
 
 set(vector_3d_graphics_backend_SOURCES
-    # ${CMAKE_CURRENT_SOURCE_DIR}/graphics_backend/GraphicsBackend.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/graphics_backend/VulkanBackend.cpp
+    # ${CMAKE_CURRENT_SOURCE_DIR}/rendering/graphics_backend.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/rendering/vulkan_backend.cpp
 )
 
 set(vector_3d_graphics_backend_HEADERS
-    ${CMAKE_CURRENT_SOURCE_DIR}/graphics_backend/GraphicsBackend.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/graphics_backend/VulkanBackend.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/rendering/graphics_backend.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/rendering/vulkan_backend.h
 )
 
 set(vector_3d_core_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/Engine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/engine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/window.cpp
 )
 
 set(vector_3d_core_HEADERS
-    ${CMAKE_CURRENT_SOURCE_DIR}/Engine.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/engine.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/window.h
 )
 
 set(vector_3d_FILES

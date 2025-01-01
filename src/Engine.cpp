@@ -1,41 +1,40 @@
-#include "Engine.h"
+#include "engine.h"
+#include <plog/Log.h>
 
 namespace v3d {
     void Engine::init() {
-        if (initialized) {
+        if (m_initialized) {
             throw std::runtime_error("Engine initialized multiple times");
         }
-        initWindow();
-        vulkanBackend = new VulkanBackend(window);
-        vulkanBackend->init();
 
-        initialized = true;
+        PLOGI << "Initializing Engine" << std::endl;
+
+        // Initialize GLFW and create a window
+        glfwInit();
+        m_window->init("Vector3D", rendering::WindowBackendHint::VULKAN_API);
+
+        m_vulkanBackend = new rendering::VulkanBackend(m_window);
+        m_vulkanBackend->init();
+
+        m_initialized = true;
     }
     void Engine::start() {}
 
-    void Engine::initWindow() {
-        glfwInit();
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-
-        window = glfwCreateWindow(m_width, m_height, "Vector3D", nullptr, nullptr);
-    }
-
     void Engine::cleanup() {
-        if (!initialized) {
+        if (!m_initialized) {
             return;
         }
-        vulkanBackend->destroy();
-        glfwDestroyWindow(window);
+        m_vulkanBackend->cleanup();
+        m_window->cleanup();
         glfwTerminate();
 
-        initialized = false;
+        m_initialized = false;
     }
 
     void Engine::mainLoop() {
-        while (!glfwWindowShouldClose(window)) {
-            vulkanBackend->frame_update();
-            glfwPollEvents();
+        while (!m_window->shouldClose()) {
+            m_vulkanBackend->frame_update();
+            m_window->pollEvents();
         }
     }
 }

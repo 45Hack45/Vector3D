@@ -1,20 +1,18 @@
 #pragma once
 
-#include <GLFW/glfw3.h>
-
 #include <cstdlib>
 #include <iostream>
 #include <stdexcept>
 
-#include "graphics_backend/VulkanBackend.h"
+#include "rendering/vulkan_backend.h"
+#include "window.h"
 
 namespace v3d {
 
-
 class Engine {
    public:
-    Engine() : m_width(800), m_height(600) {}
-    Engine(uint32_t width, uint32_t height) : m_width(width), m_height(height) {}
+    Engine() : m_window(new Window()) {};
+    Engine(uint32_t width, uint32_t height) : m_window(new Window(width, height)) {};
 
     void run() {
         init();
@@ -24,14 +22,12 @@ class Engine {
     }
 
    private:
-    GLFWwindow *window;
-    VulkanBackend *vulkanBackend;
-    uint32_t m_width, m_height;
+    rendering::VulkanBackend *m_vulkanBackend;
+    Window *m_window;
 
-    bool initialized = false;
+    bool m_initialized = false;
 
     void init();
-    void initWindow();
     void start();
     void mainLoop();
     void cleanup();

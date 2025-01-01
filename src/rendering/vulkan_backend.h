@@ -3,41 +3,43 @@
 #include <iostream>
 #include <vulkan/vulkan.hpp>
 
-#include "GraphicsBackend.h"
+#include "rendering/graphics_backend.h"
 
 namespace v3d {
+namespace rendering {
+    
 class VulkanBackend : public GraphicsBackend {
    public:
-    VulkanBackend(GLFWwindow* window) : GraphicsBackend(window) {}
+    VulkanBackend(Window* window) : GraphicsBackend(window) {}
 
     void init() {
-        if (initialized) {
+        if (m_initialized) {
             return;
         }
         initVulkan();
 
-        initialized = true;
+        m_initialized = true;
     }
 
     void frame_update();
 
-    void destroy() { cleanup(); }
+    void cleanup() { cleanup_vulkan(); }
 
    private:
-    bool initialized = false;
+    bool m_initialized = false;
 
-    vk::Instance instance{nullptr};
-    vk::Device device{nullptr};
-    vk::DebugUtilsMessengerEXT debugMessenger;
+    vk::Instance m_instance;
+    vk::Device m_device;
+    vk::PhysicalDevice m_physicalDevice;
+    vk::DebugUtilsMessengerEXT m_debugMessenger;
 #ifdef _DEBUG
-	vk::DebugUtilsMessengerCreateInfoEXT debug_utils_create_info;
+	vk::DebugUtilsMessengerCreateInfoEXT m_debug_utils_create_info;
 #endif
 
     void initVulkan();
-    void createInstance();
-    std::vector<const char*> getRequiredExtensions();
-
-    bool checkValidationLayerSupport();
+    vk::Instance createInstance();
+    vk::PhysicalDevice getSuitablePhysicalDevice();
+    void cleanup_vulkan();
 
     void setupDebugMessenger();
 
@@ -47,6 +49,6 @@ class VulkanBackend : public GraphicsBackend {
         const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
         void* pUserData);
 
-    void cleanup();
 };
+}  // namespace rendering
 }  // namespace v3d

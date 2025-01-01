@@ -1,19 +1,21 @@
 #pragma once
 
-#include <GLFW/glfw3.h>
+#include "window.h"
 
 namespace v3d {
+namespace rendering {
 class GraphicsBackend {
    public:
     virtual void init() = 0;
     virtual void frame_update() {};
-    virtual void destroy() = 0;
+    virtual void cleanup() = 0;
 
-    GraphicsBackend(GLFWwindow *window) : window(window) {}
+    GraphicsBackend(Window *window) : m_window(window) {}
 
    protected:
-    GLFWwindow *window;
+    Window *m_window;
 
    private:
 };
+}  // namespace rendering
 }  // namespace v3d
