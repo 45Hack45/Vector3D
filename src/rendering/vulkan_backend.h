@@ -1,6 +1,6 @@
 #pragma once
 
-#include <iostream>
+#define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 #include <vulkan/vulkan.hpp>
 
 #include "rendering/graphics_backend.h"
@@ -42,6 +42,7 @@ class VulkanBackend : public GraphicsBackend {
     void cleanup_vulkan();
 
     void setupDebugMessenger();
+    void cleanupDebugMessenger();
 
     static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
         VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

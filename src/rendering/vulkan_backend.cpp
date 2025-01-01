@@ -1,4 +1,5 @@
 #include "rendering/vulkan_backend.h"
+VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 
 #include <plog/Log.h>
 
@@ -33,8 +34,6 @@ std::vector<const char*> getRequiredExtensions() {
     return extensions;
 }
 
-bool isDeviceSuitable(VkPhysicalDevice device) { return true; }
-
 bool checkValidationLayerSupport() {
     std::vector<vk::LayerProperties> availableLayers =
         vk::enumerateInstanceLayerProperties();
@@ -56,9 +55,29 @@ bool checkValidationLayerSupport() {
     return true;
 }
 
+int rateDeviceSuitability(const vk::PhysicalDevice device) {
+    vk::PhysicalDeviceProperties deviceProperties = device.getProperties();
+    vk::PhysicalDeviceFeatures deviceFeatures = device.getFeatures();
+
+    std::vector<vk::QueueFamilyProperties> queueFamilyProperties =
+        device.getQueueFamilyProperties();
+
+    int score = 0;
+
+    if (deviceProperties.deviceType == vk::PhysicalDeviceType::eDiscreteGpu) {
+        score += 1000;
+    }
+
+    // Maximum possible size of textures affects graphics quality
+    score += deviceProperties.limits.maxImageDimension2D;
+
+    return score;
+}
+
 void VulkanBackend::setupDebugMessenger() {
     if (!enableValidationLayers) return;
 
+    // Setup debug messenger
     vk::DebugUtilsMessageSeverityFlagsEXT severity_flags =
         vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose |
         vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning |
@@ -69,9 +88,19 @@ void VulkanBackend::setupDebugMessenger() {
         vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation |
         vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance;
 
+    // This config will be used for the instance creation and
+    // afterwards for all vulkan validation layers debug messages
     m_debug_utils_create_info = vk::DebugUtilsMessengerCreateInfoEXT(
         vk::DebugUtilsMessengerCreateFlagsEXT(), severity_flags, msg_type_flags,
         debugCallback, nullptr);
+}
+
+void VulkanBackend::cleanupDebugMessenger(){
+    if (m_debugMessenger) {
+        m_instance.destroyDebugUtilsMessengerEXT(m_debugMessenger);
+    }else{
+        PLOGW << "Tried to cleanup debug messenger that was not initialized" << std::endl;
+    }
 }
 
 VKAPI_ATTR VkBool32 VKAPI_CALL VulkanBackend::debugCallback(
@@ -103,17 +132,19 @@ vk::PhysicalDevice VulkanBackend::getSuitablePhysicalDevice() {
     vk::PhysicalDevice physicalDevice;
 
     if (gpus.size() == 0) {
-        throw std::runtime_error("Failed to find GPUs with Vulkan support!");
+        throw std::runtime_error("Failed to find a GPU with Vulkan support!");
     }
+
+    std::multimap<int, vk::PhysicalDevice> candidates;
 
     for (const auto& gpu : gpus) {
-        if (isDeviceSuitable(gpu)) {
-            physicalDevice = gpu;
-            break;
-        }
+        int score = rateDeviceSuitability(gpu);
+        candidates.insert(std::make_pair(score, gpu));
     }
 
-    if (!physicalDevice) {
+    if (candidates.rbegin()->first > 0) {
+        physicalDevice = candidates.rbegin()->second;
+    } else {
         throw std::runtime_error("Failed to find a suitable GPU!");
     }
 
@@ -123,6 +154,7 @@ vk::PhysicalDevice VulkanBackend::getSuitablePhysicalDevice() {
 void VulkanBackend::initVulkan() {
     PLOGI << "Initializing Vulkan" << std::endl;
     m_instance = createInstance();
+    m_debugMessenger = m_instance.createDebugUtilsMessengerEXT(m_debug_utils_create_info);
     m_physicalDevice = getSuitablePhysicalDevice();
     
     PLOGI << "Vulkan initialized" << std::endl;
@@ -130,6 +162,11 @@ void VulkanBackend::initVulkan() {
 
 vk::Instance VulkanBackend::createInstance() {
     PLOGD << "Creating Vulkan instance" << std::endl;
+
+    // Initialize vulkan dynamic loader
+    static vk::DynamicLoader dl;
+    PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr = dl.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
+	VULKAN_HPP_DEFAULT_DISPATCHER.init(vkGetInstanceProcAddr);
 
 #ifdef _DEBUG
     if (enableValidationLayers && !checkValidationLayerSupport()) {
@@ -160,16 +197,16 @@ vk::Instance VulkanBackend::createInstance() {
         enableValidationLayers ? validationLayers.data() : nullptr,
         static_cast<uint32_t>(extensions.size()), extensions.data());
 
-#ifdef _DEBUG
+if (enableValidationLayers){
     setupDebugMessenger();
     instanceCreateInfo.pNext = &m_debug_utils_create_info;
-#endif
+}
 
     try {
         vk::Instance instance = vk::createInstance(instanceCreateInfo, nullptr);
+VULKAN_HPP_DEFAULT_DISPATCHER.init(instance);
         PLOGD << "Vulkan instance created" << std::endl;
-        // VULKAN_HPP_DEFAULT_DISPATCHER.init(instance);
-        return instance;
+                return instance;
     } catch (std::exception const& e) {
         PLOGE << e.what() << std::endl;
         throw std::runtime_error("Failed to create Vulkan instance!");
@@ -183,6 +220,9 @@ void VulkanBackend::cleanup_vulkan() {
         return;
     }
 
+    if (enableValidationLayers) {
+        cleanupDebugMessenger();
+    }
     m_instance.destroy();
 
     m_initialized = false;

@@ -10,6 +10,7 @@ option(VECTOR_3D_BUILD_EXECUTABLE "Build the executable" ON)
 SET(PLOG_BUILD_TESTS OFF)
 add_subdirectory(include/plog)
 
+# Vulkan
 find_package(Vulkan REQUIRED)
 
 add_subdirectory(libraries/glfw-3.4)
