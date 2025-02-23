@@ -18,6 +18,7 @@ set(vector_3d_core_SOURCES
 
 set(vector_3d_core_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/engine.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/utils.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/window.h
 )
 
