@@ -18,15 +18,15 @@ class object_ptr {
         : m_vec(&vec), m_index(index) {
         // assert(index < static_cast<key>(m_vec->size()) && "object_ptr: index out of bounds at construction");
     }
-    object_ptr(Container& vec, T* ptr) : m_vec(&vec) {
-        // // Check if the pointer is within the vector's bounds
-        // if (ptr < vec.data() || ptr >= vec.data() + vec.size()) {
-        //     throw std::out_of_range("vector_observer: pointer is out of vector bounds");
-        // }
+    // object_ptr(Container& vec, T* ptr) : m_vec(&vec) {
+    //     // // Check if the pointer is within the vector's bounds
+    //     // if (ptr < vec.data() || ptr >= vec.data() + vec.size()) {
+    //     //     throw std::out_of_range("vector_observer: pointer is out of vector bounds");
+    //     // }
 
-        // Compute index from pointer
-        m_index = static_cast<IndexType>(ptr - vec.data());
-    }
+    //     // Compute index from pointer
+    //     m_index = static_cast<IndexType>(ptr - vec.data());
+    // }
 
     // Copy assignment
     object_ptr& operator=(const object_ptr& other) noexcept {

@@ -9,7 +9,7 @@
 #include "component.h"
 #include "scene.h"
 #include "object_ptr.hpp"
-#include "utils/vector_ptr.hpp"
+// #include "utils/vector_ptr.hpp"
 
 namespace v3d {
 

@@ -110,9 +110,9 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VulkanBackend::debugCallback(
     VkDebugUtilsMessageTypeFlagsEXT messageType,
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
     void* pUserData) {
-    std::string msg =
-        std::format("{} - {}: {}", pCallbackData->messageIdNumber,
-                    pCallbackData->pMessageIdName, pCallbackData->pMessage);
+    std::stringstream ss;
+    ss << pCallbackData->messageIdNumber << " - " << pCallbackData->pMessageIdName << ": " << pCallbackData->pMessage;
+    std::string msg = ss.str();
 
     if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
         PLOGE << msg << std::endl;
