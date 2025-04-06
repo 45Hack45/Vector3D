@@ -23,13 +23,24 @@ set(vector_3d_core_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/engine.h
     ${CMAKE_CURRENT_SOURCE_DIR}/utils.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/window.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/component.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/object_ptr.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene.h
 )
 
-set(vector_3d_FILES
+set(vector_3d_core_FILES
     ${vector_3d_core_SOURCES}
     ${vector_3d_core_HEADERS}
     ${vector_3d_graphics_backend_SOURCES}
     ${vector_3d_graphics_backend_HEADERS}
+)
+
+add_subdirectory(utils)
+
+set(vector_3d_FILES
+${vector_3d_core_FILES}
+${vector_3d_utils_FILES}
 )
 
 set(vector_3d_LIBS glfw ${GLFW_LIBRARIES} ${OPENGL_LIBRARIES} Vulkan::Vulkan glm::glm plog)

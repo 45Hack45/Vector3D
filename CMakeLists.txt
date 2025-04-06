@@ -8,13 +8,16 @@ option(VECTOR_3D_BUILD_EXECUTABLE "Build the executable" ON)
 
 # Disable PLOG Tests
 SET(PLOG_BUILD_TESTS OFF)
-add_subdirectory(include/plog)
+add_subdirectory(include/plog EXCLUDE_FROM_ALL)
+
+add_definitions( -DBOOST_ALL_NO_LIB )
+find_package(Boost REQUIRED)
 
 # Vulkan
 find_package(Vulkan REQUIRED)
 
 find_package(OpenGL REQUIRED)
-include_directories( ${OPENGL_INCLUDE_DIRS} )
+include_directories( ${OPENGL_INCLUDE_DIRS} EXCLUDE_FROM_ALL)
 
 add_subdirectory(libraries/glfw-3.4)
 SET(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs")
@@ -27,7 +30,7 @@ add_subdirectory(libraries/glm EXCLUDE_FROM_ALL)
 # add_library(project_options INTERFACE)
 # target_compile_features(project_options INTERFACE cxx_std_17)
 
-SET(ENGINE_INCLUDE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src)
+SET(ENGINE_INCLUDE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src ${Boost_INCLUDE_DIRS})
 
 add_subdirectory(src)
 

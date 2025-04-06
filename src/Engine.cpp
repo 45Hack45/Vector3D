@@ -49,9 +49,33 @@ namespace v3d {
     }
 
     void Engine::mainLoop() {
+        // Initialize the scene and add entities
+        m_scene = Scene::create();
+        auto entity = m_scene->instantiateEntity("Test object");
+        auto entity2 = m_scene->instantiateEntity("Test child object", entity);
+        auto entity3 = m_scene->instantiateEntity("Test grandchild object", entity2);
+        auto entity4 = m_scene->instantiateEntity("Test object 2");
+
+        m_scene->print_entities();
+
+        // Main game loop
         while (!m_window->shouldClose()) {
-            m_graphicsBackend->frame_update();
+            const auto frame_start = std::chrono::steady_clock::now();
+
+            // Poll for window events
             m_window->pollEvents();
+
+            // Update logic
+            m_scene->update(m_last_frame_dt.count());
+
+            // Render frame
+            m_graphicsBackend->frame_update();
+
+            // Update deltatime
+            const auto frame_end = std::chrono::steady_clock::now();
+            const std::chrono::duration<double> diff = frame_end - frame_start;
+            m_last_frame_dt = diff;
+            std::cout << "Last frame dt (ms): " << std::chrono::duration_cast<std::chrono::milliseconds>(diff).count() << "\n";
         }
     }
 }

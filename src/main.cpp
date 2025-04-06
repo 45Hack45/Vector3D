@@ -1,3 +1,7 @@
+
+// required to include first to be able to include <cstddef>
+#include <stddef.h>
+
 #include <engine.h>
 
 #include <plog/Log.h>
@@ -93,6 +97,9 @@ int main(int argc, char* argv[]) {
 
     // Create the 3D engine instance
     v3d::Engine app(WIDTH, HEIGHT, graphicsBackend);
+    // v3d::Engine app(WIDTH, HEIGHT);
+
+    // v3d::Engine app = v3d::Engine();
 
     try {
         // Initialize and run the 3D engine
