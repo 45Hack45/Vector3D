@@ -13,6 +13,9 @@ add_subdirectory(include/plog)
 # Vulkan
 find_package(Vulkan REQUIRED)
 
+find_package(OpenGL REQUIRED)
+include_directories( ${OPENGL_INCLUDE_DIRS} )
+
 add_subdirectory(libraries/glfw-3.4)
 SET(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs")
 SET(GLFW_BUILD_TESTS OFF CACHE BOOL "GLM Build unit tests")

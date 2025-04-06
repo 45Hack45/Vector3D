@@ -4,15 +4,18 @@ message(STATUS "-- Generating Core Engine")
 set(vector_3d_graphics_backend_SOURCES
     # ${CMAKE_CURRENT_SOURCE_DIR}/rendering/graphics_backend.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/rendering/vulkan_backend.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/rendering/opengl_backend.cpp
 )
 
 set(vector_3d_graphics_backend_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/rendering/graphics_backend.h
     ${CMAKE_CURRENT_SOURCE_DIR}/rendering/vulkan_backend.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/rendering/opengl_backend.h
 )
 
 set(vector_3d_core_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/engine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/glad.c
     ${CMAKE_CURRENT_SOURCE_DIR}/window.cpp
 )
 
@@ -29,7 +32,7 @@ set(vector_3d_FILES
     ${vector_3d_graphics_backend_HEADERS}
 )
 
-set(vector_3d_LIBS glfw ${GLFW_LIBRARIES} Vulkan::Vulkan glm::glm plog)
+set(vector_3d_LIBS glfw ${GLFW_LIBRARIES} ${OPENGL_LIBRARIES} Vulkan::Vulkan glm::glm plog)
 
 # Add the vector_3d library to the project
 message(STATUS "-- Adding Core Engine Library")

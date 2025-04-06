@@ -1,5 +1,5 @@
 {
-    "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, IndentWidth: 4 }",
+    "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, IndentWidth: 4, ColumnLimit: 0}",
     "files.associations": {
         "cstdlib": "cpp",
         "vector": "cpp",
@@ -78,6 +78,14 @@
         "fstream": "cpp",
         "optional": "cpp",
         "unordered_set": "cpp",
-        "condition_variable": "cpp"
-    }
+        "condition_variable": "cpp",
+        "queue": "cpp",
+        "random": "cpp"
+    },
+    "C_Cpp.intelliSenseEngine": "default",
+    "C_Cpp.intelliSenseCacheSize": 0,
+    "C_Cpp.default.includePath": [
+        "src/**"
+    ],
+    "C_Cpp.doxygen.generatedStyle": "/**"
 }

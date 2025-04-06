@@ -39,13 +39,26 @@ void Window::init(const char *title, rendering::WindowBackendHint api) {
         glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
         break;
     case rendering::WindowBackendHint::OPENGL_API:
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        // glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
         break;
     default:
         break;
     }
     
     m_window = glfwCreateWindow(m_width, m_height, title, nullptr, nullptr);
+
+    if (m_window == NULL)
+    {
+        PLOG_ERROR << "Failed to create GLFW window" << std::endl;
+        glfwTerminate();
+        throw std::runtime_error("Failed to create GLFW window");
+    }
+
+    glfwMakeContextCurrent(m_window);
+
     m_initialized = true;
 }
 

@@ -36,6 +36,9 @@ int main(int argc, char* argv[]) {
     size_t log_file_max_size = 1000000; // 1 MB
     int log_file_max_count = 5;
 
+    // Default graphics backend
+    v3d::rendering::GraphicsBackendType graphicsBackend = v3d::rendering::GraphicsBackendType::OPENGL_API;
+
     for (int i = 1; i < argc; i++) {
         // Parse logging options
         if (strcmp(argv[i], "--log-file") == 0 && i + 1 < argc) {
@@ -69,8 +72,15 @@ int main(int argc, char* argv[]) {
                     i++;
                 }
             }
+        } else if (strcmp(argv[i], "--backend") == 0 && i + 1 < argc){
+            if (i + 1 < argc) {
+                if (strcmp(argv[i + 1], "vulkan") == 0) {
+                    i++;
+                } else if (strcmp(argv[i + 1], "opengl") == 0) {
+                    i++;
+                }
+            }
         }
-            
     }
 
     // Initialize the logger
@@ -82,7 +92,7 @@ int main(int argc, char* argv[]) {
     PLOGN << LOG_START_MESSAGE;
 
     // Create the 3D engine instance
-    v3d::Engine app(WIDTH, HEIGHT);
+    v3d::Engine app(WIDTH, HEIGHT, graphicsBackend);
 
     try {
         // Initialize and run the 3D engine
