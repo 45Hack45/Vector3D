@@ -2,13 +2,22 @@
 // required to include first to be able to include <cstddef>
 #include <stddef.h>
 
-#include <Engine.h>
+#include <engine.h>
 
 #include <plog/Log.h>
 #include <plog/Init.h>
 #include <plog/Formatters/TxtFormatter.h>
 #include <plog/Appenders/ColorConsoleAppender.h>
 #include <plog/Appenders/RollingFileAppender.h>
+
+// PLOG levels
+// none = 0,
+// fatal = 1,
+// error = 2,
+// warning = 3,
+// info = 4,
+// debug = 5,
+// verbose = 6
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -26,10 +35,13 @@ int main(int argc, char* argv[]) {
     // Parse command line arguments
 
     // Default logging options
-    plog::Severity severity = plog::debug;
+    plog::Severity severity = plog::verbose;
     const char* log_file_name = "vector3d_log.txt";
     size_t log_file_max_size = 1000000; // 1 MB
     int log_file_max_count = 5;
+
+    // Default graphics backend
+    v3d::rendering::GraphicsBackendType graphicsBackend = v3d::rendering::GraphicsBackendType::OPENGL_API;
 
     for (int i = 1; i < argc; i++) {
         // Parse logging options
@@ -64,8 +76,15 @@ int main(int argc, char* argv[]) {
                     i++;
                 }
             }
+        } else if (strcmp(argv[i], "--backend") == 0 && i + 1 < argc){
+            if (i + 1 < argc) {
+                if (strcmp(argv[i + 1], "vulkan") == 0) {
+                    i++;
+                } else if (strcmp(argv[i + 1], "opengl") == 0) {
+                    i++;
+                }
+            }
         }
-            
     }
 
     // Initialize the logger
@@ -77,16 +96,17 @@ int main(int argc, char* argv[]) {
     PLOGN << LOG_START_MESSAGE;
 
     // Create the 3D engine instance
+    v3d::Engine app(WIDTH, HEIGHT, graphicsBackend);
     // v3d::Engine app(WIDTH, HEIGHT);
 
-    v3d::Engine app = v3d::Engine();
+    // v3d::Engine app = v3d::Engine();
 
     try {
         // Initialize and run the 3D engine
         app.run();
     } catch (const std::exception &e) {
         // std::cerr << e.what() << std::endl;
-        PLOGE << "Unhandled exception: " << e.what();
+        PLOGE << "Exception: " << e.what();
         return EXIT_FAILURE;
     }
 

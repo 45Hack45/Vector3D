@@ -13,9 +13,13 @@ add_subdirectory(include/plog EXCLUDE_FROM_ALL)
 add_definitions( -DBOOST_ALL_NO_LIB )
 find_package(Boost REQUIRED)
 
+# Vulkan
 find_package(Vulkan REQUIRED)
 
-add_subdirectory(libraries/glfw-3.4 EXCLUDE_FROM_ALL)
+find_package(OpenGL REQUIRED)
+include_directories( ${OPENGL_INCLUDE_DIRS} EXCLUDE_FROM_ALL)
+
+add_subdirectory(libraries/glfw-3.4)
 SET(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs")
 SET(GLFW_BUILD_TESTS OFF CACHE BOOL "GLM Build unit tests")
 SET(GLFW_BUILD_DOCS OFF CACHE BOOL "Build the GLFW documentation")
