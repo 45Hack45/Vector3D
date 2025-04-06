@@ -19,12 +19,12 @@ find_package(Vulkan REQUIRED)
 find_package(OpenGL REQUIRED)
 include_directories( ${OPENGL_INCLUDE_DIRS} EXCLUDE_FROM_ALL)
 
-add_subdirectory(libraries/glfw-3.4)
 SET(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs")
 SET(GLFW_BUILD_TESTS OFF CACHE BOOL "GLM Build unit tests")
 SET(GLFW_BUILD_DOCS OFF CACHE BOOL "Build the GLFW documentation")
 SET(GLFW_INSTALL OFF CACHE BOOL "Generate installation target")
-add_subdirectory(libraries/glm EXCLUDE_FROM_ALL)
+add_subdirectory(libraries/glfw-3.4)
+add_subdirectory(include/glm EXCLUDE_FROM_ALL)
 
 # ## Set C++ standard/compile-time options
 # add_library(project_options INTERFACE)
