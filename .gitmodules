@@ -1,3 +1,9 @@
 [submodule "include/plog"]
 	path = include/plog
 	url = https://github.com/SergiusTheBest/plog.git
+[submodule "libraries/projectchrono"]
+	path = libraries/projectchrono
+	url = https://github.com/projectchrono/chrono.git
+[submodule "include/eigen"]
+	path = include/eigen
+	url = https://gitlab.com/libeigen/eigen.git
