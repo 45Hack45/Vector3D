@@ -2,19 +2,30 @@
 message(STATUS "-- Generating Core Engine")
 
 set(vector_3d_core_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/Engine.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/engine.cpp
 )
 
 set(vector_3d_core_HEADERS
-    ${CMAKE_CURRENT_SOURCE_DIR}/Engine.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/engine.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/component.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/entity.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/object_ptr.hpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/scene.h
 )
 
-set(vector_3d_FILES
+set(vector_3d_core_FILES
     ${vector_3d_core_SOURCES}
     ${vector_3d_core_HEADERS}
 )
 
-set(vector_3d_LIBS glfw ${GLFW_LIBRARIES} Vulkan::Vulkan glm::glm)
+add_subdirectory(utils)
+
+set(vector_3d_FILES
+    ${vector_3d_core_FILES}
+    ${vector_3d_utils_FILES}
+)
+
+set(vector_3d_LIBS glfw ${GLFW_LIBRARIES} Vulkan::Vulkan glm::glm plog)
 
 # Add the vector_3d library to the project
 message(STATUS "-- Adding Core Engine Library")
