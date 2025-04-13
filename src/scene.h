@@ -12,11 +12,15 @@
 #include <vector>
 
 #include "utils/keyed_stable_collection.hpp"
+#include "component.h"
 #include "Entity.h"
 #include "object_ptr.hpp"
 
+class Entity;
+
 namespace v3d {
 const uint8_t MAX_ENTITY_NESTED_DEPTH = 255;
+
 class Scene : public std::enable_shared_from_this<Scene> {
     struct Private {
         explicit Private() = default;
@@ -55,9 +59,11 @@ class Scene : public std::enable_shared_from_this<Scene> {
     }
 
     template <typename T, typename... Args>
-    componentID_t instantiateEntityComponent(entityID_t entity_id, Args&&... args){
+    componentID_t instantiateEntityComponent(const entityID_t entity_id, Args&&... args){
         componentID_t uuid = boost::uuids::random_generator()();
-        m_components.insert<T>(uuid, std::forward<Args>(args)...); 
+        m_components.insert<T>(uuid, std::forward<Args>(args)...);
+        auto component = m_components.get(uuid);
+        component->m_entity = &m_entities[entity_id];
         return uuid;
     }
     

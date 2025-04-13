@@ -30,7 +30,9 @@ add_subdirectory(include/glm EXCLUDE_FROM_ALL)
 # add_library(project_options INTERFACE)
 # target_compile_features(project_options INTERFACE cxx_std_17)
 
-SET(ENGINE_INCLUDE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src ${Boost_INCLUDE_DIRS})
+SET(ENGINE_INCLUDE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src ${Boost_INCLUDE_DIRS} ${Chrono_INCLUDE_DIR})
+
+set(vector_3d_LIBS glfw ${GLFW_LIBRARIES} ${OPENGL_LIBRARIES} Vulkan::Vulkan glm::glm plog ${CHRONO_TARGETS})
 
 add_subdirectory(src)
 
@@ -38,10 +40,12 @@ add_subdirectory(src)
 
 # target_link_libraries(${PROJECT_NAME} glfw ${GLFW_LIBRARIES} Vulkan::Vulkan glm::glm)
 
-
-# cmake_minimum_required(VERSION 3.16)
-# project(vulkanLearning)
-
-# find_package(Vulkan REQUIRED)
-
-
+# Add the vector_3d executable to the project if specified
+if(VECTOR_3D_BUILD_EXECUTABLE)
+    message(STATUS "-- Adding Core Engine Executable")
+    add_executable(vector_3d_exe "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
+    target_include_directories(vector_3d_exe PUBLIC
+        ${ENGINE_INCLUDE}
+    )
+    target_link_libraries(vector_3d_exe PRIVATE vector_3d)
+endif()

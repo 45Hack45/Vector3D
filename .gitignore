@@ -1,5 +1,7 @@
 
 libraries/boost*
+libraries/projectchrono_build
+build
 
 ##### Windows
 # Windows thumbnail cache files

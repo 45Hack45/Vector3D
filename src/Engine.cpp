@@ -56,6 +56,8 @@ namespace v3d {
         auto entity3 = m_scene->instantiateEntity("Test grandchild object", entity2);
         auto entity4 = m_scene->instantiateEntity("Test object 2");
 
+        m_scene->instantiateEntityComponent<TestComponent>(entity.index());
+
         m_scene->print_entities();
 
         // Main game loop

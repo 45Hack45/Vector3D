@@ -6,7 +6,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include "component.h"
 #include "scene.h"
 #include "object_ptr.hpp"
 // #include "utils/vector_ptr.hpp"
@@ -31,10 +30,10 @@ class Entity {
         return m_childs;
     }
 
-    template <typename T, typename... Args>
-    componentID_t addComponent(Args&&... args){
-        return m_scene->instantiateEntityComponent<T>(m_id,std::forward<Args>(args)...);
-    }
+    // template <typename T, typename... Args>
+    // componentID_t addComponent(Args&&... args){
+    //     return m_scene->instantiateEntityComponent<T>(m_id,std::forward<Args>(args)...);
+    // }
 
     // // Add a new component of type T
     // template <typename T, typename... Args>
