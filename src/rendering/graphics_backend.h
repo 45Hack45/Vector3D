@@ -14,6 +14,7 @@ class GraphicsBackend {
 
    protected:
     Window *m_window;
+    bool m_initialized = false;
 
    private:
 };

@@ -4,12 +4,6 @@
 #include <plog/Log.h>
 
 namespace v3d {
-Window::~Window() {
-    if (m_initialized) {
-        glfwDestroyWindow(m_window);
-    }
-}
-
 
 /**
  * @brief Initializes the window with the given title and rendering API.
@@ -33,6 +27,11 @@ void Window::init(const char *title, rendering::WindowBackendHint api) {
 
     switch (api)
     {
+    case v3d::rendering::WindowBackendHint::NONE:
+        PLOGI << "  - Windowless mode";
+        m_window = NULL;
+        m_initialized = true;
+        return;
     case rendering::WindowBackendHint::VULKAN_API:
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
         // Window resizing is not implemented for Vulkan

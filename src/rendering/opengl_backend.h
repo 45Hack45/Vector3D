@@ -17,7 +17,6 @@ class OpenGlBackend : public GraphicsBackend {
     void cleanup();
 
    private:
-    bool m_initialized = false;
 
 
 };

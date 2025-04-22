@@ -1,5 +1,7 @@
 #include <cstdint>
 #include <stdexcept>
+#include <limits>
+#include <vector>
 
 namespace v3d {
 namespace utils {

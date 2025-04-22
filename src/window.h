@@ -6,7 +6,7 @@
 namespace v3d {
 
 namespace rendering {
-enum class WindowBackendHint { OPENGL_API, VULKAN_API };
+enum class WindowBackendHint { NONE, OPENGL_API, VULKAN_API };
 }  // namespace rendering
 
 class Window {
@@ -14,7 +14,7 @@ class Window {
     Window() : m_width(800), m_height(600) {}
     Window(uint32_t width, uint32_t height)
         : m_width(width), m_height(height) {}
-    ~Window();
+    ~Window(){ cleanup(); };
 
     void init(const char *title, rendering::WindowBackendHint api);
 
@@ -29,7 +29,12 @@ class Window {
     uint32_t getWidth() { return m_width; }
     uint32_t getHeight() { return m_height; }
 
-    bool shouldClose() { return glfwWindowShouldClose(m_window); }
+    bool shouldClose() {
+        if (m_window)
+            return glfwWindowShouldClose(m_window);
+        else
+            return false;
+    }
     void pollEvents() { glfwPollEvents(); }
 
    private:

@@ -9,6 +9,7 @@ set(vector_3d_graphics_backend_SOURCES
 
 set(vector_3d_graphics_backend_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/rendering/graphics_backend.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/rendering/null_graphics_backend.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/rendering/vulkan_backend.h
     ${CMAKE_CURRENT_SOURCE_DIR}/rendering/opengl_backend.h
 )

@@ -11,14 +11,15 @@
 
 #include "rendering/vulkan_backend.h"
 #include "rendering/opengl_backend.h"
+#include "rendering/null_graphics_backend.hpp"
 #include "window.h"
 
-#include "Scene.h"
+#include "scene.h"
 
 namespace v3d {
 
 namespace rendering {
-enum class GraphicsBackendType { OPENGL_API, VULKAN_API };
+enum class GraphicsBackendType { NONE, OPENGL_API, VULKAN_API };
 }  // namespace rendering
 
 class Engine {
@@ -40,6 +41,7 @@ class Engine {
     rendering::GraphicsBackend *m_graphicsBackend;
     rendering::VulkanBackend *m_vulkanBackend;
     rendering::OpenGlBackend *m_openGlBackend;
+    rendering::NullGraphicsBackend *m_nullGraphicsBackend;
     Window *m_window;
 
     bool m_initialized = false;

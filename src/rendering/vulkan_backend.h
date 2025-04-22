@@ -43,7 +43,6 @@ class VulkanBackend : public GraphicsBackend {
     void cleanup() { cleanup_vulkan(); }
 
    private:
-    bool m_initialized = false;
 
     vk::Instance m_instance;
     // vk::Device m_device;

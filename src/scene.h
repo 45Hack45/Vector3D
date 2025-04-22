@@ -13,7 +13,7 @@
 
 #include "utils/keyed_stable_collection.hpp"
 #include "component.h"
-#include "Entity.h"
+#include "entity.h"
 #include "object_ptr.hpp"
 
 class Entity;

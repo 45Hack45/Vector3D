@@ -1,4 +1,5 @@
 #include "engine.h"
+#include "rendering/null_graphics_backend.hpp"
 #include <plog/Log.h>
 
 namespace v3d {
@@ -10,17 +11,24 @@ namespace v3d {
         PLOGI << "Initializing Engine" << std::endl;
 
         // Initialize GLFW and create a window
-        glfwInit();
         switch (m_gBackendType)
         {
+            case v3d::rendering::GraphicsBackendType::NONE:
+            m_window->init("Vector3D", rendering::WindowBackendHint::NONE);
+
+            m_nullGraphicsBackend = new rendering::NullGraphicsBackend(m_window);            
+            m_graphicsBackend = m_nullGraphicsBackend;
+            break;
         case rendering::GraphicsBackendType::VULKAN_API:
+            glfwInit();
             m_window->init("Vector3D", rendering::WindowBackendHint::VULKAN_API);
 
             m_vulkanBackend = new rendering::VulkanBackend(m_window);
             m_graphicsBackend = m_vulkanBackend;
             // m_vulkanBackend->init();
             break;
-            case rendering::GraphicsBackendType::OPENGL_API:
+        case rendering::GraphicsBackendType::OPENGL_API:
+            glfwInit();
             m_window->init("Vector3D", rendering::WindowBackendHint::OPENGL_API);
 
             m_openGlBackend = new rendering::OpenGlBackend(m_window);

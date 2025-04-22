@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
     int log_file_max_count = 5;
 
     // Default graphics backend
-    v3d::rendering::GraphicsBackendType graphicsBackend = v3d::rendering::GraphicsBackendType::OPENGL_API;
+    v3d::rendering::GraphicsBackendType graphicsBackend = v3d::rendering::GraphicsBackendType::NONE;
 
     for (int i = 1; i < argc; i++) {
         // Parse logging options
