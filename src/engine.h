@@ -43,7 +43,7 @@ class Engine {
     rendering::OpenGlBackend *m_openGlBackend;
     rendering::NullGraphicsBackend *m_nullGraphicsBackend;
     Window *m_window;
-
+    
     bool m_initialized = false;
 
     void init();
@@ -56,7 +56,5 @@ class Engine {
     std::shared_ptr<Scene> m_scene;
     std::chrono::steady_clock::time_point m_engineStartTime;
     std::chrono::duration<double> m_last_frame_dt;
-
-    void initVulkan() {}
 };
 }  // namespace v3d

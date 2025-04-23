@@ -16,12 +16,14 @@
 #include "entity.h"
 #include "object_ptr.hpp"
 
-class Entity;
+class Engine;
 
 namespace v3d {
 const uint8_t MAX_ENTITY_NESTED_DEPTH = 255;
 
 class Scene : public std::enable_shared_from_this<Scene> {
+    friend class Engine;
+
     struct Private {
         explicit Private() = default;
     };

@@ -11,6 +11,7 @@ class GraphicsBackend {
     virtual void cleanup() = 0;
 
     GraphicsBackend(Window *window) : m_window(window) {}
+    virtual ~GraphicsBackend(){}
 
    protected:
     Window *m_window;

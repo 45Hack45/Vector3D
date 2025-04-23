@@ -1,12 +1,67 @@
 #include "engine.h"
+#include "plog/Severity.h"
 #include "rendering/null_graphics_backend.hpp"
+#include <ostream>
 #include <plog/Log.h>
+#include <boost/stacktrace.hpp>
+
+#include <csignal>
+#include <atomic>
+#include <sstream>
+#include <string>
+
+std::atomic<bool> recieved_forced_close_signal{false};
+
+void signalHandler(int signal){
+    std::string signal_str = std::to_string(signal);
+    std::stringstream msg_ss;
+    plog::Severity severity = plog::verbose;
+
+    switch (signal) {
+    case SIGTERM:
+        signal_str = "SIGTERM";
+        break;
+    case SIGINT:
+        signal_str = "SIGINT";
+        break;
+    case SIGSEGV:
+        signal_str = "SIGSEGV";
+        break;
+    case SIGABRT:
+        signal_str = "SIGABRT";
+        break;
+    case SIGILL:
+        signal_str = "SIGILL";
+        break;
+    case SIGFPE:
+        signal_str = "SIGFPE";
+        break;
+    }
+    msg_ss << boost::stacktrace::stacktrace() << "\n";
+    msg_ss << "Exiting...\n";
+    recieved_forced_close_signal = true;
+    PLOG(severity) << "Signal (" << signal_str << ") recieved:\n" << msg_ss.str() << "\n";
+    std::_Exit(EXIT_FAILURE); // exit immediately
+}
+
+void initSignalHandler(){
+    std::signal(SIGINT, signalHandler);
+    std::signal(SIGTERM, signalHandler);
+    std::signal(SIGSEGV, signalHandler);
+    std::signal(SIGABRT, signalHandler);
+    std::signal(SIGILL, signalHandler);
+    std::signal(SIGFPE, signalHandler);
+}
 
 namespace v3d {
+
     void Engine::init() {
         if (m_initialized) {
             throw std::runtime_error("Engine initialized multiple times");
         }
+
+        // Initialize signal handler to log unhandled errors and other signals
+        initSignalHandler();
 
         PLOGI << "Initializing Engine" << std::endl;
 
@@ -42,8 +97,24 @@ namespace v3d {
         m_graphicsBackend->init();
 
         m_initialized = true;
+
+        // Initialize the scene and add entities
+        m_scene = Scene::create();
+        auto entity = m_scene->instantiateEntity("Test object");
+        auto entity2 = m_scene->instantiateEntity("Test child object", entity);
+        auto entity3 = m_scene->instantiateEntity("Test grandchild object", entity2);
+        auto entity4 = m_scene->instantiateEntity("Test object 2");
+        auto entity_car = m_scene->instantiateEntity("Brum brum");
+
+        m_scene->instantiateEntityComponent<TestComponent>(entity.index());
+
+        m_scene->print_entities();
     }
-    void Engine::start() {}
+
+    void Engine::start() {
+        int delta = 0;
+        m_scene->m_components.for_each([](Component& component) { component.start(); });
+    }
 
     void Engine::cleanup() {
         if (!m_initialized) {
@@ -57,19 +128,13 @@ namespace v3d {
     }
 
     void Engine::mainLoop() {
-        // Initialize the scene and add entities
-        m_scene = Scene::create();
-        auto entity = m_scene->instantiateEntity("Test object");
-        auto entity2 = m_scene->instantiateEntity("Test child object", entity);
-        auto entity3 = m_scene->instantiateEntity("Test grandchild object", entity2);
-        auto entity4 = m_scene->instantiateEntity("Test object 2");
 
-        m_scene->instantiateEntityComponent<TestComponent>(entity.index());
-
-        m_scene->print_entities();
+        bool running = !recieved_forced_close_signal;
 
         // Main game loop
-        while (!m_window->shouldClose()) {
+        while (running) {
+            running = !recieved_forced_close_signal && !m_window->shouldClose();
+
             const auto frame_start = std::chrono::steady_clock::now();
 
             // Poll for window events
