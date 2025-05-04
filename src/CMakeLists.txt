@@ -5,6 +5,7 @@ set(vector_3d_graphics_backend_SOURCES
     # ${CMAKE_CURRENT_SOURCE_DIR}/rendering/graphics_backend.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/rendering/vulkan_backend.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/rendering/opengl_backend.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/rendering/shader.cpp
 )
 
 set(vector_3d_graphics_backend_HEADERS
@@ -12,6 +13,7 @@ set(vector_3d_graphics_backend_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/rendering/null_graphics_backend.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/rendering/vulkan_backend.h
     ${CMAKE_CURRENT_SOURCE_DIR}/rendering/opengl_backend.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/rendering/shader.h
 )
 
 set(vector_3d_core_SOURCES
@@ -22,8 +24,9 @@ set(vector_3d_core_SOURCES
 )
 
 set(vector_3d_core_HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/asset.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/camera.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/engine.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/utils.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/window.h
     ${CMAKE_CURRENT_SOURCE_DIR}/component.h
     ${CMAKE_CURRENT_SOURCE_DIR}/entity.h

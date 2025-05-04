@@ -5,7 +5,7 @@ VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 
 #include <cstring>
 #include <map>
-#include <utils.hpp>
+#include "utils/utils.hpp"
 
 const std::vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation"};

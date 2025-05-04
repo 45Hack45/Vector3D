@@ -94,7 +94,7 @@ class Entity {
     Scene *m_scene;
     entity_ptr m_parent;
     std::vector<entity_ptr> m_childs;
-    boost::base_collection<Component> m_components;
+    std::vector<componentID_t> m_components;
 
    private:
 };

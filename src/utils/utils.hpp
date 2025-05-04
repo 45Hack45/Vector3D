@@ -2,10 +2,11 @@
 #include <stdexcept>
 #include <limits>
 #include <vector>
+#include <utility>
 
 namespace v3d {
 namespace utils {
-uint32_t convertToUint32(int value) {
+uint32_t inline convertToUint32(int value) {
     if (value < 0) {
         throw std::invalid_argument("Value must be non-negative.");
     }
@@ -67,6 +68,21 @@ inline std::vector<uint8_t> to_bytes(const T &value)
 	                            reinterpret_cast<const uint8_t *>(&value) + sizeof(T)};
 }
 
+template <typename Tuple, typename Func, std::size_t... I>
+void forEachInTupleImpl(Func&& func, std::index_sequence<I...>) {
+    (func(std::tuple_element_t<I, Tuple>{}), ...);
+}
+
+template <typename Tuple, typename Func>
+void forEachInTuple(Func&& func) {
+    forEachInTupleImpl<Tuple>(std::forward<Func>(func), std::make_index_sequence<std::tuple_size_v<Tuple>>{});
+}
+
+template <typename Tuple, typename Func>
+void forEachInTuple(Tuple&&, Func&& func) {
+    using T = std::decay_t<Tuple>;
+    forEachInTupleImpl<T>(std::forward<Func>(func), std::make_index_sequence<std::tuple_size_v<T>>{});
+}
 
 }  // namespace utils
 }  // namespace v3d

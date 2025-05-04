@@ -66,6 +66,7 @@ namespace v3d {
         PLOGI << "Initializing Engine" << std::endl;
 
         // Initialize GLFW and create a window
+        glfwInit();
         switch (m_gBackendType)
         {
             case v3d::rendering::GraphicsBackendType::NONE:
@@ -75,7 +76,6 @@ namespace v3d {
             m_graphicsBackend = m_nullGraphicsBackend;
             break;
         case rendering::GraphicsBackendType::VULKAN_API:
-            glfwInit();
             m_window->init("Vector3D", rendering::WindowBackendHint::VULKAN_API);
 
             m_vulkanBackend = new rendering::VulkanBackend(m_window);
@@ -83,7 +83,6 @@ namespace v3d {
             // m_vulkanBackend->init();
             break;
         case rendering::GraphicsBackendType::OPENGL_API:
-            glfwInit();
             m_window->init("Vector3D", rendering::WindowBackendHint::OPENGL_API);
 
             m_openGlBackend = new rendering::OpenGlBackend(m_window);
@@ -106,14 +105,14 @@ namespace v3d {
         auto entity4 = m_scene->instantiateEntity("Test object 2");
         auto entity_car = m_scene->instantiateEntity("Brum brum");
 
-        m_scene->instantiateEntityComponent<TestComponent>(entity.index());
+        // m_scene->instantiateEntityComponent<CinemaASCIIComponent>(entity);
 
         m_scene->print_entities();
     }
 
     void Engine::start() {
         int delta = 0;
-        m_scene->m_components.for_each([](Component& component) { component.start(); });
+        m_scene->m_components.for_each([](ComponentBase& component) { component.start(); });
     }
 
     void Engine::cleanup() {
@@ -150,7 +149,7 @@ namespace v3d {
             const auto frame_end = std::chrono::steady_clock::now();
             const std::chrono::duration<double> diff = frame_end - frame_start;
             m_last_frame_dt = diff;
-            std::cout << "Last frame dt (ms): " << std::chrono::duration_cast<std::chrono::milliseconds>(diff).count() << "\n";
+            // std::cout << "Last frame dt (ms): " << std::chrono::duration_cast<std::chrono::milliseconds>(diff).count() << "\n";
         }
     }
 }

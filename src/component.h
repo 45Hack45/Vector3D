@@ -1,5 +1,6 @@
 #pragma once
 
+#include "utils/keyed_stable_collection.hpp"
 #include <boost/uuid/uuid.hpp>
 #include <memory>
 #include <string>
@@ -8,14 +9,18 @@
 namespace v3d {
 class Entity;
 class Scene;
+class ComponentBase;
+
 typedef boost::uuids::uuid componentID_t;
-class Component {
+using ComponentMap = utils::KeyedStableCollection<componentID_t, ComponentBase>;
+
+class ComponentBase {
     friend class Entity;
     friend class Scene;
 
    public:
-    Component() = default;
-    virtual ~Component() = default;
+    ComponentBase() = default;
+    virtual ~ComponentBase() = default;
 
     virtual void start() = 0;
     virtual void update(double deltaTime) = 0;
@@ -24,33 +29,41 @@ class Component {
         return typeid(this).name();
     }
 
+    static auto dependencies() {
+        return std::tuple<>();
+    }
+
    private:
    protected:
     componentID_t m_id;
     Entity *m_entity;
+
+    void setEntity(Entity *entity) {
+        m_entity = entity;
+    }
 };
 
-class DataComponent : public Component {
+class DataComponent : public ComponentBase {
    public:
     DataComponent() = default;
     void update(double deltaTime) {};
     virtual void start() {};
 };
 
-class TestComponent : public Component {
-    public:
-     TestComponent() = default;
-     TestComponent(int value) : testVariable(value) {};
-     bool test_method() { return true; }
- 
-     void start() override {};
-     void update(double deltaTime) override;
- 
-    private:
-     int testVariable;
- };
+class TestComponent : public ComponentBase {
+   public:
+    TestComponent() = default;
+    TestComponent(int value) : testVariable(value) {};
+    bool test_method() { return true; }
 
-class AbsoluteASCIIComponent : public Component {
+    void start() override {};
+    void update(double deltaTime) override;
+
+   private:
+    int testVariable;
+};
+
+class AbsoluteASCIIComponent : public ComponentBase {
    public:
     AbsoluteASCIIComponent() = default;
     AbsoluteASCIIComponent(int value) : testVariable(value) {};
@@ -63,18 +76,21 @@ class AbsoluteASCIIComponent : public Component {
     int testVariable;
 };
 
-class CinemaASCIIComponent : public Component {
-    public:
-     CinemaASCIIComponent() = default;
-     CinemaASCIIComponent(int value) : testVariable(value) {};
-     bool test_method() { return true; }
- 
-     void start() override {};
-     void update(double deltaTime) override;
- 
-    private:
-     int testVariable;
- };
+class CinemaASCIIComponent : public ComponentBase {
+   public:
+    CinemaASCIIComponent() = default;
+    CinemaASCIIComponent(int value) : testVariable(value) {};
+    bool test_method() { return true; }
+
+    static auto dependencies() {
+        return std::tuple<AbsoluteASCIIComponent>{};
+    }
+    void start() override {};
+    void update(double deltaTime) override;
+
+   private:
+    int testVariable;
+};
 
 class TestDataComponent : public DataComponent {
    public:

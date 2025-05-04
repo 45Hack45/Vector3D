@@ -1048,3 +1048,5 @@ dkms.conf
 *.uf2
 # Raspberry Pi Pico disassembler file
 *.dis
+.vscode/launch.json
+.vscode/settings.json

@@ -1,8 +1,8 @@
 #pragma once
 
-#ifdef __MINGW32__  // Si estamos usando MinGW
-    #define strncpy_s(dst, size, src, count) strncpy(dst, src, count)
-#endif
+// #ifdef __MINGW32__  // Si estamos usando MinGW
+//     #define strncpy_s(dst, size, src, count) strncpy(dst, src, count)
+// #endif
 
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 #include <vulkan/vulkan.hpp>

@@ -12,9 +12,13 @@
 namespace v3d {
 namespace utils {
 
+// A collection that stores polymorphic objects (derived from a common base)
+// with a stable handle system and key-based lookup.
 template <typename Key, typename Base>
 class KeyedStableCollection {
    public:
+    // A handle representing a reference to a stored object, including its type,
+    // index in the storage container, and generation for versioning.
     struct Handle {
         std::type_index type;
         std::size_t index;
@@ -25,6 +29,7 @@ class KeyedStableCollection {
         Handle(std::type_index t, std::size_t i, std::size_t g)
             : type(t), index(i), generation(g) {}
 
+        // Equality operator to compare handles
         bool operator==(const Handle& other) const {
             return type == other.type && index == other.index && generation == other.generation;
         }
@@ -32,6 +37,8 @@ class KeyedStableCollection {
 
     KeyedStableCollection() = default;
 
+    // Insert a new Derived object constructed with Args... under the specified key.
+    // Fails if the key already exists.
     template <typename Derived, typename... Args>
     bool insert(const Key& key, Args&&... args) {
         static_assert(std::is_base_of<Base, Derived>::value, "Must inherit from Base");
@@ -47,12 +54,14 @@ class KeyedStableCollection {
         return true;
     }
 
+    // Get a raw Base* to the object associated with the key (if exists).
     Base* get(const Key& key) {
         auto it = m_keyToHandle.find(key);
         if (it == m_keyToHandle.end()) return nullptr;
         return getRaw(it->second);
     }
 
+    // Get a Derived* to the object associated with the key, only if the type matches.
     template <typename Derived>
     Derived* getAs(const Key& key) {
         static_assert(std::is_base_of<Base, Derived>::value);
@@ -69,6 +78,7 @@ class KeyedStableCollection {
         return &storage.entries[h.index];
     }
 
+    // Erase the object associated with the given key, if it exists.
     bool erase(const Key& key) {
         auto it = m_keyToHandle.find(key);
         if (it == m_keyToHandle.end()) return false;
@@ -87,13 +97,15 @@ class KeyedStableCollection {
         return true;
     }
 
+    // Compact all internal storage to remove gaps left by deleted entries.
     void compact() {
         for (auto& [type, storage] : m_derivedStorage) {
             storage->compact();
         }
-        remapHandles();
+        remapHandles(); // Recalculate handles after compacting
     }
 
+    // Apply a function to all stored objects.
     template <typename Func>
     void for_each(Func&& func) {
         for (auto& [type, storage] : m_derivedStorage) {
@@ -102,17 +114,20 @@ class KeyedStableCollection {
     }
 
    private:
+    // Abstract base class for storing derived objects.
     struct TypedVectorBase {
         TypedVectorBase() = default;
         virtual ~TypedVectorBase() = default;
 
         std::vector<std::size_t> generations;
+
         virtual Base* get(std::size_t idx) = 0;
         virtual void erase(std::size_t idx) = 0;
         virtual void compact() = 0;
         virtual void for_each(std::function<void(Base&)>&& func) = 0;
     };
 
+    // Template implementation of TypedVectorBase for a specific derived type.
     template <typename Derived>
     struct TypedVector : TypedVectorBase {
         std::deque<Derived> entries;
@@ -125,11 +140,12 @@ class KeyedStableCollection {
 
         void erase(std::size_t idx) override {
             if (idx < entries.size()) {
-                entries[idx] = Derived();  // Optional: reset object
+                entries[idx] = Derived();  // Reset the object
                 this->generations[idx]++;
             }
         }
 
+        // Remove unused entries and update generations vector accordingly.
         void compact() override {
             std::deque<Derived> newEntries;
             std::vector<std::size_t> newGenerations;
@@ -145,6 +161,7 @@ class KeyedStableCollection {
             std::swap(this->generations, newGenerations);
         }
 
+        // Call the provided function on all valid entries.
         void for_each(std::function<void(Base&)>&& func) override {
             for (std::size_t i = 0; i < entries.size(); ++i) {
                 if (this->generations[i] != static_cast<std::size_t>(-1)) {
@@ -154,6 +171,7 @@ class KeyedStableCollection {
         }
     };
 
+    // Get (or create if not present) the TypedVector for a specific Derived type.
     template <typename Derived>
     TypedVector<Derived>& getStorage() {
         auto type = std::type_index(typeid(Derived));
@@ -167,6 +185,7 @@ class KeyedStableCollection {
         return *static_cast<TypedVector<Derived>*>(m_derivedStorage[type].get());
     }
 
+    // Get a raw pointer to a Base using a Handle.
     Base* getRaw(const Handle& h) {
         auto it = m_derivedStorage.find(h.type);
         if (it == m_derivedStorage.end()) return nullptr;
@@ -178,6 +197,7 @@ class KeyedStableCollection {
         return storage.get(h.index);
     }
 
+    // Update all handles after a compaction, so they point to correct new indices.
     void remapHandles() {
         for (auto& [key, handle] : m_keyToHandle) {
             auto storageIt = m_derivedStorage.find(handle.type);
@@ -198,7 +218,10 @@ class KeyedStableCollection {
         }
     }
 
+    // Maps a key to a handle referencing the actual object.
     boost::unordered_flat_map<Key, Handle> m_keyToHandle;
+
+    // Maps type_info to typed storage containers.
     std::unordered_map<std::type_index, std::unique_ptr<TypedVectorBase>> m_derivedStorage;
 };
 
