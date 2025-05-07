@@ -1,0 +1,31 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build the active target",
+            "type": "cmake",
+            "command": "build",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "dependsOn": [
+                "generate-cmakelists"
+            ]
+        },
+        {
+            "label": "generate-cmakelists",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "scripts/generate_cmakelistsV2.py",
+                "--dir",
+                "./src",
+                "--output",
+                "./src/CMakeLists.txt",
+                "--ignore-file",
+                "scripts/.cmakeignore"
+            ],
+        },
+    ]
+}

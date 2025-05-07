@@ -1,0 +1,2 @@
+# This file ignores files that you do not want to include in CMakeLists.txt
+*/vector_ptr.hpp

@@ -115,12 +115,20 @@
         "cassert": "cpp"
     },
     "C_Cpp.intelliSenseEngine": "default",
-    "C_Cpp.intelliSenseCacheSize": 0,
+    "C_Cpp.intelliSenseCacheSize": 5120,
     "C_Cpp.default.includePath": [
-        "src/**",
-        "${default}",
-        "C:\\Boost\\include\\boost-1_87"
+        "${default}"
     ],
     "C_Cpp.doxygen.generatedStyle": "/**",
-    "continue.telemetryEnabled": false
+    "continue.telemetryEnabled": false,
+    "C_Cpp.autocompleteAddParentheses": true,
+    "C_Cpp.inlayHints.autoDeclarationTypes.enabled": true,
+    "C_Cpp.inlayHints.autoDeclarationTypes.showOnLeft": true,
+    "C_Cpp.inlayHints.parameterNames.enabled": true,
+    "C_Cpp.inlayHints.referenceOperator.enabled": true,
+    "cmake.buildTask": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeLinkDefinitions": "always"
+    },
+    "editor.formatOnSave": true,
 }
