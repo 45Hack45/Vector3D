@@ -126,9 +126,18 @@
     "C_Cpp.inlayHints.autoDeclarationTypes.showOnLeft": true,
     "C_Cpp.inlayHints.parameterNames.enabled": true,
     "C_Cpp.inlayHints.referenceOperator.enabled": true,
-    "cmake.buildTask": true,
     "editor.codeActionsOnSave": {
         "source.organizeLinkDefinitions": "always"
     },
     "editor.formatOnSave": true,
+    "VSCodeCounter.exclude": [
+        "**/.gitignore",
+        "**/.vscode/**",
+        "**/node_modules/**",
+        "**/build/**",
+        "**/include/**",
+        "**/libraries/**",
+        "src/glad.c"
+    ],
+    "VSCodeCounter.history": 5000000,
 }

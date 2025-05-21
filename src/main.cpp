@@ -1,14 +1,12 @@
 
 // required to include first to be able to include <cstddef>
-#include <stddef.h>
-
 #include <engine.h>
-
-#include <plog/Log.h>
-#include <plog/Init.h>
-#include <plog/Formatters/TxtFormatter.h>
 #include <plog/Appenders/ColorConsoleAppender.h>
 #include <plog/Appenders/RollingFileAppender.h>
+#include <plog/Formatters/TxtFormatter.h>
+#include <plog/Init.h>
+#include <plog/Log.h>
+#include <stddef.h>
 
 // PLOG levels
 // none = 0,
@@ -37,7 +35,7 @@ int main(int argc, char* argv[]) {
     // Default logging options
     plog::Severity severity = plog::verbose;
     const char* log_file_name = "vector3d_log.txt";
-    size_t log_file_max_size = 1000000; // 1 MB
+    size_t log_file_max_size = 1000000;  // 1 MB
     int log_file_max_count = 5;
 
     // Default graphics backend
@@ -76,7 +74,7 @@ int main(int argc, char* argv[]) {
                     i++;
                 }
             }
-        } else if (strcmp(argv[i], "--backend") == 0 && i + 1 < argc){
+        } else if (strcmp(argv[i], "--backend") == 0 && i + 1 < argc) {
             if (i + 1 < argc) {
                 if (strcmp(argv[i + 1], "vulkan") == 0) {
                     i++;
@@ -104,7 +102,7 @@ int main(int argc, char* argv[]) {
     try {
         // Initialize and run the 3D engine
         app.run();
-    } catch (const std::exception &e) {
+    } catch (const std::exception& e) {
         // std::cerr << e.what() << std::endl;
         PLOGE << "Exception: " << e.what();
         return EXIT_FAILURE;

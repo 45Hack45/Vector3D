@@ -6,9 +6,9 @@
 #include <unordered_map>
 #include <vector>
 
-#include "utils/definitions.hpp"
 #include "object_ptr.hpp"
 #include "scene.h"
+#include "utils/definitions.hpp"
 // #include "utils/vector_ptr.hpp"
 
 namespace v3d {
@@ -90,7 +90,7 @@ class Entity {
     ~Entity() {};
 
     Scene *m_scene;
-    //TODO: Add reference to Transform and Rigidbody
+    // TODO: Add reference to Transform and Rigidbody
 
    protected:
     entityID_t m_id;

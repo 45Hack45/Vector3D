@@ -2,10 +2,11 @@
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 
 #include <plog/Log.h>
-#include "utils/exception.hpp"
 
 #include <cstring>
 #include <map>
+
+#include "utils/exception.hpp"
 #include "utils/utils.hpp"
 
 const std::vector<const char*> validationLayers = {
@@ -174,11 +175,10 @@ int rateDeviceSuitability(const vk::PhysicalDevice& physicalDevice, const vk::Su
     }
 
     std::vector<vk::ExtensionProperties> deviceExtensions = physicalDevice.enumerateDeviceExtensionProperties();
-	if (!validate_extensions(requiredDeviceExtensions, deviceExtensions))
-	{
-		// Required device extensions are missing.
+    if (!validate_extensions(requiredDeviceExtensions, deviceExtensions)) {
+        // Required device extensions are missing.
         return -1000;
-	}
+    }
 
     // Maximum possible size of textures affects graphics quality
     score += deviceProperties.limits.maxImageDimension2D;

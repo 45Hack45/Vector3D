@@ -1,7 +1,7 @@
 #pragma once
 
-#include <boost/uuid/uuid.hpp>
 #include <boost/uuid/nil_generator.hpp>
+#include <boost/uuid/uuid.hpp>
 #include <cassert>
 #include <cstddef>
 #include <stdexcept>

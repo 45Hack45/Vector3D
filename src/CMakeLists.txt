@@ -97,13 +97,13 @@ set(vector_3d_utils_FILES
 message(STATUS "-- --")
 
 set(vector_3d_FILES
-${vector_3d_core_FILES}
-${vector_3d_physics_FILES}
-${vector_3d_rendering_FILES}
-${vector_3d_utils_FILES}
+    ${vector_3d_core_FILES}
+    ${vector_3d_physics_FILES}
+    ${vector_3d_rendering_FILES}
+    ${vector_3d_utils_FILES}
 )
 
-### === AUTO-GENERATED SECTION ENDS HERE ===
+# ## === AUTO-GENERATED SECTION ENDS HERE ===
 
 # Add the vector_3d library to the project
 message(STATUS "-- Adding Core Engine Library")
@@ -114,7 +114,7 @@ target_include_directories(vector_3d PUBLIC
 )
 
 # Set properties for the executable target
-target_compile_definitions(vector_3d PUBLIC "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\"") 
+target_compile_definitions(vector_3d PUBLIC "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\"")
 
 if(MSVC)
     set_target_properties(vector_3d PROPERTIES MSVC_RUNTIME_LIBRARY "${CHRONO_MSVC_RUNTIME_LIBRARY}")

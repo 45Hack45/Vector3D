@@ -14,7 +14,6 @@ namespace v3d {
  *            resizable.
  */
 void Window::init(const char *title, rendering::WindowBackendHint api) {
-
     PLOGI << "Initializing window with size " << m_width << "x" << m_height
           << " and title \"" << title << "\"" << std::endl;
 
@@ -25,32 +24,30 @@ void Window::init(const char *title, rendering::WindowBackendHint api) {
         return;
     }
 
-    switch (api)
-    {
-    case v3d::rendering::WindowBackendHint::NONE:
-        PLOGI << "  - Windowless mode";
-        m_window = NULL;
-        m_initialized = true;
-        return;
-    case rendering::WindowBackendHint::VULKAN_API:
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        // Window resizing is not implemented for Vulkan
-        glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-        break;
-    case rendering::WindowBackendHint::OPENGL_API:
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-        // glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
-        break;
-    default:
-        break;
+    switch (api) {
+        case v3d::rendering::WindowBackendHint::NONE:
+            PLOGI << "  - Windowless mode";
+            m_window = NULL;
+            m_initialized = true;
+            return;
+        case rendering::WindowBackendHint::VULKAN_API:
+            glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+            // Window resizing is not implemented for Vulkan
+            glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+            break;
+        case rendering::WindowBackendHint::OPENGL_API:
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+            glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+            glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+            // glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+            break;
+        default:
+            break;
     }
-    
+
     m_window = glfwCreateWindow(m_width, m_height, title, nullptr, nullptr);
 
-    if (m_window == NULL)
-    {
+    if (m_window == NULL) {
         PLOG_ERROR << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
         throw std::runtime_error("Failed to create GLFW window");

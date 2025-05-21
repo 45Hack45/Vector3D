@@ -5,9 +5,8 @@
 // #endif
 
 #define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
-#include <vulkan/vulkan.hpp>
-
 #include <optional>
+#include <vulkan/vulkan.hpp>
 // #include <iostream>
 
 #include "rendering/graphics_backend.h"
@@ -45,7 +44,6 @@ class VulkanBackend : public GraphicsBackend {
     Mesh* createMesh(std::string filePath) override;
 
    private:
-
     vk::Instance m_instance;
     // vk::Device m_device;
     // vk::PhysicalDevice m_physicalDevice;
@@ -58,7 +56,7 @@ class VulkanBackend : public GraphicsBackend {
 
     void initVulkan();
     vk::Instance createInstance(const std::optional<vk::DebugUtilsMessengerCreateInfoEXT>& debug_utils_create_info = std::nullopt);
-    vk::SurfaceKHR createSurface(const vk::Instance& instance, GLFWwindow *window);
+    vk::SurfaceKHR createSurface(const vk::Instance& instance, GLFWwindow* window);
     vk::PhysicalDevice getSuitablePhysicalDevice(const vk::SurfaceKHR& surface, const std::vector<const char*>& requiredDeviceExtensions);
     vk::Device createLogicalDevice(v3d::rendering::VulkanDevice& vulkanDevice, const std::vector<const char*>& device_extensions, const vk::PhysicalDeviceFeatures& device_features);
 
@@ -74,7 +72,6 @@ class VulkanBackend : public GraphicsBackend {
         VkDebugUtilsMessageTypeFlagsEXT messageType,
         const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
         void* pUserData);
-
 };
 }  // namespace rendering
 }  // namespace v3d

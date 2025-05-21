@@ -3,11 +3,11 @@
 #include <boost/unordered/unordered_flat_map.hpp>
 #include <cassert>
 #include <deque>
+#include <functional>
 #include <memory>
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
-#include <functional>
 
 namespace v3d {
 namespace utils {
@@ -102,7 +102,7 @@ class KeyedStableCollection {
         for (auto& [type, storage] : m_derivedStorage) {
             storage->compact();
         }
-        remapHandles(); // Recalculate handles after compacting
+        remapHandles();  // Recalculate handles after compacting
     }
 
     // Apply a function to all stored objects.
