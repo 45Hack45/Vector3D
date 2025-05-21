@@ -1,5 +1,6 @@
 #pragma once
 
+#include <glad/glad.h>
 #include <plog/Log.h>
 
 #include <chrono>
@@ -7,20 +8,15 @@
 #include <iostream>
 #include <stdexcept>
 
-#include <glad/glad.h>
-
-#include "rendering/vulkan_backend.h"
-#include "rendering/opengl_backend.h"
+#include "physics/physics.h"
 #include "rendering/null_graphics_backend.hpp"
+#include "rendering/opengl_backend.h"
+#include "rendering/rendering_def.h"
+#include "rendering/vulkan_backend.h"
+#include "scene.h"
 #include "window.h"
 
-#include "scene.h"
-
 namespace v3d {
-
-namespace rendering {
-enum class GraphicsBackendType { NONE, OPENGL_API, VULKAN_API };
-}  // namespace rendering
 
 class Engine {
    public:
@@ -36,6 +32,10 @@ class Engine {
         cleanup();
     }
 
+    void registerRenderTarget(rendering::IRenderable *renderTarget) {
+        m_graphicsBackend->registerRenderTarget(renderTarget);
+    }
+
    private:
     rendering::GraphicsBackendType m_gBackendType = rendering::GraphicsBackendType::VULKAN_API;
     rendering::GraphicsBackend *m_graphicsBackend;
@@ -43,7 +43,7 @@ class Engine {
     rendering::OpenGlBackend *m_openGlBackend;
     rendering::NullGraphicsBackend *m_nullGraphicsBackend;
     Window *m_window;
-    
+
     bool m_initialized = false;
 
     void init();
@@ -53,6 +53,7 @@ class Engine {
 
     GLFWwindow *window;
 
+    Physics m_phSystem;
     std::shared_ptr<Scene> m_scene;
     std::chrono::steady_clock::time_point m_engineStartTime;
     std::chrono::duration<double> m_last_frame_dt;

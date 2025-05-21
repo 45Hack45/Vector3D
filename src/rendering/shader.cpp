@@ -94,7 +94,7 @@ Shader::Shader(const char* vertexShader, const char* fragmentShader, bool isFile
 void Shader::loadFile() {
 	//log_printf(log_level_e::LOG_INFO, "ERROR::SHADER::CONSTRUCTOR_NOT_IMPLEMENTED\n SHADER: %s", shaderPath);
 
-	PLOGD << "\nLoading Shader: " << filePath.c_str() << "\n";
+	PLOGD << "Loading Shader: " << filePath.c_str() << "\n";
 
 	// 1. retrieve the vertex/fragment source code from filePath
 	std::string vertexCode;
@@ -283,7 +283,7 @@ void Shader::getProperties(const std::string& shaderCode) {
 
 void ComputeShader::loadFile()
 {
-	PLOGD << "\nLoading Shader: " << filePath.c_str() << "\n";
+	PLOGD << "Loading Shader: " << filePath.c_str() << "\n";
 
 	// 1. retrieve the vertex/fragment source code from filePath
 	std::string compCode;

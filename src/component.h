@@ -1,17 +1,17 @@
 #pragma once
 
 #include "utils/keyed_stable_collection.hpp"
-#include <boost/uuid/uuid.hpp>
 #include <memory>
 #include <string>
 #include <typeinfo>
+
+#include "utils/definitions.hpp"
 
 namespace v3d {
 class Entity;
 class Scene;
 class ComponentBase;
 
-typedef boost::uuids::uuid componentID_t;
 using ComponentMap = utils::KeyedStableCollection<componentID_t, ComponentBase>;
 
 class ComponentBase {
@@ -22,6 +22,7 @@ class ComponentBase {
     ComponentBase() = default;
     virtual ~ComponentBase() = default;
 
+    virtual void init(){};
     virtual void start() = 0;
     virtual void update(double deltaTime) = 0;
 
@@ -33,12 +34,17 @@ class ComponentBase {
         return std::tuple<>();
     }
 
+    entityID_t getEntity(){
+        return m_entity;
+    }
+
    private:
    protected:
     componentID_t m_id;
-    Entity *m_entity;
+    entityID_t m_entity;
+    Scene* m_scene;
 
-    void setEntity(Entity *entity) {
+    void setEntity(entityID_t entity) {
         m_entity = entity;
     }
 };

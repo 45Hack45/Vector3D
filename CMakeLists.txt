@@ -26,19 +26,33 @@ SET(GLFW_INSTALL OFF CACHE BOOL "Generate installation target")
 add_subdirectory(libraries/glfw-3.4)
 add_subdirectory(include/glm EXCLUDE_FROM_ALL)
 
-# ## Set C++ standard/compile-time options
-# add_library(project_options INTERFACE)
-# target_compile_features(project_options INTERFACE cxx_std_17)
+# Project Chrono
+find_package(Chrono
+             COMPONENTS Vehicle
+             CONFIG)
 
-SET(ENGINE_INCLUDE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src ${Boost_INCLUDE_DIRS} ${Chrono_INCLUDE_DIR})
+set(Chrono_INCLUDE_DIR "" CACHE STRING "Project Chrono include path")
 
-set(vector_3d_LIBS glfw ${GLFW_LIBRARIES} ${OPENGL_LIBRARIES} Vulkan::Vulkan glm::glm plog ${CHRONO_TARGETS})
+# Return now if Chrono or a required component was not found.
+if (NOT Chrono_FOUND)
+  message("Could not find Chrono or one of its required modules")
+  return()
+endif()
+message(STATUS "CHRONO_STATIC = ${CHRONO_STATIC}")
+
+
+IF (WIN32)
+# set stuff for windows
+set(WINMM_LIB_PATH C:/Windows/System32/winmm.dll)
+ELSE()
+# set stuff for other systems
+set(WINMM_LIB_PATH )
+ENDIF()
+
+SET(ENGINE_INCLUDE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src $${CMAKE_SOURCE_DIR}/include/OBJ-Loader-master/Source ${Boost_INCLUDE_DIRS} ${Chrono_INCLUDE_DIR})
+set(vector_3d_LIBS glfw ${GLFW_LIBRARIES} ${OPENGL_LIBRARIES} Vulkan::Vulkan glm::glm plog ${CHRONO_TARGETS} ${WINMM_LIB_PATH})
 
 add_subdirectory(src)
-
-# add_executable(${PROJECT_NAME} main.cpp)
-
-# target_link_libraries(${PROJECT_NAME} glfw ${GLFW_LIBRARIES} Vulkan::Vulkan glm::glm)
 
 # Add the vector_3d executable to the project if specified
 if(VECTOR_3D_BUILD_EXECUTABLE)
@@ -47,5 +61,5 @@ if(VECTOR_3D_BUILD_EXECUTABLE)
     target_include_directories(vector_3d_exe PUBLIC
         ${ENGINE_INCLUDE}
     )
-    target_link_libraries(vector_3d_exe PRIVATE vector_3d)
+    target_link_libraries(vector_3d_exe PUBLIC vector_3d)
 endif()

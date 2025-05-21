@@ -1,0 +1,54 @@
+
+#include "mesh_renderer.h"
+
+#include "engine.h"
+#include "rendering/mesh.h"
+#include "rendering/shader.h"
+#include "scene.h"
+#include "transform.h"
+#include "utils/exception.hpp"
+
+namespace v3d {
+MeshRenderer::MeshRenderer() {
+}
+MeshRenderer::~MeshRenderer() {
+}
+
+// auto MeshRenderer::dependencies() {
+//     // return std::tuple<Transform>{};
+//     return std::tuple<>{};
+// }
+
+void MeshRenderer::init() {
+    // Set the rigidbody of the transform to this instance
+    auto transform = m_scene->getComponentOfType<Transform>(m_entity);
+    assert(transform != nullptr && "Failed to initialize Transform. Missing required component Transform from the entity");
+    m_transform = transform;
+
+    if (m_mesh == nullptr) return;
+    // TODO: Maybe load the mesh?
+}
+
+void MeshRenderer::registerRenderTarget() {
+    m_scene->getEngine()->registerRenderTarget(this);
+}
+
+void MeshRenderer::renderElement() {
+    m_mesh->draw();
+}
+void MeshRenderer::renderElementInstanced() {
+    throw exception::NotImplemented();
+}
+
+void MeshRenderer::setUniforms(Shader *shader) {
+    glm::mat4 model = glm::mat4(1.0f);
+    glm::vec3 pos = m_transform->getPos();
+    glm::vec3 axis = m_transform->getRotAxis();
+    float angle = m_transform->getRotAngle();
+
+    model = glm::rotate(model, glm::radians(angle), axis);
+    model = glm::translate(model, pos);
+
+    shader->setMat4("model", model);
+}
+}  // namespace v3d

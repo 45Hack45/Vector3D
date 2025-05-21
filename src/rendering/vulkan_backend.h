@@ -42,6 +42,8 @@ class VulkanBackend : public GraphicsBackend {
 
     void cleanup() { cleanup_vulkan(); }
 
+    Mesh* createMesh(std::string filePath) override;
+
    private:
 
     vk::Instance m_instance;

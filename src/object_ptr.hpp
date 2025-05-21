@@ -1,9 +1,11 @@
 #pragma once
+
 #include <boost/uuid/uuid.hpp>
+#include <boost/uuid/nil_generator.hpp>
 #include <cassert>
+#include <cstddef>
 #include <stdexcept>
 #include <vector>
-#include <cstddef>
 
 namespace v3d {
 class Entity;
@@ -12,7 +14,6 @@ class Scene;
 template <typename Container, typename T, typename key = boost::uuids::uuid>
 class object_ptr {
    public:
-
     object_ptr() : m_vec(nullptr), m_index(boost::uuids::nil_uuid()) {}
     object_ptr(Container& vec, key index)
         : m_vec(&vec), m_index(index) {
@@ -41,7 +42,7 @@ class object_ptr {
     object_ptr& operator=(const key& other) noexcept {
         if (other == boost::uuids::nil_uuid()) {
             reset();
-        }else{
+        } else {
             m_index = other.m_index;
         }
         return *this;

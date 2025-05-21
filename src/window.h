@@ -3,18 +3,16 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
-namespace v3d {
+#include "rendering/rendering_def.h"
 
-namespace rendering {
-enum class WindowBackendHint { NONE, OPENGL_API, VULKAN_API };
-}  // namespace rendering
+namespace v3d {
 
 class Window {
    public:
     Window() : m_width(800), m_height(600) {}
     Window(uint32_t width, uint32_t height)
         : m_width(width), m_height(height) {}
-    ~Window(){ cleanup(); };
+    ~Window() { cleanup(); };
 
     void init(const char *title, rendering::WindowBackendHint api);
 

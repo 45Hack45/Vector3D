@@ -1,9 +1,14 @@
 #include "engine.h"
+#include "transform.h"
+#include "physics/rigidbody.h"
+#include "physics/collider.h"
+#include "rendering/mesh_renderer.h"
 #include "plog/Severity.h"
 #include "rendering/null_graphics_backend.hpp"
 #include <ostream>
 #include <plog/Log.h>
 #include <boost/stacktrace.hpp>
+
 
 #include <csignal>
 #include <atomic>
@@ -54,7 +59,6 @@ void initSignalHandler(){
 }
 
 namespace v3d {
-
     void Engine::init() {
         if (m_initialized) {
             throw std::runtime_error("Engine initialized multiple times");
@@ -72,7 +76,7 @@ namespace v3d {
             case v3d::rendering::GraphicsBackendType::NONE:
             m_window->init("Vector3D", rendering::WindowBackendHint::NONE);
 
-            m_nullGraphicsBackend = new rendering::NullGraphicsBackend(m_window);            
+            m_nullGraphicsBackend = new rendering::NullGraphicsBackend(m_window);
             m_graphicsBackend = m_nullGraphicsBackend;
             break;
         case rendering::GraphicsBackendType::VULKAN_API:
@@ -98,14 +102,32 @@ namespace v3d {
         m_initialized = true;
 
         // Initialize the scene and add entities
-        m_scene = Scene::create();
-        auto entity = m_scene->instantiateEntity("Test object");
-        auto entity2 = m_scene->instantiateEntity("Test child object", entity);
-        auto entity3 = m_scene->instantiateEntity("Test grandchild object", entity2);
-        auto entity4 = m_scene->instantiateEntity("Test object 2");
-        auto entity_car = m_scene->instantiateEntity("Brum brum");
+        m_scene = Scene::create(this, &m_phSystem);
+        // auto entity = m_scene->instantiateEntity("Test object");
+        // auto entity2 = m_scene->instantiateEntity("Test child object", entity);
+        // auto entity3 = m_scene->instantiateEntity("Test grandchild object", entity2);
+        // auto entity4 = m_scene->instantiateEntity("Test object 2");
+        // auto entity_car = m_scene->instantiateEntity("Brum brum");
 
-        // m_scene->instantiateEntityComponent<CinemaASCIIComponent>(entity);
+        Mesh* mesh = m_graphicsBackend->createMesh("EngineProject/stanford-bunny.obj");
+
+
+        auto ground = m_scene->instantiateEntity("Ground");
+        auto groundRigidBody = m_scene->getComponentOfType<RigidBody>(ground);
+        auto groundCollider = m_scene->createEntityComponentOfType<ColliderBox>(ground);
+        groundRigidBody->setFixed(true);
+        groundRigidBody->setPos(0, -1, 0);
+        groundCollider->setSize(10, .2, 10);
+        auto groundRenderer = m_scene->createEntityComponentOfType<MeshRenderer>(ground);
+        groundRenderer->setMesh(mesh);
+
+
+        auto bunny = m_scene->instantiateEntity("Bunny");
+
+        auto bunnyCollider_id = m_scene->instantiateEntityComponent<ColliderBox>(bunny);        
+        componentID_t renderer_id = m_scene->instantiateEntityComponent<MeshRenderer>(bunny);
+        MeshRenderer* renderer = m_scene->getComponent<MeshRenderer>(renderer_id);
+        renderer->setMesh(mesh);
 
         m_scene->print_entities();
     }
@@ -141,6 +163,9 @@ namespace v3d {
 
             // Update logic
             m_scene->update(m_last_frame_dt.count());
+
+            // Update Physics
+            m_phSystem.m_system.DoStepDynamics(m_last_frame_dt.count());
 
             // Render frame
             m_graphicsBackend->frame_update();

@@ -2,6 +2,7 @@
 VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 
 #include <plog/Log.h>
+#include "utils/exception.hpp"
 
 #include <cstring>
 #include <map>
@@ -20,6 +21,10 @@ const bool enableValidationLayers = true;
 
 namespace v3d {
 namespace rendering {
+
+Mesh* VulkanBackend::createMesh(std::string filePath) {
+    throw exception::NotImplemented();
+}
 
 bool validate_extensions(const std::vector<const char*>& required,
                          const std::vector<vk::ExtensionProperties>& available) {

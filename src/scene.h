@@ -14,11 +14,13 @@
 #include "component.h"
 #include "entity.h"
 #include "object_ptr.hpp"
+#include "utils/definitions.hpp"
 #include "utils/utils.hpp"
 
-class Engine;
-
 namespace v3d {
+class Engine;
+class Physics;
+
 const uint8_t MAX_ENTITY_NESTED_DEPTH = 255;
 
 class Scene {
@@ -40,18 +42,15 @@ class Scene {
      * @brief Scene factory
      * @return
      */
-    static std::shared_ptr<Scene> create() {
+    static std::shared_ptr<Scene> create(Engine* engine, Physics* physics) {
         auto scene = std::make_shared<Scene>(Private());
+        scene->m_engine = engine;
+        scene->m_phSystem = physics;
         scene->init();
         return scene;
     }
 
-    entity_ptr instantiateEntity(std::string name, entity_ptr parent) {
-        entity_ptr entity = createEntity(parent);
-        entity->m_name = name;
-        return entity;
-    }
-
+    entity_ptr instantiateEntity(std::string name, entity_ptr parent);
     entity_ptr instantiateEntity(std::string name) {
         return this->instantiateEntity(name, m_root);
     }
@@ -77,16 +76,55 @@ class Scene {
         m_components.insert<T>(uuid, std::forward<Args>(args)...);
         // Assign entity to component and vice versa
         auto component = m_components.get(uuid);
-        component->m_entity = &entity.get();
-        component->m_entity->m_components.push_back(uuid);
-        return uuid;
+        component->m_scene = this;
+        component->m_entity = entity.index();
+        entity->m_components.push_back(uuid);
 
-        // return createComponent(entityID, std::forward<Args>(args)...);
+        component->init();
+        component->start();
+
+        return uuid;
     }
 
     template <typename T>
+    T* createEntityComponentOfType(entity_ptr entity) {
+        auto component_id = instantiateEntityComponent<T>(entity);
+        return getComponent<T>(component_id);
+    }
+
+    entity_ptr getEntity(entityID_t entityID) {
+        if (m_entities.contains(entityID)) {
+            return entity_ptr(m_entities, entityID);
+        } else {
+            return entity_ptr();
+        }
+    }
+
+    // Get instance of a specific component
+    template <typename T>
     T* getComponent(componentID_t componentID) {
         return m_components.getAs<T>(componentID);
+    }
+
+    // Get first component of an entity of type T if found
+    template <typename T>
+    T* getComponentOfType(entity_ptr entity) {
+        T* component = nullptr;
+        for (size_t i = 0; i < entity->m_components.size(); i++) {
+            auto cp = entity->m_components[i];
+            component = m_components.getAs<T>(cp);
+            if (component != nullptr) {
+                // Component found
+                break;
+            }
+        }
+        return component;
+    }
+
+    template <typename T>
+    T* getComponentOfType(entityID_t entityID) {
+        entity_ptr entity = getEntity(entityID);
+        return getComponentOfType<T>(entity);
     }
 
     template <typename T>
@@ -131,7 +169,12 @@ class Scene {
         }
     }
 
+    Engine* getEngine() { return m_engine; }
+    Physics* getPhysics() { return m_phSystem; }
+
    private:
+    Engine* m_engine;
+    Physics* m_phSystem;
     entity_ptr m_root;
     EntityMap m_entities;
     ComponentMap m_components;

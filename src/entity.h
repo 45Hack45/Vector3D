@@ -1,18 +1,18 @@
 #pragma once
 
-#include <boost/uuid/uuid.hpp>
 #include <boost/poly_collection/base_collection.hpp>
+#include <boost/uuid/uuid.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
-#include "scene.h"
+#include "utils/definitions.hpp"
 #include "object_ptr.hpp"
+#include "scene.h"
 // #include "utils/vector_ptr.hpp"
 
 namespace v3d {
 
-typedef boost::uuids::uuid entityID_t;
 // typedef utils::vector_ptr<Entity> entity_ptr;
 struct EntityUuidHash {
     std::size_t operator()(const entityID_t &uuid) const noexcept {
@@ -47,11 +47,11 @@ class Entity {
     //     // return *component;
     // }
 
-    // // Get the first component of type T (if it exists)
-    // template <typename T>
-    // std::weak_ptr<T> getComponent() {
-    //     return {};
-    // }
+    // Get the first component of type T (if it exists)
+    template <typename T>
+    std::weak_ptr<T> getComponent() {
+        return {};
+    }
 
     // // Get all components of type T
     // template <typename T>
@@ -89,9 +89,11 @@ class Entity {
 
     ~Entity() {};
 
+    Scene *m_scene;
+    //TODO: Add reference to Transform and Rigidbody
+
    protected:
     entityID_t m_id;
-    Scene *m_scene;
     entity_ptr m_parent;
     std::vector<entity_ptr> m_childs;
     std::vector<componentID_t> m_components;
