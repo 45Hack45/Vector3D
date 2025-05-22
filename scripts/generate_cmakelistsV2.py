@@ -8,7 +8,7 @@ from pathlib import Path
 from collections import defaultdict
 from io import StringIO
 
-AUTO_GENERATED_END = "### === AUTO-GENERATED SECTION ENDS HERE ==="
+AUTO_GENERATED_END = "# ## === AUTO-GENERATED SECTION ENDS HERE ==="
 DEFAULT_EXTENSIONS = [".cpp", ".c", ".h", ".hpp"]
 
 def log_error(msg):
@@ -119,7 +119,7 @@ def main():
     cmake_output.write('message(STATUS "-- --")\n\n')
     cmake_output.write("set(vector_3d_FILES\n")
     for line in all_files:
-        cmake_output.write(f"{line}\n")
+        cmake_output.write(f"    {line}\n")
     cmake_output.write(")\n\n")
 
     cmake_output.write(f"{AUTO_GENERATED_END}")

@@ -7,7 +7,7 @@ import fnmatch
 source_extensions = {".cpp", ".c"}
 header_extensions = {".h", ".hpp"}
 project_name = "vector_3d"
-AUTO_SECTION_END = "### === AUTO-GENERATED SECTION ENDS HERE ==="
+AUTO_SECTION_END = "# ## === AUTO-GENERATED SECTION ENDS HERE ==="
 
 file_occurrences = defaultdict(list)
 ignore_patterns = []

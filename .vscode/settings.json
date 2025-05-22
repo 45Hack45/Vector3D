@@ -115,7 +115,6 @@
         "cassert": "cpp"
     },
     "C_Cpp.intelliSenseEngine": "default",
-    "C_Cpp.intelliSenseCacheSize": 5120,
     "C_Cpp.default.includePath": [
         "${default}"
     ],
