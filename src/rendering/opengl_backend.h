@@ -18,6 +18,9 @@ class OpenGlBackend : public GraphicsBackend {
 
     Mesh* createMesh(std::string filePath) override;
 
+   protected:
+    void initPrimitives() override;
+
    private:
     std::vector<MeshOpenGL*> m_meshList;
 };

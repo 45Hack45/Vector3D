@@ -43,6 +43,9 @@ class VulkanBackend : public GraphicsBackend {
 
     Mesh* createMesh(std::string filePath) override;
 
+   protected:
+    void initPrimitives() override {};
+
    private:
     vk::Instance m_instance;
     // vk::Device m_device;

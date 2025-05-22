@@ -118,8 +118,14 @@ void v3d::rendering::OpenGlBackend::init() {
     glEnable(GL_DEPTH_TEST);
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
+    // Enable backface culling
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+
     PLOGI << "OpenGL initialized" << std::endl;
     m_initialized = true;
+
+    initPrimitives();
 }
 
 void v3d::rendering::OpenGlBackend::frame_update() {
@@ -164,6 +170,7 @@ v3d::Mesh* v3d::rendering::OpenGlBackend::createMesh(std::string filePath) {
     bool loadout = obj_loader.LoadFile(filePath);
 
     if (loadout) {
+        //FIXME: use smart ptr? improve lifetime handeling
         MeshOpenGL* mesh = new v3d::MeshOpenGL(obj_loader.LoadedMeshes[0]);
         m_meshList.push_back(mesh);
         return mesh;
@@ -172,4 +179,11 @@ v3d::Mesh* v3d::rendering::OpenGlBackend::createMesh(std::string filePath) {
         PLOGD << "Failed to Load File " << filePath << ". May have failed to find it or it was not an .obj file.\n";
         return nullptr;
     }
+}
+
+void v3d::rendering::OpenGlBackend::initPrimitives(){
+    PLOGD << "Loading primitives\n";
+    m_primitives.m_cube = createMesh("rcs/primitives/3D/cube.obj");
+    m_primitives.m_sphere = createMesh("rcs/primitives/3D/sphere.obj");
+    PLOGD << "\n";
 }

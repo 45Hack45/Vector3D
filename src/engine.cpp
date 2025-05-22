@@ -119,7 +119,7 @@ void Engine::init() {
     groundRigidBody->setPos(0, -1, 0);
     groundCollider->setSize(10, .2, 10);
     auto groundRenderer = m_scene->createEntityComponentOfType<MeshRenderer>(ground);
-    groundRenderer->setMesh(mesh);
+    groundRenderer->setMesh(m_graphicsBackend->m_primitives.m_cube);
 
     auto bunny = m_scene->instantiateEntity("Bunny");
 
@@ -166,6 +166,7 @@ void Engine::mainLoop() {
         m_phSystem.m_system.DoStepDynamics(m_last_frame_dt.count());
 
         // Render frame
+        // TODO: Pass time and dt, to be able to pass them to a shader
         m_graphicsBackend->frame_update();
 
         // Update deltatime

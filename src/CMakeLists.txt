@@ -67,6 +67,7 @@ set(vector_3d_rendering_HEADERS
     ${CMAKE_SOURCE_DIR}/src/rendering/model.h
     ${CMAKE_SOURCE_DIR}/src/rendering/null_graphics_backend.hpp
     ${CMAKE_SOURCE_DIR}/src/rendering/opengl_backend.h
+    ${CMAKE_SOURCE_DIR}/src/rendering/primitives.hpp
     ${CMAKE_SOURCE_DIR}/src/rendering/rendering_def.h
     ${CMAKE_SOURCE_DIR}/src/rendering/shader.h
     ${CMAKE_SOURCE_DIR}/src/rendering/vulkan_backend.h

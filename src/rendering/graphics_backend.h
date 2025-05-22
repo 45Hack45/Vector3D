@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+#include "rendering/primitives.hpp"
 #include "rendering/rendering_def.h"
 #include "window.h"
 
@@ -47,11 +48,16 @@ class GraphicsBackend {
     //     }
     // }
 
+    // FIXME: Make private/protected
+    MeshPrimitives m_primitives;
+
    protected:
     Window *m_window = nullptr;
     bool m_initialized = false;
 
     std::vector<IRenderable *> m_renderTargets;
+
+    virtual void initPrimitives() = 0;
 
    private:
 };

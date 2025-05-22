@@ -24,6 +24,9 @@ class NullGraphicsBackend : public GraphicsBackend {
         return nullptr;
     };
 
+   protected:
+    void initPrimitives() override {};
+
    private:
 };
 }  // namespace rendering
