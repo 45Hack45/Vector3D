@@ -116,14 +116,13 @@ void v3d::rendering::OpenGlBackend::init() {
     shader = new Shader("rcs/shaders/SimpleShader.glsl");
 
     glEnable(GL_DEPTH_TEST);
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
     PLOGI << "OpenGL initialized" << std::endl;
     m_initialized = true;
 }
 
 void v3d::rendering::OpenGlBackend::frame_update() {
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     float currentFrame = glfwGetTime();
@@ -144,7 +143,7 @@ void v3d::rendering::OpenGlBackend::frame_update() {
     shader->bind();
     shader->setMat4("view", view);
     shader->setMat4("projection", projection);
-    shader->setVector("dye_color", glm::vec4(0, camX, camZ, 1));
+    shader->setVector("dye_color", glm::vec4(1, 1, 1, 1));
 
     for (auto renderTarget : m_renderTargets) {
         renderTarget->setUniforms(shader);

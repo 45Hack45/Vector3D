@@ -76,6 +76,9 @@ class Shader : public v3d::Asset {
     void setMat4(const std::string& name, glm::mat4 matrix) {
         glUniformMatrix4fv(glGetUniformLocation(m_ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(matrix));
     }
+    void setMat3(const std::string& name, glm::mat3 matrix) {
+        glUniformMatrix3fv(glGetUniformLocation(m_ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(matrix));
+    }
     // ------------------------------------------------------------------------
     void setVector(const std::string& name, glm::vec2 value) const {
         glUniform2f(glGetUniformLocation(m_ID, name.c_str()), value.x, value.y);

@@ -49,6 +49,9 @@ void MeshRenderer::setUniforms(Shader *shader) {
     model = glm::rotate(model, glm::radians(angle), axis);
     model = glm::translate(model, pos);
 
+    glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(model)));
+    
     shader->setMat4("model", model);
+    shader->setMat3("normalMatrix", normalMatrix);
 }
 }  // namespace v3d
