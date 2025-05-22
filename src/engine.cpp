@@ -114,19 +114,25 @@ void Engine::init() {
 
     auto ground = m_scene->instantiateEntity("Ground");
     auto groundRigidBody = m_scene->getComponentOfType<RigidBody>(ground);
+    auto groundTransform = m_scene->getComponentOfType<Transform>(ground);
     auto groundCollider = m_scene->createEntityComponentOfType<ColliderBox>(ground);
     groundRigidBody->setFixed(true);
     groundRigidBody->setPos(0, -1, 0);
-    groundCollider->setSize(10, .2, 10);
+    groundCollider->setSize(1, .1, 1);
+    groundTransform->setScale(1, .1, 1);
     auto groundRenderer = m_scene->createEntityComponentOfType<MeshRenderer>(ground);
     groundRenderer->setMesh(m_graphicsBackend->m_primitives.m_cube);
 
     auto bunny = m_scene->instantiateEntity("Bunny");
-
-    auto bunnyCollider_id = m_scene->instantiateEntityComponent<ColliderBox>(bunny);
-    componentID_t renderer_id = m_scene->instantiateEntityComponent<MeshRenderer>(bunny);
-    MeshRenderer* renderer = m_scene->getComponent<MeshRenderer>(renderer_id);
-    renderer->setMesh(mesh);
+    auto bunnyCollider = m_scene->createEntityComponentOfType<ColliderBox>(bunny);
+    auto bunnyTransform = m_scene->getComponentOfType<Transform>(bunny);
+    auto bunnyRigidBody = m_scene->getComponentOfType<RigidBody>(bunny);
+    bunnyRigidBody->setVelocity(chrono::ChVector3d(0, 0, 0));
+    bunnyRigidBody->setPos(0, 2, 0);
+    bunnyCollider->setSize(1, 1, 1);
+    bunnyTransform->setScale(10, 10, 10);
+    auto bunnyRenderer = m_scene->createEntityComponentOfType<MeshRenderer>(bunny);
+    bunnyRenderer->setMesh(mesh);
 
     m_scene->print_entities();
 }

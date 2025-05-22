@@ -43,11 +43,13 @@ void MeshRenderer::renderElementInstanced() {
 void MeshRenderer::setUniforms(Shader *shader) {
     glm::mat4 model = glm::mat4(1.0f);
     glm::vec3 pos = m_transform->getPos();
+    glm::vec3 scale = m_transform->getScale();
     glm::vec3 axis = m_transform->getRotAxis();
     float angle = m_transform->getRotAngle();
 
     model = glm::rotate(model, glm::radians(angle), axis);
     model = glm::translate(model, pos);
+    model = glm::scale(model, scale);
 
     glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(model)));
     

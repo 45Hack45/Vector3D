@@ -7,7 +7,7 @@ namespace v3d {
 void ColliderBase::init() {
     // Set the rigidbody
     auto rigidBody = m_scene->getComponentOfType<RigidBody>(m_entity);
-    assert(rigidBody != nullptr && "Failed to initialize Transform. Missing required component Transform from the entity");
+    assert(rigidBody != nullptr && "Failed to initialize Collider. Missing required component RigidBody from the entity");
     m_rigidBody = rigidBody;
 
     m_collisionMaterial = m_scene->getPhysics()->getDefaultCollisionMaterial();

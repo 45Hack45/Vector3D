@@ -22,6 +22,10 @@ glm::vec3 Transform::getPos() {
     return glm::vec3(pos.x(), pos.y(), pos.z());
 }
 
+glm::vec3 Transform::getScale() {
+    return m_scale;
+}
+
 glm::vec3 Transform::getRotAxis() {
     auto axis = m_rigidBody->m_body->GetRotAxis();
     return glm::vec3(axis.x(), axis.y(), axis.z());
