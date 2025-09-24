@@ -16,11 +16,13 @@ class VehicleInteractiveController : public ComponentBase {
 
     // Remove Copy
     VehicleInteractiveController(const VehicleInteractiveController&) = delete;
-    VehicleInteractiveController& operator=(const VehicleInteractiveController&) = delete;
+    VehicleInteractiveController& operator=(
+        const VehicleInteractiveController&) = delete;
 
     // Enable move
     VehicleInteractiveController(VehicleInteractiveController&&) = default;
-    VehicleInteractiveController& operator=(VehicleInteractiveController&&) = default;
+    VehicleInteractiveController& operator=(VehicleInteractiveController&&) =
+        default;
 
     void init() override;
     void start() override;

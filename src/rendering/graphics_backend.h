@@ -19,14 +19,12 @@ class GraphicsBackend {
     virtual void init() = 0;
     virtual void cleanup() = 0;
 
-    void update(); 
-    
+    void update();
+
     GraphicsBackend(Window *window) : m_window(window) {
         gizmos = new GizmosManager(this);
     }
-    virtual ~GraphicsBackend() {
-        delete gizmos;
-    }
+    virtual ~GraphicsBackend() { delete gizmos; }
 
     virtual Mesh *createMesh(std::string filePath) = 0;
 
@@ -39,26 +37,27 @@ class GraphicsBackend {
         m_renderTargets.push_back(renderTarget);
     }
 
-    inline void registerGizmosTarget(IGizmosRenderable *gizmosTarget){
+    inline void registerGizmosTarget(IGizmosRenderable *gizmosTarget) {
         m_gizmosTargets.push_back(gizmosTarget);
     }
 
     // /**
-    //  * @brief Unregisters a render target object from the list of render targets.
+    //  * @brief Unregisters a render target object from the list of render
+    //  targets.
     //  *
     //  * Removes the first occurrence of the given render target from the list.
     //  *
     //  * @param renderTarget Pointer to the IRenderable object to unregister.
     //  */
     // void unregisterRenderable(IRenderable *renderable) {
-    //     auto it = std::find(m_renderTargets.begin(), m_renderTargets.end(), renderable);
-    //     if (it != m_renderTargets.end()) {
+    //     auto it = std::find(m_renderTargets.begin(), m_renderTargets.end(),
+    //     renderable); if (it != m_renderTargets.end()) {
     //         m_renderTargets.erase(it);
     //     }
     // }
 
     GizmosManager *gizmos;
-    MeshPrimitives m_primitives; // FIXME: Make private/protected
+    MeshPrimitives m_primitives;  // FIXME: Make private/protected
 
    protected:
     Window *m_window = nullptr;
@@ -85,8 +84,10 @@ class GraphicsBackend {
     // Inmediate primitive draw
     virtual void draw_primitive_point(glm::vec3 a, float size) {};
     virtual void draw_primitive_line(glm::vec3 a, glm::vec3 b, float size) {};
-    virtual void draw_primitive_cube(glm::vec3 position, float size, glm::vec4 color) {};
-    virtual void draw_primitive_sphere(glm::vec3 position, float size, glm::vec4 color) {};
+    virtual void draw_primitive_cube(glm::vec3 position, float size,
+                                     glm::vec4 color) {};
+    virtual void draw_primitive_sphere(glm::vec3 position, float size,
+                                       glm::vec4 color) {};
 
    private:
     friend class GizmosManager;

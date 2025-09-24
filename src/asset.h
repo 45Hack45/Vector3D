@@ -42,7 +42,8 @@ class Asset  //: public IEditorGUISelectable
         size_t separatorIndex = filePath.find_last_of('/');
 
         if (separatorIndex == std::string::npos) {
-            PLOGW << "ERROR::ASSET::FILE_DIRECTORY_NOT_FOUND " << filePath << "\n";
+            PLOGW << "ERROR::ASSET::FILE_DIRECTORY_NOT_FOUND " << filePath
+                  << "\n";
             return "";
         }
 
@@ -52,8 +53,7 @@ class Asset  //: public IEditorGUISelectable
         size_t separatorIndex = filePath.find_last_of('/') + 1;
         size_t extensionIndex = filePath.find_last_of('.');
 
-        if (separatorIndex == std::string::npos)
-            separatorIndex = 0;
+        if (separatorIndex == std::string::npos) separatorIndex = 0;
 
         if (extensionIndex == std::string::npos)
             extensionIndex = (size_t)filePath.size();
@@ -64,7 +64,8 @@ class Asset  //: public IEditorGUISelectable
         size_t separatorIndex = filePath.find_last_of('.');
 
         if (separatorIndex == std::string::npos) {
-            PLOGW << "ERROR::ASSET::FILE_EXTENSION_NOT_FOUND " << filePath << "\n";
+            PLOGW << "ERROR::ASSET::FILE_EXTENSION_NOT_FOUND " << filePath
+                  << "\n";
             return "";
         }
 
@@ -74,11 +75,13 @@ class Asset  //: public IEditorGUISelectable
         size_t separatorIndex = filePath.find_last_of('/') + 1;
 
         if (separatorIndex == std::string::npos) {
-            PLOGW << "ERROR::ASSET::FILE_DIRECTORY_NOT_FOUND " << filePath << "\n";
+            PLOGW << "ERROR::ASSET::FILE_DIRECTORY_NOT_FOUND " << filePath
+                  << "\n";
             return "";
         }
 
-        return filePath.substr(separatorIndex, filePath.size() - separatorIndex);
+        return filePath.substr(separatorIndex,
+                               filePath.size() - separatorIndex);
     }
 };
 

@@ -13,7 +13,7 @@
 #include "mesh.h"
 #include "rendering/shader.h"
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
     glViewport(0, 0, width, height);
     // PLOGV << "Window resized to " << width << "x" << height << std::endl;
 }
@@ -24,7 +24,7 @@ bool moveCam = false;
 float deltaTime = 0.0f;  // time between current frame and last frame
 float lastFrame = 0.0f;
 
-void processInput(GLFWwindow* window) {
+void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
@@ -44,7 +44,7 @@ void processInput(GLFWwindow* window) {
     }
 }
 
-void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
     static bool firstMouse = true;
     // TODO: not hardcoded
     static float lastX = 800 / 2.0f;
@@ -57,41 +57,45 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     }
 
     float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos;  // reversed since y-coordinates go from bottom to top
+    float yoffset =
+        lastY - ypos;  // reversed since y-coordinates go from bottom to top
     lastX = xpos;
     lastY = ypos;
 
-    if (moveCam)
-        cam.ProcessMouseMovement(xoffset, yoffset);
+    if (moveCam) cam.ProcessMouseMovement(xoffset, yoffset);
 
     // std::cout << xpos << ",	" << ypos << std::endl;
 }
 
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+void mouse_button_callback(GLFWwindow *window, int button, int action,
+                           int mods) {
     if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);  // Hide cursor
+        glfwSetInputMode(window, GLFW_CURSOR,
+                         GLFW_CURSOR_DISABLED);  // Hide cursor
         moveCam = true;
     }
 
     if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_RELEASE) {
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);  // Show cursor
+        glfwSetInputMode(window, GLFW_CURSOR,
+                         GLFW_CURSOR_NORMAL);  // Show cursor
         moveCam = false;
     }
 }
 
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
 // ----------------------------------------------------------------------
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
     if (moveCam) cam.ProcessMouseScroll(yoffset);
 }
 
 bool bunny_loaded = false;
 
-glm::mat4 model = glm::rotate(glm::mat4(1.0f), glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+glm::mat4 model = glm::rotate(glm::mat4(1.0f), glm::radians(-55.0f),
+                              glm::vec3(1.0f, 0.0f, 0.0f));
 glm::mat4 view;
 glm::mat4 projection;
 
-Shader* shader;
+Shader *shader;
 
 void v3d::rendering::OpenGlBackend::init() {
     if (m_initialized) {
@@ -107,7 +111,8 @@ void v3d::rendering::OpenGlBackend::init() {
 
     glViewport(0, 0, m_window->getWidth(), m_window->getHeight());
 
-    glfwSetFramebufferSizeCallback(m_window->getWindow(), framebuffer_size_callback);
+    glfwSetFramebufferSizeCallback(m_window->getWindow(),
+                                   framebuffer_size_callback);
 
     glfwSetCursorPosCallback(m_window->getWindow(), mouse_callback);
     glfwSetScrollCallback(m_window->getWindow(), scroll_callback);
@@ -144,7 +149,9 @@ void v3d::rendering::OpenGlBackend::frame_update() {
     float camZ = cos(glfwGetTime() * frequency) * radius;
 
     view = cam.GetViewMatrix();
-    projection = glm::perspective(glm::radians(cam.Zoom), 1.f * m_window->getWidth() / m_window->getHeight(), 0.1f, 100.0f);
+    projection = glm::perspective(
+        glm::radians(cam.Zoom),
+        1.f * m_window->getWidth() / m_window->getHeight(), 0.1f, 100.0f);
 
     shader->bind();
     shader->setMat4("view", view);
@@ -157,20 +164,23 @@ void v3d::rendering::OpenGlBackend::frame_update() {
     }
 }
 
-void v3d::rendering::OpenGlBackend::present_frame(){
+void v3d::rendering::OpenGlBackend::present_frame() {
     glfwSwapBuffers(m_window->getWindow());
 }
-void v3d::rendering::OpenGlBackend::pre_draw_gizmos_hook(){
+void v3d::rendering::OpenGlBackend::pre_draw_gizmos_hook() {
     glDisable(GL_DEPTH_TEST);
 }
-void v3d::rendering::OpenGlBackend::post_draw_gizmos_hook(){
+void v3d::rendering::OpenGlBackend::post_draw_gizmos_hook() {
     glEnable(GL_DEPTH_TEST);
 }
 
-void v3d::rendering::OpenGlBackend::draw_primitive_cube(glm::vec3 position, float size, glm::vec4 color){
-
+void v3d::rendering::OpenGlBackend::draw_primitive_cube(glm::vec3 position,
+                                                        float size,
+                                                        glm::vec4 color) {
     view = cam.GetViewMatrix();
-    projection = glm::perspective(glm::radians(cam.Zoom), 1.f * m_window->getWidth() / m_window->getHeight(), 0.1f, 100.0f);
+    projection = glm::perspective(
+        glm::radians(cam.Zoom),
+        1.f * m_window->getWidth() / m_window->getHeight(), 0.1f, 100.0f);
 
     shader->bind();
     shader->setMat4("view", view);
@@ -187,9 +197,13 @@ void v3d::rendering::OpenGlBackend::draw_primitive_cube(glm::vec3 position, floa
     m_primitives.m_cube->draw();
 }
 
-void v3d::rendering::OpenGlBackend::draw_primitive_sphere(glm::vec3 position, float size, glm::vec4 color){
+void v3d::rendering::OpenGlBackend::draw_primitive_sphere(glm::vec3 position,
+                                                          float size,
+                                                          glm::vec4 color) {
     view = cam.GetViewMatrix();
-    projection = glm::perspective(glm::radians(cam.Zoom), 1.f * m_window->getWidth() / m_window->getHeight(), 0.1f, 100.0f);
+    projection = glm::perspective(
+        glm::radians(cam.Zoom),
+        1.f * m_window->getWidth() / m_window->getHeight(), 0.1f, 100.0f);
 
     shader->bind();
     shader->setMat4("view", view);
@@ -208,7 +222,7 @@ void v3d::rendering::OpenGlBackend::draw_primitive_sphere(glm::vec3 position, fl
 
 void v3d::rendering::OpenGlBackend::cleanup() {}
 
-v3d::Mesh* v3d::rendering::OpenGlBackend::createMesh(std::string filePath) {
+v3d::Mesh *v3d::rendering::OpenGlBackend::createMesh(std::string filePath) {
     // Initialize Loader
     objl::Loader obj_loader;
 
@@ -217,18 +231,19 @@ v3d::Mesh* v3d::rendering::OpenGlBackend::createMesh(std::string filePath) {
     bool loadout = obj_loader.LoadFile(filePath);
 
     if (loadout) {
-        //FIXME: use smart ptr? improve lifetime handeling
-        MeshOpenGL* mesh = new v3d::MeshOpenGL(obj_loader.LoadedMeshes[0]);
+        // FIXME: use smart ptr? improve lifetime handeling
+        MeshOpenGL *mesh = new v3d::MeshOpenGL(obj_loader.LoadedMeshes[0]);
         m_meshList.push_back(mesh);
         return mesh;
     } else {
         // Output Error
-        PLOGD << "Failed to Load File " << filePath << ". May have failed to find it or it was not an .obj file.\n";
+        PLOGD << "Failed to Load File " << filePath
+              << ". May have failed to find it or it was not an .obj file.\n";
         return nullptr;
     }
 }
 
-void v3d::rendering::OpenGlBackend::initPrimitives(){
+void v3d::rendering::OpenGlBackend::initPrimitives() {
     PLOGD << "Loading primitives\n";
     m_primitives.m_cube = createMesh("resources/primitives/3D/cube.obj");
     m_primitives.m_sphere = createMesh("resources/primitives/3D/sphere.obj");

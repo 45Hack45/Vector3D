@@ -39,7 +39,8 @@ int main(int argc, char* argv[]) {
     int log_file_max_count = 5;
 
     // Default graphics backend
-    v3d::rendering::GraphicsBackendType graphicsBackend = v3d::rendering::GraphicsBackendType::OPENGL_API;
+    v3d::rendering::GraphicsBackendType graphicsBackend =
+        v3d::rendering::GraphicsBackendType::OPENGL_API;
 
     for (int i = 1; i < argc; i++) {
         // Parse logging options
@@ -52,7 +53,7 @@ int main(int argc, char* argv[]) {
         } else if (strcmp(argv[i], "--log-level") == 0) {
             if (i + 1 < argc) {
                 if (strcmp(argv[i + 1], "none") == 0) {
-                    severity = plog::none;  
+                    severity = plog::none;
                     i++;
                 } else if (strcmp(argv[i + 1], "fatal") == 0) {
                     severity = plog::fatal;
@@ -87,7 +88,8 @@ int main(int argc, char* argv[]) {
 
     // Initialize the logger
     // log to file and console
-    static plog::RollingFileAppender<plog::TxtFormatter> fileAppender(log_file_name, log_file_max_size, log_file_max_count);
+    static plog::RollingFileAppender<plog::TxtFormatter> fileAppender(
+        log_file_name, log_file_max_size, log_file_max_count);
     static plog::ColorConsoleAppender<plog::TxtFormatter> consoleAppender;
     plog::init(severity, &fileAppender).addAppender(&consoleAppender);
 
@@ -95,14 +97,14 @@ int main(int argc, char* argv[]) {
 
     try {
         {
-        // Create the 3D engine instance
-        v3d::Engine app(WIDTH, HEIGHT, graphicsBackend);
-        // v3d::Engine app(WIDTH, HEIGHT);
+            // Create the 3D engine instance
+            v3d::Engine app(WIDTH, HEIGHT, graphicsBackend);
+            // v3d::Engine app(WIDTH, HEIGHT);
 
-        // v3d::Engine app = v3d::Engine();
+            // v3d::Engine app = v3d::Engine();
 
-        // Initialize and run the 3D engine
-        app.run();
+            // Initialize and run the 3D engine
+            app.run();
         }
     } catch (const std::exception& e) {
         // std::cerr << e.what() << std::endl;

@@ -15,14 +15,15 @@ template <typename Container, typename T, typename key = boost::uuids::uuid>
 class object_ptr {
    public:
     object_ptr() : m_vec(nullptr) {}
-    object_ptr(Container& vec, key index)
-        : m_vec(&vec), m_index(index) {
-        // assert(index < static_cast<key>(m_vec->size()) && "object_ptr: index out of bounds at construction");
+    object_ptr(Container& vec, key index) : m_vec(&vec), m_index(index) {
+        // assert(index < static_cast<key>(m_vec->size()) && "object_ptr: index
+        // out of bounds at construction");
     }
     // object_ptr(Container& vec, T* ptr) : m_vec(&vec) {
     //     // // Check if the pointer is within the vector's bounds
     //     // if (ptr < vec.data() || ptr >= vec.data() + vec.size()) {
-    //     //     throw std::out_of_range("vector_observer: pointer is out of vector bounds");
+    //     //     throw std::out_of_range("vector_observer: pointer is out of
+    //     vector bounds");
     //     // }
 
     //     // Compute index from pointer
@@ -88,26 +89,22 @@ class object_ptr {
 
     // Accessors
     T& get() {
-        // assert(valid() && "object_ptr: accessing an invalid or out-of-bounds index");
+        // assert(valid() && "object_ptr: accessing an invalid or out-of-bounds
+        // index");
         return (*m_vec)[m_index];
     }
 
     const T& get() const {
-        // assert(valid() && "object_ptr: accessing an invalid or out-of-bounds index");
+        // assert(valid() && "object_ptr: accessing an invalid or out-of-bounds
+        // index");
         return (*m_vec)[m_index];
     }
 
-    T* operator->() {
-        return &get();
-    }
+    T* operator->() { return &get(); }
 
-    T& operator*() {
-        return get();
-    }
+    T& operator*() { return get(); }
 
-    key index() const noexcept {
-        return m_index;
-    }
+    key index() const noexcept { return m_index; }
 
     void reset() noexcept {
         m_vec = nullptr;
@@ -121,8 +118,8 @@ class object_ptr {
     }
 
     // void update_index(key new_index) noexcept {
-    //     assert(new_index < static_cast<key>(m_vec->size()) && "object_ptr: new index out of bounds");
-    //     m_index = new_index;
+    //     assert(new_index < static_cast<key>(m_vec->size()) && "object_ptr:
+    //     new index out of bounds"); m_index = new_index;
     // }
 
     // // Checks if is index within bounds

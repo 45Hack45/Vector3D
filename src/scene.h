@@ -11,10 +11,10 @@
 #include <unordered_set>
 #include <vector>
 
+#include "DefinitionCore.hpp"
 #include "component.h"
 #include "entity.h"
 #include "object_ptr.hpp"
-#include "DefinitionCore.hpp"
 #include "utils/utils.hpp"
 
 namespace v3d {
@@ -56,8 +56,10 @@ class Scene {
     }
 
     template <typename T, typename... Args>
-    componentID_t instantiateEntityComponent(entity_ptr entity, Args&&... args) {
-        static_assert(std::is_base_of_v<ComponentBase, T>, "T must inherit from ComponentBase");
+    componentID_t instantiateEntityComponent(entity_ptr entity,
+                                             Args&&... args) {
+        static_assert(std::is_base_of_v<ComponentBase, T>,
+                      "T must inherit from ComponentBase");
 
         // Instantiate all unmet dependencies first
         utils::forEachInTuple(T::dependencies(), [this, entity](auto dummy) {
@@ -68,7 +70,8 @@ class Scene {
             if (this->hasComponent<Dep>(entity)) return;
 
             // Create component and its recursive dependancies
-            this->instantiateEntityComponent<Dep>(entity);  // Each gets its own UUID
+            this->instantiateEntityComponent<Dep>(
+                entity);  // Each gets its own UUID
         });
 
         // Create Component
@@ -92,7 +95,8 @@ class Scene {
 
     template <typename T, typename... Args>
     T* createEntityComponentOfType(entity_ptr entity, Args&&... args) {
-        auto component_id = instantiateEntityComponent<T>(entity, std::forward<Args>(args)...);
+        auto component_id =
+            instantiateEntityComponent<T>(entity, std::forward<Args>(args)...);
         return getComponent<T>(component_id);
     }
 
@@ -143,8 +147,7 @@ class Scene {
         std::vector<T*> componentList;
         for (auto const component : entity->m_components) {
             auto component_ptr = m_components.getAs<T>(component);
-            if (component_ptr != nullptr)
-                componentList.pushBack();
+            if (component_ptr != nullptr) componentList.pushBack();
         }
         return componentList;
     }
@@ -163,17 +166,20 @@ class Scene {
     }
 
     void deleteEntity(Entity* entity) {
-        // TODO: Deleyed destroy, mark object as to be deleted and delete after the frame update
+        // TODO: Deleyed destroy, mark object as to be deleted and delete after
+        // the frame update
     }
 
     void update(double delta) {
-        m_components.for_each([delta](ComponentBase& component) { component.update(delta); });
+        m_components.for_each(
+            [delta](ComponentBase& component) { component.update(delta); });
     }
 
     void print_entities() {
         for (auto [id, entity] : m_entities) {
             if (entity.m_parent) {
-                std::cout << "Entity: " << entity.m_name << " Parent: " << entity.m_parent->m_name << "\n";
+                std::cout << "Entity: " << entity.m_name
+                          << " Parent: " << entity.m_parent->m_name << "\n";
             } else {
                 std::cout << "Entity: " << entity.m_name << "\n";
             }
@@ -202,7 +208,8 @@ class Scene {
 
     entity_ptr createEntity() {
         entityID_t uuid = boost::uuids::random_generator()();
-        auto [entity_it, inserted] = m_entities.emplace(uuid, Entity(this, uuid));
+        auto [entity_it, inserted] =
+            m_entities.emplace(uuid, Entity(this, uuid));
         return entity_ptr(m_entities, uuid);
     };
     entity_ptr createEntity(entity_ptr parent) {

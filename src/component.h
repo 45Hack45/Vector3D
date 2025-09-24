@@ -27,17 +27,11 @@ class ComponentBase : public rendering::IGizmosRenderable {
     virtual void start() = 0;
     virtual void update(double deltaTime) = 0;
 
-    virtual std::string getComponentName() {
-        return typeid(this).name();
-    }
+    virtual std::string getComponentName() { return typeid(this).name(); }
 
-    static auto dependencies() {
-        return std::tuple<>();
-    }
+    static auto dependencies() { return std::tuple<>(); }
 
-    entityID_t getEntity() {
-        return m_entity;
-    }
+    entityID_t getEntity() { return m_entity; }
 
    private:
    protected:
@@ -45,9 +39,7 @@ class ComponentBase : public rendering::IGizmosRenderable {
     entityID_t m_entity;
     Scene* m_scene;
 
-    void setEntity(entityID_t entity) {
-        m_entity = entity;
-    }
+    void setEntity(entityID_t entity) { m_entity = entity; }
 
     // Initialize base component, call once after component creation
     void _init();
@@ -92,9 +84,7 @@ class CinemaASCIIComponent : public ComponentBase {
     CinemaASCIIComponent(int value) : testVariable(value) {};
     bool test_method() { return true; }
 
-    static auto dependencies() {
-        return std::tuple<AbsoluteASCIIComponent>{};
-    }
+    static auto dependencies() { return std::tuple<AbsoluteASCIIComponent>{}; }
     void start() override {};
     void update(double deltaTime) override;
 

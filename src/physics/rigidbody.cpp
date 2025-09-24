@@ -10,7 +10,9 @@ namespace v3d {
 void RigidBody::init() {
     // Initialize chrono rigidbody and add to the system
     // TODO: Relate to the parent
-    // TODO: Make all entities have entities have rigidbody but with physics disabled, to disable physics set the body to fixed: m_body->SetFixed(true)
+    // TODO: Make all entities have entities have rigidbody but with physics
+    // disabled, to disable physics set the body to fixed:
+    // m_body->SetFixed(true)
     m_body = chrono_types::make_shared<chrono::ChBody>();
 
     // Initialize
@@ -25,7 +27,8 @@ void RigidBody::init() {
 };
 
 void RigidBody::update(double deltaTime) {
-    // std::cout << "Pos " << m_scene->getEntity(m_entity)->m_name << ": " << m_body->GetPos() << "\n";
+    // std::cout << "Pos " << m_scene->getEntity(m_entity)->m_name << ": " <<
+    // m_body->GetPos() << "\n";
 };
 
 void RigidBody::addCollider(ColliderBase &collider) {

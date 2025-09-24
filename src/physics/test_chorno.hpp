@@ -4,7 +4,8 @@
 using namespace chrono;
 
 int main(int argc, char* argv[]) {
-    std::cout << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << std::endl;
+    std::cout << "Copyright (c) 2017 projectchrono.org\nChrono version: "
+              << CHRONO_VERSION << std::endl;
 
     {
         //
@@ -54,7 +55,8 @@ int main(int argc, char* argv[]) {
         sys.AddBody(my_body_C);
 
         // Show the hierarchy in the shell window...
-        std::cout << "Here's the system hierarchy which you built:" << std::endl;
+        std::cout << "Here's the system hierarchy which you built:"
+                  << std::endl;
         sys.ShowHierarchy(std::cout);
 
         // Do you want to remove items? Use the
@@ -139,18 +141,23 @@ int main(int argc, char* argv[]) {
         // i.e. is using two bodies and a position as arguments..
         // For example, to create the rod-truss constraint:
         auto my_link_CA = chrono_types::make_shared<ChLinkLockPointLine>();
-        my_link_CA->Initialize(my_body_C, my_body_A, ChFrame<>(ChVector3d(6, 0, 0)));
+        my_link_CA->Initialize(my_body_C, my_body_A,
+                               ChFrame<>(ChVector3d(6, 0, 0)));
         sys.AddLink(my_link_CA);
 
         my_link_CA->GetMarker1()->SetName("rod_poinline");
         my_link_CA->GetMarker2()->SetName("truss_pointline");
         my_link_CA->SetName("POINTLINE rod-truss");
 
-        // Now create a 'motor' link between crank and truss, in 'imposed speed' mode:
-        auto my_motor_AB = chrono_types::make_shared<ChLinkMotorRotationSpeed>();
+        // Now create a 'motor' link between crank and truss, in 'imposed speed'
+        // mode:
+        auto my_motor_AB =
+            chrono_types::make_shared<ChLinkMotorRotationSpeed>();
         my_motor_AB->SetName("MOTOR truss-crank");
-        my_motor_AB->Initialize(my_body_A, my_body_B, ChFrame<>(ChVector3d(0, 0, 0)));
-        my_motor_AB->SetSpeedFunction(chrono_types::make_shared<ChFunctionConst>(CH_PI));
+        my_motor_AB->Initialize(my_body_A, my_body_B,
+                                ChFrame<>(ChVector3d(0, 0, 0)));
+        my_motor_AB->SetSpeedFunction(
+            chrono_types::make_shared<ChFunctionConst>(CH_PI));
         sys.AddLink(my_motor_AB);
 
         std::cout << std::endl
@@ -159,7 +166,9 @@ int main(int argc, char* argv[]) {
                   << std::endl;
         sys.ShowHierarchy(std::cout);
 
-        std::cout << "Now use an iterator to scan through already-added constraints:" << std::endl;
+        std::cout
+            << "Now use an iterator to scan through already-added constraints:"
+            << std::endl;
         for (auto link : sys.GetLinks()) {
             auto& rlink = *link.get();
             std::cout << "   Link class: " << typeid(rlink).name() << std::endl;
@@ -170,13 +179,17 @@ int main(int argc, char* argv[]) {
         double end_time = 2.5;
         double step_size = 0.01;
 
-        for (double frame_time = 0.05; frame_time < end_time; frame_time += 0.05) {
+        for (double frame_time = 0.05; frame_time < end_time;
+             frame_time += 0.05) {
             // Perform simulation up to frame_time
             sys.DoFrameDynamics(frame_time, step_size);
 
-            std::cout << "Time: " << frame_time << "  Steps: " << sys.GetNumSteps()
-                      << "  Slider X position: " << my_link_CA->GetMarker1()->GetAbsCoordsys().pos.x()
-                      << "  Engine torque: " << my_motor_AB->GetMotorTorque() << std::endl;
+            std::cout << "Time: " << frame_time
+                      << "  Steps: " << sys.GetNumSteps()
+                      << "  Slider X position: "
+                      << my_link_CA->GetMarker1()->GetAbsCoordsys().pos.x()
+                      << "  Engine torque: " << my_motor_AB->GetMotorTorque()
+                      << std::endl;
         }
     }
 

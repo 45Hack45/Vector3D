@@ -6,12 +6,8 @@ class Shader;
 
 namespace v3d {
 namespace rendering {
-enum class GraphicsBackendType { NONE,
-                                 OPENGL_API,
-                                 VULKAN_API };
-enum class WindowBackendHint { NONE,
-                               OPENGL_API,
-                               VULKAN_API };
+enum class GraphicsBackendType { NONE, OPENGL_API, VULKAN_API };
+enum class WindowBackendHint { NONE, OPENGL_API, VULKAN_API };
 
 class IRenderable {
    public:
@@ -23,8 +19,8 @@ class IRenderable {
     virtual void setUniforms(Shader *shader) = 0;
 };
 
-class IGizmosRenderable{
-    public:
+class IGizmosRenderable {
+   public:
     virtual ~IGizmosRenderable() = default;
     virtual void onDrawGizmos(GizmosManager *gizmos) {};
 };

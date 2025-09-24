@@ -6,9 +6,9 @@
 #include <unordered_map>
 #include <vector>
 
+#include "DefinitionCore.hpp"
 #include "object_ptr.hpp"
 #include "scene.h"
-#include "DefinitionCore.hpp"
 // #include "utils/vector_ptr.hpp"
 
 namespace v3d {
@@ -26,20 +26,21 @@ class Entity {
     friend class Scene;
 
    public:
-    const std::vector<entity_ptr> &getChilds() const {
-        return m_childs;
-    }
+    const std::vector<entity_ptr> &getChilds() const { return m_childs; }
 
     // template <typename T, typename... Args>
     // componentID_t addComponent(Args&&... args){
-    //     return m_scene->instantiateEntityComponent<T>(m_id,std::forward<Args>(args)...);
+    //     return
+    //     m_scene->instantiateEntityComponent<T>(m_id,std::forward<Args>(args)...);
     // }
 
     // // Add a new component of type T
     // template <typename T, typename... Args>
     // T* addComponent(Args &&...args) {
-    //     static_assert(std::is_base_of<Component, T>::value, "T must inherit from Component");
-    //     // // auto component = std::make_shared<T>(std::forward<Args>(args)...);
+    //     static_assert(std::is_base_of<Component, T>::value, "T must inherit
+    //     from Component");
+    //     // // auto component =
+    //     std::make_shared<T>(std::forward<Args>(args)...);
     //     // // component->m_Entity = this;
     //     // // m_components.emplace(typeid(T).hash_code(), component);
     //     // // return component;
@@ -78,8 +79,10 @@ class Entity {
     std::string m_name = "entity";
 
     Entity() = default;
-    Entity(Scene *scene, entityID_t uuid) : m_scene(scene), m_id(uuid), m_parent() {};
-    Entity(Scene *scene, entityID_t uuid, entity_ptr parent) : m_scene(scene), m_id(uuid), m_parent(parent) {};
+    Entity(Scene *scene, entityID_t uuid)
+        : m_scene(scene), m_id(uuid), m_parent() {};
+    Entity(Scene *scene, entityID_t uuid, entity_ptr parent)
+        : m_scene(scene), m_id(uuid), m_parent(parent) {};
     //    Entity(Entity&&) = default;
     //    Entity& operator=(Entity&&) = default;
 

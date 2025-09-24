@@ -26,17 +26,13 @@ class RigidBody : public ComponentBase {
     void start() override {};
     void update(double deltaTime) override;
 
-    void setMass(double mass) {
-        m_body->SetMass(mass);
-    }
+    void setMass(double mass) { m_body->SetMass(mass); }
 
     void setInertia(chrono::ChVector3d inertia) {
         m_body->SetInertiaXX(inertia);
     }
 
-    void setPos(chrono::ChVector3d position) {
-        m_body->SetPos(position);
-    }
+    void setPos(chrono::ChVector3d position) { m_body->SetPos(position); }
     void setPos(float x, float y, float z) {
         m_body->SetPos(chrono::ChVector3d(x, y, z));
     }
@@ -49,9 +45,7 @@ class RigidBody : public ComponentBase {
         m_body->SetPosDt2(acceleration);
     }
 
-    void setFixed(bool fixed) {
-        m_body->SetFixed(fixed);
-    }
+    void setFixed(bool fixed) { m_body->SetFixed(fixed); }
 
     void addCollider(ColliderBase &collider);
 

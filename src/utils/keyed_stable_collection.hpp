@@ -31,17 +31,19 @@ class KeyedStableCollection {
 
         // Equality operator to compare handles
         bool operator==(const Handle& other) const {
-            return type == other.type && index == other.index && generation == other.generation;
+            return type == other.type && index == other.index &&
+                   generation == other.generation;
         }
     };
 
     KeyedStableCollection() = default;
 
-    // Insert a new Derived object constructed with Args... under the specified key.
-    // Fails if the key already exists.
+    // Insert a new Derived object constructed with Args... under the specified
+    // key. Fails if the key already exists.
     template <typename Derived, typename... Args>
     bool insert(const Key& key, Args&&... args) {
-        static_assert(std::is_base_of<Base, Derived>::value, "Must inherit from Base");
+        static_assert(std::is_base_of<Base, Derived>::value,
+                      "Must inherit from Base");
 
         if (m_keyToHandle.contains(key)) return false;
 
@@ -61,7 +63,8 @@ class KeyedStableCollection {
         return getRaw(it->second);
     }
 
-    // Get a Derived* to the object associated with the key, only if the type matches.
+    // Get a Derived* to the object associated with the key, only if the type
+    // matches.
     template <typename Derived>
     Derived* getAs(const Key& key) {
         static_assert(std::is_base_of<Base, Derived>::value);
@@ -72,7 +75,8 @@ class KeyedStableCollection {
         if (h.type != typeid(Derived)) return nullptr;
 
         auto& storage = getStorage<Derived>();
-        if (h.index >= storage.entries.size() || h.generation != storage.generations[h.index])
+        if (h.index >= storage.entries.size() ||
+            h.generation != storage.generations[h.index])
             return nullptr;
 
         return &storage.entries[h.index];
@@ -97,7 +101,8 @@ class KeyedStableCollection {
 
         auto& genVec = storageIt->second->generations;
 
-        if (handle.index >= genVec.size() || genVec[handle.index] != handle.generation)
+        if (handle.index >= genVec.size() ||
+            genVec[handle.index] != handle.generation)
             return false;
 
         storageIt->second->erase(handle.index);
@@ -141,7 +146,8 @@ class KeyedStableCollection {
         std::deque<Derived> entries;
 
         Base* get(std::size_t idx) override {
-            if (idx >= entries.size() || this->generations[idx] == static_cast<std::size_t>(-1))
+            if (idx >= entries.size() ||
+                this->generations[idx] == static_cast<std::size_t>(-1))
                 return nullptr;
             return &entries[idx];
         }
@@ -179,7 +185,8 @@ class KeyedStableCollection {
         }
     };
 
-    // Get (or create if not present) the TypedVector for a specific Derived type.
+    // Get (or create if not present) the TypedVector for a specific Derived
+    // type.
     template <typename Derived>
     TypedVector<Derived>& getStorage() {
         auto type = std::type_index(typeid(Derived));
@@ -190,7 +197,8 @@ class KeyedStableCollection {
             m_derivedStorage[type] = std::move(ptr);
             return ref;
         }
-        return *static_cast<TypedVector<Derived>*>(m_derivedStorage[type].get());
+        return *static_cast<TypedVector<Derived>*>(
+            m_derivedStorage[type].get());
     }
 
     // Get a raw pointer to a Base using a Handle.
@@ -199,13 +207,15 @@ class KeyedStableCollection {
         if (it == m_derivedStorage.end()) return nullptr;
 
         auto& storage = *it->second;
-        if (h.index >= storage.generations.size() || h.generation != storage.generations[h.index])
+        if (h.index >= storage.generations.size() ||
+            h.generation != storage.generations[h.index])
             return nullptr;
 
         return storage.get(h.index);
     }
 
-    // Update all handles after a compaction, so they point to correct new indices.
+    // Update all handles after a compaction, so they point to correct new
+    // indices.
     void remapHandles() {
         for (auto& [key, handle] : m_keyToHandle) {
             auto storageIt = m_derivedStorage.find(handle.type);
@@ -213,7 +223,8 @@ class KeyedStableCollection {
 
             auto& genVec = storageIt->second->generations;
 
-            if (handle.index < genVec.size() && genVec[handle.index] == handle.generation) {
+            if (handle.index < genVec.size() &&
+                genVec[handle.index] == handle.generation) {
                 continue;
             }
 
@@ -230,7 +241,8 @@ class KeyedStableCollection {
     boost::unordered_flat_map<Key, Handle> m_keyToHandle;
 
     // Maps type_info to typed storage containers.
-    std::unordered_map<std::type_index, std::unique_ptr<TypedVectorBase>> m_derivedStorage;
+    std::unordered_map<std::type_index, std::unique_ptr<TypedVectorBase>>
+        m_derivedStorage;
 };
 
 }  // namespace utils

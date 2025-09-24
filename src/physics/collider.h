@@ -45,11 +45,15 @@ class ColliderBox : public ColliderBase {
    public:
     void setSize(float x, float y, float z) {
         m_collisionShape.reset();
-        m_collisionShape = chrono_types::make_shared<chrono::ChCollisionShapeBox>(m_collisionMaterial, x, y, z);
+        m_collisionShape =
+            chrono_types::make_shared<chrono::ChCollisionShapeBox>(
+                m_collisionMaterial, x, y, z);
     }
     void setSize(glm::vec3& lengths) {
         m_collisionShape.reset();
-        m_collisionShape = chrono_types::make_shared<chrono::ChCollisionShapeBox>(m_collisionMaterial, lengths.x, lengths.y, lengths.z);
+        m_collisionShape =
+            chrono_types::make_shared<chrono::ChCollisionShapeBox>(
+                m_collisionMaterial, lengths.x, lengths.y, lengths.z);
     }
 
    protected:
@@ -60,7 +64,9 @@ class ColliderBox : public ColliderBase {
     }
 
     void initColliderProperties() override {
-        m_collisionShape = chrono_types::make_shared<chrono::ChCollisionShapeBox>(m_collisionMaterial, 0.1, 0.2, 0.3);
+        m_collisionShape =
+            chrono_types::make_shared<chrono::ChCollisionShapeBox>(
+                m_collisionMaterial, 0.1, 0.2, 0.3);
     };
 };
 
@@ -70,9 +76,10 @@ class ColliderBox : public ColliderBase {
 // typedef ColliderBase<chrono::ChCollisionShapeCone> ColliderCone;
 // typedef ColliderBase<chrono::ChCollisionShapeConvexHull> ColliderConvexHull;
 // typedef ColliderBase<chrono::ChCollisionShapeCylinder> ColliderCylinder;
-// typedef ColliderBase<chrono::ChCollisionShapeCylindricalShell> ColliderCylindricalShell;
-// typedef ColliderBase<chrono::ChCollisionShapeEllipsoid> ColliderEllipsoid;
-// typedef ColliderBase<chrono::ChCollisionShapeMeshTriangle> ColliderMeshTriangle;
+// typedef ColliderBase<chrono::ChCollisionShapeCylindricalShell>
+// ColliderCylindricalShell; typedef
+// ColliderBase<chrono::ChCollisionShapeEllipsoid> ColliderEllipsoid; typedef
+// ColliderBase<chrono::ChCollisionShapeMeshTriangle> ColliderMeshTriangle;
 // typedef ColliderBase<chrono::ChCollisionShapePoint> ColliderPoint;
 // typedef ColliderBase<chrono::ChCollisionShapeSphere> ColliderSphere;
 // typedef ColliderBase<chrono::ChCollisionShapeTriangle> ColliderTriangle;
@@ -80,9 +87,10 @@ class ColliderBox : public ColliderBase {
 // typedef ColliderBase<chrono::ChCollisionShapeBarrel> ColliderBarrel;
 // typedef ColliderBase<chrono::ChCollisionShapePath2D> ColliderPath2D;
 // typedef ColliderBase<chrono::ChCollisionShapeRoundedBox> ColliderRoundedBox;
-// typedef ColliderBase<chrono::ChCollisionShapeRoundedCylinder> ColliderRoundedCylinder;
-// typedef ColliderBase<chrono::ChCollisionShapeSegment> ColliderSegment;
-// typedef ColliderBase<chrono::ChCollisionShapeSegment2D> ColliderSegment2D;
-// typedef ColliderBase<chrono::ChCollisionShapeTriangleMesh> ColliderTriangleMesh;
+// typedef ColliderBase<chrono::ChCollisionShapeRoundedCylinder>
+// ColliderRoundedCylinder; typedef
+// ColliderBase<chrono::ChCollisionShapeSegment> ColliderSegment; typedef
+// ColliderBase<chrono::ChCollisionShapeSegment2D> ColliderSegment2D; typedef
+// ColliderBase<chrono::ChCollisionShapeTriangleMesh> ColliderTriangleMesh;
 
 }  // namespace v3d

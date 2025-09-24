@@ -51,8 +51,10 @@ template <class T>
 uint32_t to_u32(T value) {
     static_assert(std::is_arithmetic<T>::value, "T must be numeric");
 
-    if (static_cast<uintmax_t>(value) > static_cast<uintmax_t>(std::numeric_limits<uint32_t>::max())) {
-        throw std::runtime_error("to_u32() failed, value is too big to be converted to uint32_t");
+    if (static_cast<uintmax_t>(value) >
+        static_cast<uintmax_t>(std::numeric_limits<uint32_t>::max())) {
+        throw std::runtime_error(
+            "to_u32() failed, value is too big to be converted to uint32_t");
     }
 
     return static_cast<uint32_t>(value);
@@ -60,8 +62,9 @@ uint32_t to_u32(T value) {
 
 template <typename T>
 inline std::vector<uint8_t> to_bytes(const T &value) {
-    return std::vector<uint8_t>{reinterpret_cast<const uint8_t *>(&value),
-                                reinterpret_cast<const uint8_t *>(&value) + sizeof(T)};
+    return std::vector<uint8_t>{
+        reinterpret_cast<const uint8_t *>(&value),
+        reinterpret_cast<const uint8_t *>(&value) + sizeof(T)};
 }
 
 template <typename Tuple, typename Func, std::size_t... I>
@@ -71,13 +74,16 @@ void forEachInTupleImpl(Func &&func, std::index_sequence<I...>) {
 
 template <typename Tuple, typename Func>
 void forEachInTuple(Func &&func) {
-    forEachInTupleImpl<Tuple>(std::forward<Func>(func), std::make_index_sequence<std::tuple_size_v<Tuple>>{});
+    forEachInTupleImpl<Tuple>(
+        std::forward<Func>(func),
+        std::make_index_sequence<std::tuple_size_v<Tuple>>{});
 }
 
 template <typename Tuple, typename Func>
 void forEachInTuple(Tuple &&, Func &&func) {
     using T = std::decay_t<Tuple>;
-    forEachInTupleImpl<T>(std::forward<Func>(func), std::make_index_sequence<std::tuple_size_v<T>>{});
+    forEachInTupleImpl<T>(std::forward<Func>(func),
+                          std::make_index_sequence<std::tuple_size_v<T>>{});
 }
 
 }  // namespace utils

@@ -1,14 +1,14 @@
 
 #include "component.h"
-#include "scene.h"
-#include "engine.h"
 
 #include <iostream>
 
+#include "engine.h"
+#include "scene.h"
+
 namespace v3d {
 
-void ComponentBase::_init()
-{
+void ComponentBase::_init() {
     m_scene->getEngine()->registerGizmosTarget(this);
 }
 

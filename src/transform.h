@@ -23,8 +23,8 @@ class Transform : public ComponentBase {
     glm::quat getRotation();
     glm::vec3 getRotationCardanAngles();
 
-    void setScale(const glm::vec3 &scale){ m_scale = scale;}
-    void setScale(float x, float y, float z){ m_scale = glm::vec3(x, y, z);}
+    void setScale(const glm::vec3& scale) { m_scale = scale; }
+    void setScale(float x, float y, float z) { m_scale = glm::vec3(x, y, z); }
 
    private:
     Transform* m_parent;

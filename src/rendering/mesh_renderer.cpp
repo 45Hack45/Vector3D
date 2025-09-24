@@ -1,6 +1,8 @@
 
 #include "mesh_renderer.h"
 
+#include <glm/gtc/quaternion.hpp>
+
 #include "engine.h"
 #include "rendering/mesh.h"
 #include "rendering/shader.h"
@@ -8,13 +10,9 @@
 #include "transform.h"
 #include "utils/exception.hpp"
 
-#include <glm/gtc/quaternion.hpp>
-
 namespace v3d {
-MeshRenderer::MeshRenderer() {
-}
-MeshRenderer::~MeshRenderer() {
-}
+MeshRenderer::MeshRenderer() {}
+MeshRenderer::~MeshRenderer() {}
 
 // auto MeshRenderer::dependencies() {
 //     // return std::tuple<Transform>{};
@@ -24,7 +22,9 @@ MeshRenderer::~MeshRenderer() {
 void MeshRenderer::init() {
     // Set the rigidbody of the transform to this instance
     auto transform = m_scene->getComponentOfType<Transform>(m_entity);
-    assert(transform != nullptr && "Failed to initialize Transform. Missing required component Transform from the entity");
+    assert(transform != nullptr &&
+           "Failed to initialize Transform. Missing required component "
+           "Transform from the entity");
     m_transform = transform;
 
     if (m_mesh == nullptr) return;
@@ -35,9 +35,7 @@ void MeshRenderer::registerRenderTarget() {
     m_scene->getEngine()->registerRenderTarget(this);
 }
 
-void MeshRenderer::renderElement() {
-    m_mesh->draw();
-}
+void MeshRenderer::renderElement() { m_mesh->draw(); }
 void MeshRenderer::renderElementInstanced() {
     throw exception::NotImplemented();
 }
@@ -48,13 +46,14 @@ void MeshRenderer::setUniforms(Shader *shader) {
     glm::vec3 scale = m_transform->getScale();
     // glm::vec3 axis = m_transform->getRotAxis();
     // float angle = m_transform->getRotAngle();
-    // std::cout << "Rotation Axis: (" << axis.x << ", " << axis.y << ", " << axis.z << ") Angle: " << angle << std::endl;
+    // std::cout << "Rotation Axis: (" << axis.x << ", " << axis.y << ", " <<
+    // axis.z << ") Angle: " << angle << std::endl;
 
     glm::vec3 rotAngles = m_transform->getRotationCardanAngles();
 
     glm::mat4 RotationMatrix = glm::mat4_cast(m_transform->getRotation());
 
-    glm::quat q = glm::quat(rotAngles); // pitch=x, yaw=y, roll=z
+    glm::quat q = glm::quat(rotAngles);  // pitch=x, yaw=y, roll=z
 
     model = glm::translate(model, pos);
 
@@ -66,7 +65,7 @@ void MeshRenderer::setUniforms(Shader *shader) {
     model = glm::scale(model, scale);
 
     glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(model)));
-    
+
     shader->setMat4("model", model);
     shader->setMat3("normalMatrix", normalMatrix);
 }

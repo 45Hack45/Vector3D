@@ -23,20 +23,35 @@ class Vehicle : public ComponentBase {
 
     void loadVehicleModelJSON();
 
-    // chrono::vehicle::WheeledVehicle* getVehicleRaw() { return m_vehicle->vehicle; };
-    // chrono::vehicle::DriverInputs* getDriverInputsRaw() { return m_vehicle->driverInputs; };
+    // chrono::vehicle::WheeledVehicle* getVehicleRaw() { return
+    // m_vehicle->vehicle; }; chrono::vehicle::DriverInputs*
+    // getDriverInputsRaw() { return m_vehicle->driverInputs; };
 
-    inline double getSteering(){ return m_vehicleHandle->driverInputs.m_steering; }
-    inline double getThrottle(){ return m_vehicleHandle->driverInputs.m_throttle; }
-    inline double getBraking(){ return m_vehicleHandle->driverInputs.m_braking; }
-    inline double getClutch(){ return m_vehicleHandle->driverInputs.m_clutch; }
+    inline double getSteering() {
+        return m_vehicleHandle->driverInputs.m_steering;
+    }
+    inline double getThrottle() {
+        return m_vehicleHandle->driverInputs.m_throttle;
+    }
+    inline double getBraking() {
+        return m_vehicleHandle->driverInputs.m_braking;
+    }
+    inline double getClutch() { return m_vehicleHandle->driverInputs.m_clutch; }
 
-    inline void setSteering(double steering){ m_vehicleHandle->driverInputs.m_steering = steering; }
-    inline void setThrottle(double throttle){ m_vehicleHandle->driverInputs.m_throttle = throttle; }
-    inline void setBraking(double braking){ m_vehicleHandle->driverInputs.m_braking = braking; }
-    inline void setClutch(double clutch){ m_vehicleHandle->driverInputs.m_clutch = clutch; }
+    inline void setSteering(double steering) {
+        m_vehicleHandle->driverInputs.m_steering = steering;
+    }
+    inline void setThrottle(double throttle) {
+        m_vehicleHandle->driverInputs.m_throttle = throttle;
+    }
+    inline void setBraking(double braking) {
+        m_vehicleHandle->driverInputs.m_braking = braking;
+    }
+    inline void setClutch(double clutch) {
+        m_vehicleHandle->driverInputs.m_clutch = clutch;
+    }
 
-    void resetDriverInputs(){
+    void resetDriverInputs() {
         m_vehicleHandle->driverInputs.m_steering = 0.0;
         m_vehicleHandle->driverInputs.m_throttle = 0.0;
         m_vehicleHandle->driverInputs.m_braking = 0.0;
@@ -59,14 +74,18 @@ class Vehicle : public ComponentBase {
     void start() override;
     void update(double deltaTime) override;
 
-    void onDrawGizmos(rendering::GizmosManager *gizmos) override;
+    void onDrawGizmos(rendering::GizmosManager* gizmos) override;
 
     void setFilePath(const std::string& filepath) {
         m_vehicleModelPath = filepath;
     }
 
-    void setInitialPosition(chrono::ChVector3d position) { m_initPos = position; }
-    void setInitialRotation(chrono::ChQuaterniond rotation) { m_initRot = rotation; }
+    void setInitialPosition(chrono::ChVector3d position) {
+        m_initPos = position;
+    }
+    void setInitialRotation(chrono::ChQuaterniond rotation) {
+        m_initRot = rotation;
+    }
 };
 
 }  // namespace v3d

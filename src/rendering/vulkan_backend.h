@@ -58,10 +58,18 @@ class VulkanBackend : public GraphicsBackend {
 #endif
 
     void initVulkan();
-    vk::Instance createInstance(const std::optional<vk::DebugUtilsMessengerCreateInfoEXT>& debug_utils_create_info = std::nullopt);
-    vk::SurfaceKHR createSurface(const vk::Instance& instance, GLFWwindow* window);
-    vk::PhysicalDevice getSuitablePhysicalDevice(const vk::SurfaceKHR& surface, const std::vector<const char*>& requiredDeviceExtensions);
-    vk::Device createLogicalDevice(v3d::rendering::VulkanDevice& vulkanDevice, const std::vector<const char*>& device_extensions, const vk::PhysicalDeviceFeatures& device_features);
+    vk::Instance createInstance(
+        const std::optional<vk::DebugUtilsMessengerCreateInfoEXT>&
+            debug_utils_create_info = std::nullopt);
+    vk::SurfaceKHR createSurface(const vk::Instance& instance,
+                                 GLFWwindow* window);
+    vk::PhysicalDevice getSuitablePhysicalDevice(
+        const vk::SurfaceKHR& surface,
+        const std::vector<const char*>& requiredDeviceExtensions);
+    vk::Device createLogicalDevice(
+        v3d::rendering::VulkanDevice& vulkanDevice,
+        const std::vector<const char*>& device_extensions,
+        const vk::PhysicalDeviceFeatures& device_features);
 
     void cleanup_vulkan();
 
@@ -70,11 +78,11 @@ class VulkanBackend : public GraphicsBackend {
     void cleanupDebugMessenger();
 #endif
 
-    static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-        VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-        VkDebugUtilsMessageTypeFlagsEXT messageType,
-        const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-        void* pUserData);
+    static VKAPI_ATTR VkBool32 VKAPI_CALL
+    debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+                  VkDebugUtilsMessageTypeFlagsEXT messageType,
+                  const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+                  void* pUserData);
 };
 }  // namespace rendering
 }  // namespace v3d

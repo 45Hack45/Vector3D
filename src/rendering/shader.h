@@ -23,17 +23,20 @@ class Shader : public v3d::Asset {
    public:
     // constructor generates the shader on the fly
     // ------------------------------------------------------------------------
-    Shader(const char* vertexPath, const char* fragmentPath, bool isFile = true);
+    Shader(const char* vertexPath, const char* fragmentPath,
+           bool isFile = true);
 
     // constructor generates the shader on the fly frome one single file
-    // The convention is that every shader type start with: //#Begin_Type and ends with: //#End_Type
-    // Example: //#Begin_vert ... //#End_vert	//#Begin_frag ... //#End_frag
-    // Everything out of Begin...End won't be compiled
+    // The convention is that every shader type start with: //#Begin_Type and
+    // ends with: //#End_Type Example: //#Begin_vert ... //#End_vert
+    // //#Begin_frag ... //#End_frag Everything out of Begin...End won't be
+    // compiled
     Shader(const char* shaderPath) : Asset(shaderPath, shaderPath) {
         loadFile();
     }
 
-    Shader(const std::string& shaderPath, const std::string& shaderName) : Asset(shaderPath, shaderName) {  // Constructor for the manager
+    Shader(const std::string& shaderPath, const std::string& shaderName)
+        : Asset(shaderPath, shaderName) {  // Constructor for the manager
         loadFile();
     }
 
@@ -47,9 +50,7 @@ class Shader : public v3d::Asset {
 
     // activate the shader
     // ------------------------------------------------------------------------
-    void bind() const {
-        glUseProgram(m_ID);
-    }
+    void bind() const { glUseProgram(m_ID); }
     // utility uniform functions
     // ------------------------------------------------------------------------
     void setBool(const std::string& name, bool value) const {
@@ -69,25 +70,30 @@ class Shader : public v3d::Asset {
     void setFloat(const std::string& name, float x, float y, float z) const {
         glUniform3f(glGetUniformLocation(m_ID, name.c_str()), x, y, z);
     }
-    void setFloat(const std::string& name, float x, float y, float z, float w) const {
+    void setFloat(const std::string& name, float x, float y, float z,
+                  float w) const {
         glUniform4f(glGetUniformLocation(m_ID, name.c_str()), x, y, z, w);
     }
     // ------------------------------------------------------------------------
     void setMat4(const std::string& name, glm::mat4 matrix) {
-        glUniformMatrix4fv(glGetUniformLocation(m_ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(matrix));
+        glUniformMatrix4fv(glGetUniformLocation(m_ID, name.c_str()), 1,
+                           GL_FALSE, glm::value_ptr(matrix));
     }
     void setMat3(const std::string& name, glm::mat3 matrix) {
-        glUniformMatrix3fv(glGetUniformLocation(m_ID, name.c_str()), 1, GL_FALSE, glm::value_ptr(matrix));
+        glUniformMatrix3fv(glGetUniformLocation(m_ID, name.c_str()), 1,
+                           GL_FALSE, glm::value_ptr(matrix));
     }
     // ------------------------------------------------------------------------
     void setVector(const std::string& name, glm::vec2 value) const {
         glUniform2f(glGetUniformLocation(m_ID, name.c_str()), value.x, value.y);
     }
     void setVector(const std::string& name, glm::vec3 value) const {
-        glUniform3f(glGetUniformLocation(m_ID, name.c_str()), value.x, value.y, value.z);
+        glUniform3f(glGetUniformLocation(m_ID, name.c_str()), value.x, value.y,
+                    value.z);
     }
     void setVector(const std::string& name, glm::vec4 value) const {
-        glUniform4f(glGetUniformLocation(m_ID, name.c_str()), value.x, value.y, value.z, value.w);
+        glUniform4f(glGetUniformLocation(m_ID, name.c_str()), value.x, value.y,
+                    value.z, value.w);
     }
 
     bool errorOnLoad = false;
@@ -96,9 +102,7 @@ class Shader : public v3d::Asset {
     std::vector<std::string> shaderProperties;
 
    protected:
-    Shader() : v3d::Asset("", "") {
-        m_ID = -1;
-    }
+    Shader() : v3d::Asset("", "") { m_ID = -1; }
 
     unsigned int m_ID;
 
@@ -111,14 +115,22 @@ class Shader : public v3d::Asset {
             glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
             if (!success) {
                 glGetShaderInfoLog(shader, 1024, NULL, infoLog);
-                PLOGE << "	ERROR::SHADER_COMPILATION_ERROR of type: " << type.c_str() << "\n"
-                      << infoLog << "\n -- --------------------------------------------------- -- \n";
+                PLOGE << "	ERROR::SHADER_COMPILATION_ERROR of type: "
+                      << type.c_str() << "\n"
+                      << infoLog
+                      << "\n -- "
+                         "--------------------------------------------------- "
+                         "-- \n";
             }
         } else {
             glGetProgramiv(shader, GL_LINK_STATUS, &success);
             if (!success) {
                 glGetProgramInfoLog(shader, 1024, NULL, infoLog);
-                PLOGE << "	ERROR::PROGRAM_LINKING_ERROR of type: " << type.c_str() << "\n " << infoLog << "\n -- --------------------------------------------------- -- \n";
+                PLOGE << "	ERROR::PROGRAM_LINKING_ERROR of type: "
+                      << type.c_str() << "\n " << infoLog
+                      << "\n -- "
+                         "--------------------------------------------------- "
+                         "-- \n";
             }
         }
     }
@@ -128,7 +140,8 @@ class Shader : public v3d::Asset {
 
 class ComputeShader : public Shader {
    public:
-    ComputeShader(const std::string& shaderPath, const std::string& shaderName) : Shader() {
+    ComputeShader(const std::string& shaderPath, const std::string& shaderName)
+        : Shader() {
         filePath = shaderPath.c_str();
         assetName = shaderName.c_str();
         loadFile();

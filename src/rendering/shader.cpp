@@ -13,7 +13,9 @@
 #define _propBegin "//#Begin_prop"
 #define _propEnd "//#End_prop"
 
-Shader::Shader(const char* vertexShader, const char* fragmentShader, bool isFile) : Asset(vertexShader, vertexShader) {
+Shader::Shader(const char* vertexShader, const char* fragmentShader,
+               bool isFile)
+    : Asset(vertexShader, vertexShader) {
     // 1. retrieve the vertex/fragment source code from filePath
     std::string vertexCode;
     std::string fragmentCode;
@@ -77,13 +79,15 @@ Shader::Shader(const char* vertexShader, const char* fragmentShader, bool isFile
     glAttachShader(m_ID, fragment);
     glLinkProgram(m_ID);
     checkCompileErrors(m_ID, "PROGRAM");
-    // delete the shaders as they're linked into our program now and no longer necessary
+    // delete the shaders as they're linked into our program now and no longer
+    // necessary
     glDeleteShader(vertex);
     glDeleteShader(fragment);
 }
 
 void Shader::loadFile() {
-    // log_printf(log_level_e::LOG_INFO, "ERROR::SHADER::CONSTRUCTOR_NOT_IMPLEMENTED\n SHADER: %s", shaderPath);
+    // log_printf(log_level_e::LOG_INFO,
+    // "ERROR::SHADER::CONSTRUCTOR_NOT_IMPLEMENTED\n SHADER: %s", shaderPath);
 
     PLOGD << "Loading Shader: " << filePath.c_str() << "\n";
 
@@ -135,7 +139,8 @@ void Shader::loadFile() {
 
         if (fragOffset != std::string::npos) {
             if (fragEndOffset == std::string::npos) {
-                PLOGE << "ERROR::SHADER::FRAGMENT_SHADER: //#End_frag not found";
+                PLOGE
+                    << "ERROR::SHADER::FRAGMENT_SHADER: //#End_frag not found";
                 errorOnLoad = true;
             } else
                 fragmentCode = shaderCode.substr(fragOffset, fragLenght);
@@ -212,7 +217,8 @@ void Shader::loadFile() {
     glLinkProgram(m_ID);
     checkCompileErrors(m_ID, "PROGRAM");
 
-    // delete the shaders as they're linked into our program now and no longer necessary
+    // delete the shaders as they're linked into our program now and no longer
+    // necessary
     glDeleteShader(vertex);
     glDeleteShader(fragment);
     if (hasGeometryCode) glDeleteShader(geometry);
@@ -237,9 +243,12 @@ void Shader::getProperties(const std::string& shaderCode) {
         return;
     }
 
-    propBegin += sizeof(_propBegin);  // offseting to end of _propBegin to avoid including _propBegin in the propertiesCode
+    propBegin +=
+        sizeof(_propBegin);  // offseting to end of _propBegin to avoid
+                             // including _propBegin in the propertiesCode
 
-    std::string propertiesCode = shaderCode.substr(propBegin, propEnd - propBegin);
+    std::string propertiesCode =
+        shaderCode.substr(propBegin, propEnd - propBegin);
     std::stringstream ss(propertiesCode);
     std::string to;
 
@@ -323,11 +332,13 @@ void ComputeShader::loadFile() {
     glLinkProgram(m_ID);
     checkCompileErrors(m_ID, "PROGRAM");
 
-    // delete the shader as they're linked into our program now and no longer necessary
+    // delete the shader as they're linked into our program now and no longer
+    // necessary
     glDeleteShader(compute);
 }
 
-void ComputeShader::Dispatch(GLuint num_grups_x, GLuint num_grups_y, GLuint num_grups_z) {
+void ComputeShader::Dispatch(GLuint num_grups_x, GLuint num_grups_y,
+                             GLuint num_grups_z) {
     this->bind();
     glDispatchCompute(num_grups_x, num_grups_y, num_grups_z);
 }
