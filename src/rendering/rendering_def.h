@@ -1,5 +1,7 @@
 #pragma once
 
+#include "rendering/GizmosManager.h"
+
 class Shader;
 
 namespace v3d {
@@ -19,6 +21,12 @@ class IRenderable {
 
     // Set uniforms values before rendering
     virtual void setUniforms(Shader *shader) = 0;
+};
+
+class IGizmosRenderable{
+    public:
+    virtual ~IGizmosRenderable() = default;
+    virtual void onDrawGizmos(GizmosManager *gizmos) {};
 };
 
 }  // namespace rendering

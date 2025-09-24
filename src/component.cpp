@@ -1,9 +1,17 @@
 
 #include "component.h"
+#include "scene.h"
+#include "engine.h"
 
 #include <iostream>
 
 namespace v3d {
+
+void ComponentBase::_init()
+{
+    m_scene->getEngine()->registerGizmosTarget(this);
+}
+
 const char* CINEMA_ART_IMAGE = R"(
         ::::::--:::::::::::::::::::::-----------------------------------------------------------------------
         :::%@+#@+::::::::::::::::::::-----------------------------------------------------------------------

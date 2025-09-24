@@ -7,13 +7,14 @@ set(CMAKE_CXX_STANDARD 17)
 option(VECTOR_3D_BUILD_EXECUTABLE "Build the executable" ON)
 
 # Disable PLOG Tests
-SET(PLOG_BUILD_TESTS OFF)
+# SET(PLOG_BUILD_TESTS OFF)
 add_subdirectory(include/plog EXCLUDE_FROM_ALL)
 
 add_definitions(-DBOOST_ALL_NO_LIB)
 find_package(Boost REQUIRED)
 
 # Vulkan
+set(Vulkan_ROOT "$ENV{VULKAN_SDK}")
 find_package(Vulkan REQUIRED)
 
 find_package(OpenGL REQUIRED)
@@ -26,12 +27,15 @@ SET(GLFW_INSTALL OFF CACHE BOOL "Generate installation target")
 add_subdirectory(libraries/glfw-3.4)
 add_subdirectory(include/glm EXCLUDE_FROM_ALL)
 
+set(EiGEN3_INCLUDE_DIR "" CACHE STRING "Eigen include path")
+
+
 # Project Chrono
 find_package(Chrono
   COMPONENTS Vehicle
   CONFIG)
 
-set(Chrono_INCLUDE_DIR "" CACHE STRING "Project Chrono include path")
+# set(Chrono_INCLUDE_DIR "" CACHE STRING "Project Chrono include path")
 
 # Return now if Chrono or a required component was not found.
 if(NOT Chrono_FOUND)
@@ -41,25 +45,45 @@ endif()
 
 message(STATUS "CHRONO_STATIC = ${CHRONO_STATIC}")
 
-IF(WIN32)
-  # set stuff for windows
-  set(WINMM_LIB_PATH C:/Windows/System32/winmm.dll)
-ELSE()
-  # set stuff for other systems
-  set(WINMM_LIB_PATH)
-ENDIF()
+# IF(WIN32)
+#   # set stuff for windows
+#   set(WINMM_LIB_PATH C:/Windows/System32/winmm.dll)
+# ELSE()
+#   # set stuff for other systems
+#   set(WINMM_LIB_PATH)
+# ENDIF()
 
-SET(ENGINE_INCLUDE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src $${CMAKE_SOURCE_DIR}/include/OBJ-Loader-master/Source ${Boost_INCLUDE_DIRS} ${Chrono_INCLUDE_DIR})
-set(vector_3d_LIBS glfw ${GLFW_LIBRARIES} ${OPENGL_LIBRARIES} Vulkan::Vulkan glm::glm plog ${CHRONO_TARGETS} ${WINMM_LIB_PATH})
+SET(ENGINE_INCLUDE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src $${CMAKE_SOURCE_DIR}/include/OBJ-Loader-master/Source ${Boost_INCLUDE_DIRS} ${Chrono_INCLUDE_DIR} ${EiGEN3_INCLUDE_DIR} ${CHRONO_INCLUDE_DIRS})
+set(vector_3d_LIBS glfw ${GLFW_LIBRARIES} ${OPENGL_LIBRARIES} Vulkan::Vulkan glm::glm plog ${CHRONO_TARGETS} ${WINMM_LIB_PATH} ${CHRONO_LIBRARIES})
+
+message(STATUS "ENGINE_INCLUDE = ${ENGINE_INCLUDE}")
 
 add_subdirectory(src)
 
 # Add the vector_3d executable to the project if specified
 if(VECTOR_3D_BUILD_EXECUTABLE)
   message(STATUS "-- Adding Core Engine Executable")
-  add_executable(vector_3d_exe "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
-  target_include_directories(vector_3d_exe PUBLIC
+  add_executable(vector_3d_exe WIN32 "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
+  target_include_directories(vector_3d_exe PRIVATE
     ${ENGINE_INCLUDE}
   )
-  target_link_libraries(vector_3d_exe PUBLIC vector_3d)
+  target_link_libraries(vector_3d_exe PRIVATE vector_3d)
+  if(MSVC)
+    set_target_properties(vector_3d_exe PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE")
+  endif()
+
+  # Copy resources
+  add_custom_command(TARGET vector_3d_exe POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+      ${CMAKE_SOURCE_DIR}/resources
+      $<TARGET_FILE_DIR:vector_3d_exe>/resources
+  )
+
+  # Copy external DLLs
+  add_custom_command(TARGET vector_3d_exe POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+      ${CMAKE_SOURCE_DIR}/external_dll
+      $<TARGET_FILE_DIR:vector_3d_exe>
+  )
+
 endif()

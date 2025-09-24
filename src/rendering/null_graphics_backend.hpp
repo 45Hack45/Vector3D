@@ -13,10 +13,6 @@ class NullGraphicsBackend : public GraphicsBackend {
 
     void init() { m_initialized = true; };
 
-    void frame_update() {
-        return;
-    };
-
     void cleanup() { m_initialized = false; };
 
     Mesh* createMesh(std::string filePath) override {
@@ -26,6 +22,8 @@ class NullGraphicsBackend : public GraphicsBackend {
 
    protected:
     void initPrimitives() override {};
+    void frame_update() override {};
+    void present_frame() override {};
 
    private:
 };

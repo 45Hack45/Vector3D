@@ -78,6 +78,14 @@ class KeyedStableCollection {
         return &storage.entries[h.index];
     }
 
+    template <typename Derived>
+    Derived* getFirstOfType() {
+        static_assert(std::is_base_of<Base, Derived>::value);
+        auto& derivedStorage = getStorage<Derived>();
+
+        return &derivedStorage.entries.front();
+    }
+
     // Erase the object associated with the given key, if it exists.
     bool erase(const Key& key) {
         auto it = m_keyToHandle.find(key);

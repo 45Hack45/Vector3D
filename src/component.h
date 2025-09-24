@@ -4,7 +4,8 @@
 #include <string>
 #include <typeinfo>
 
-#include "utils/definitions.hpp"
+#include "DefinitionCore.hpp"
+#include "rendering/rendering_def.h"
 #include "utils/keyed_stable_collection.hpp"
 
 namespace v3d {
@@ -14,7 +15,7 @@ class ComponentBase;
 
 using ComponentMap = utils::KeyedStableCollection<componentID_t, ComponentBase>;
 
-class ComponentBase {
+class ComponentBase : public rendering::IGizmosRenderable {
     friend class Entity;
     friend class Scene;
 
@@ -47,6 +48,9 @@ class ComponentBase {
     void setEntity(entityID_t entity) {
         m_entity = entity;
     }
+
+    // Initialize base component, call once after component creation
+    void _init();
 };
 
 class DataComponent : public ComponentBase {

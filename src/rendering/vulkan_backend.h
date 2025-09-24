@@ -37,14 +37,14 @@ class VulkanBackend : public GraphicsBackend {
         m_initialized = true;
     }
 
-    void frame_update();
-
     void cleanup() { cleanup_vulkan(); }
 
     Mesh* createMesh(std::string filePath) override;
 
    protected:
     void initPrimitives() override {};
+    void frame_update() override;
+    void present_frame() override {};
 
    private:
     vk::Instance m_instance;

@@ -113,7 +113,7 @@ void v3d::rendering::OpenGlBackend::init() {
     glfwSetScrollCallback(m_window->getWindow(), scroll_callback);
     glfwSetMouseButtonCallback(m_window->getWindow(), mouse_button_callback);
 
-    shader = new Shader("rcs/shaders/SimpleShader.glsl");
+    shader = new Shader("resources/shaders/SimpleShader.glsl");
 
     glEnable(GL_DEPTH_TEST);
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -155,8 +155,55 @@ void v3d::rendering::OpenGlBackend::frame_update() {
         renderTarget->setUniforms(shader);
         renderTarget->renderElement();
     }
+}
 
+void v3d::rendering::OpenGlBackend::present_frame(){
     glfwSwapBuffers(m_window->getWindow());
+}
+void v3d::rendering::OpenGlBackend::pre_draw_gizmos_hook(){
+    glDisable(GL_DEPTH_TEST);
+}
+void v3d::rendering::OpenGlBackend::post_draw_gizmos_hook(){
+    glEnable(GL_DEPTH_TEST);
+}
+
+void v3d::rendering::OpenGlBackend::draw_primitive_cube(glm::vec3 position, float size, glm::vec4 color){
+
+    view = cam.GetViewMatrix();
+    projection = glm::perspective(glm::radians(cam.Zoom), 1.f * m_window->getWidth() / m_window->getHeight(), 0.1f, 100.0f);
+
+    shader->bind();
+    shader->setMat4("view", view);
+    shader->setMat4("projection", projection);
+    shader->setVector("dye_color", color);
+
+    glm::mat4 pmodel = glm::translate(glm::mat4(1.0f), position);
+    glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(pmodel)));
+    pmodel = glm::scale(pmodel, size * glm::vec3(1, 1, 1));
+
+    shader->setMat4("model", pmodel);
+    shader->setMat3("normalMatrix", normalMatrix);
+
+    m_primitives.m_cube->draw();
+}
+
+void v3d::rendering::OpenGlBackend::draw_primitive_sphere(glm::vec3 position, float size, glm::vec4 color){
+    view = cam.GetViewMatrix();
+    projection = glm::perspective(glm::radians(cam.Zoom), 1.f * m_window->getWidth() / m_window->getHeight(), 0.1f, 100.0f);
+
+    shader->bind();
+    shader->setMat4("view", view);
+    shader->setMat4("projection", projection);
+    shader->setVector("dye_color", color);
+
+    glm::mat4 pmodel = glm::translate(glm::mat4(1.0f), position);
+    glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(pmodel)));
+    pmodel = glm::scale(pmodel, size * glm::vec3(1, 1, 1));
+
+    shader->setMat4("model", pmodel);
+    shader->setMat3("normalMatrix", normalMatrix);
+
+    m_primitives.m_sphere->draw();
 }
 
 void v3d::rendering::OpenGlBackend::cleanup() {}
@@ -183,7 +230,7 @@ v3d::Mesh* v3d::rendering::OpenGlBackend::createMesh(std::string filePath) {
 
 void v3d::rendering::OpenGlBackend::initPrimitives(){
     PLOGD << "Loading primitives\n";
-    m_primitives.m_cube = createMesh("rcs/primitives/3D/cube.obj");
-    m_primitives.m_sphere = createMesh("rcs/primitives/3D/sphere.obj");
+    m_primitives.m_cube = createMesh("resources/primitives/3D/cube.obj");
+    m_primitives.m_sphere = createMesh("resources/primitives/3D/sphere.obj");
     PLOGD << "\n";
 }

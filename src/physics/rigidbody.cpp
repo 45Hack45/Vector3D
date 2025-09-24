@@ -19,7 +19,7 @@ void RigidBody::init() {
     m_body->SetPos(chrono::ChVector3d(0, .1, 0));
     m_body->SetPosDt(chrono::ChVector3d(0, 0, 0));
     // Init acceleration to earth gravity
-    m_body->SetPosDt2(chrono::ChVector3d(0, 0.91, 0));
+    // m_body->SetPosDt2(chrono::ChVector3d(0, 0.91, 0));
 
     m_scene->getPhysics()->addBody(*this);
 };
@@ -32,6 +32,13 @@ void RigidBody::addCollider(ColliderBase &collider) {
     auto shape = collider.getRawShape();
     m_body->AddCollisionShape(shape);
     m_body->EnableCollision(true);
+}
+
+void RigidBody::hardResetBody(chrono::ChBody *newBody) {
+    // Remove the current body from the system
+    // it will be deleted if it doesn't have external references
+    m_scene->getPhysics()->removeBody(*this);
+    m_body.reset(newBody);
 }
 
 }  // namespace v3d

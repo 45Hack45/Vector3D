@@ -14,7 +14,7 @@
 #include "component.h"
 #include "entity.h"
 #include "object_ptr.hpp"
-#include "utils/definitions.hpp"
+#include "DefinitionCore.hpp"
 #include "utils/utils.hpp"
 
 namespace v3d {
@@ -80,15 +80,19 @@ class Scene {
         component->m_entity = entity.index();
         entity->m_components.push_back(uuid);
 
+        // Initialize component base
+        component->_init();
+
+        // Initialize component specialization
         component->init();
         component->start();
 
         return uuid;
     }
 
-    template <typename T>
-    T* createEntityComponentOfType(entity_ptr entity) {
-        auto component_id = instantiateEntityComponent<T>(entity);
+    template <typename T, typename... Args>
+    T* createEntityComponentOfType(entity_ptr entity, Args&&... args) {
+        auto component_id = instantiateEntityComponent<T>(entity, std::forward<Args>(args)...);
         return getComponent<T>(component_id);
     }
 
@@ -121,10 +125,17 @@ class Scene {
         return component;
     }
 
+    // Get first component of an entity of type T if found
     template <typename T>
     T* getComponentOfType(entityID_t entityID) {
         entity_ptr entity = getEntity(entityID);
         return getComponentOfType<T>(entity);
+    }
+
+    // Get any component of type T if found
+    template <typename T>
+    T* getComponentOfType() {
+        return m_components.getFirstOfType<T>();
     }
 
     template <typename T>

@@ -11,10 +11,12 @@ namespace v3d {
 class Transform;
 class Physics;
 class ColliderBase;
+class Vehicle;
 
 class RigidBody : public ComponentBase {
     friend class Transform;
     friend class Physics;
+    friend class Vehicle;
 
    public:
     RigidBody() = default;
@@ -55,6 +57,8 @@ class RigidBody : public ComponentBase {
 
    private:
     std::shared_ptr<chrono::ChBody> m_body;
+
+    void hardResetBody(chrono::ChBody *newBody);
 };
 
 }  // namespace v3d

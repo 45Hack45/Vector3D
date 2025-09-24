@@ -1,7 +1,7 @@
 #pragma once
 
 #include <glad/glad.h>
-#include <plog/Log.h>
+#include "plog/Log.h"
 
 #include <chrono>
 #include <cstdlib>
@@ -32,8 +32,12 @@ class Engine {
         cleanup();
     }
 
-    void registerRenderTarget(rendering::IRenderable *renderTarget) {
+    inline void registerRenderTarget(rendering::IRenderable *renderTarget) {
         m_graphicsBackend->registerRenderTarget(renderTarget);
+    }
+
+    inline void registerGizmosTarget(rendering::IGizmosRenderable *gizmosTarget){
+        m_graphicsBackend->registerGizmosTarget(gizmosTarget);
     }
 
    private:
@@ -51,11 +55,13 @@ class Engine {
     void mainLoop();
     void cleanup();
 
+    void processInput(GLFWwindow* window);
+
     GLFWwindow *window;
 
     Physics m_phSystem;
     std::shared_ptr<Scene> m_scene;
     std::chrono::steady_clock::time_point m_engineStartTime;
-    std::chrono::duration<double> m_last_frame_dt;
+    std::chrono::duration<double> m_last_frame_dt = std::chrono::duration<double>(1/60);
 };
 }  // namespace v3d

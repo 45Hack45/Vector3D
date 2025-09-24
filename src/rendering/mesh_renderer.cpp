@@ -8,6 +8,8 @@
 #include "transform.h"
 #include "utils/exception.hpp"
 
+#include <glm/gtc/quaternion.hpp>
+
 namespace v3d {
 MeshRenderer::MeshRenderer() {
 }
@@ -44,11 +46,23 @@ void MeshRenderer::setUniforms(Shader *shader) {
     glm::mat4 model = glm::mat4(1.0f);
     glm::vec3 pos = m_transform->getPos();
     glm::vec3 scale = m_transform->getScale();
-    glm::vec3 axis = m_transform->getRotAxis();
-    float angle = m_transform->getRotAngle();
+    // glm::vec3 axis = m_transform->getRotAxis();
+    // float angle = m_transform->getRotAngle();
+    // std::cout << "Rotation Axis: (" << axis.x << ", " << axis.y << ", " << axis.z << ") Angle: " << angle << std::endl;
 
-    model = glm::rotate(model, glm::radians(angle), axis);
+    glm::vec3 rotAngles = m_transform->getRotationCardanAngles();
+
+    glm::mat4 RotationMatrix = glm::mat4_cast(m_transform->getRotation());
+
+    glm::quat q = glm::quat(rotAngles); // pitch=x, yaw=y, roll=z
+
     model = glm::translate(model, pos);
+
+    // model = glm::rotate(model, glm::radians(angle), axis);
+    model = model * glm::mat4_cast(q);
+    // model = glm::mat4(1.0f);
+    // model = RotationMatrix;
+
     model = glm::scale(model, scale);
 
     glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(model)));

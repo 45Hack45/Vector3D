@@ -8,6 +8,7 @@ VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE
 
 #include "utils/exception.hpp"
 #include "utils/utils.hpp"
+#include "vulkan_backend.h"
 
 const std::vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation"};
@@ -219,7 +220,7 @@ vk::Instance VulkanBackend::createInstance(const std::optional<vk::DebugUtilsMes
     PLOGD << "Creating Vulkan instance" << std::endl;
 
     // Initialize vulkan dynamic loader
-    static vk::DynamicLoader dl;
+    static vk::detail::DynamicLoader dl;
     PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr = dl.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
     VULKAN_HPP_DEFAULT_DISPATCHER.init(vkGetInstanceProcAddr);
 

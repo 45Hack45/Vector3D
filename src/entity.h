@@ -8,7 +8,7 @@
 
 #include "object_ptr.hpp"
 #include "scene.h"
-#include "utils/definitions.hpp"
+#include "DefinitionCore.hpp"
 // #include "utils/vector_ptr.hpp"
 
 namespace v3d {

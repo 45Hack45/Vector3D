@@ -4,17 +4,31 @@
 
 #include <atomic>
 #include <boost/stacktrace.hpp>
+#include <cassert>
 #include <csignal>
 #include <ostream>
 #include <sstream>
 #include <string>
 
+#include "physics/Vehicle.h"
 #include "physics/collider.h"
 #include "physics/rigidbody.h"
 #include "plog/Severity.h"
 #include "rendering/mesh_renderer.h"
 #include "rendering/null_graphics_backend.hpp"
 #include "transform.h"
+
+// ------------------------------- TEMP ----------------------------------
+#include "chrono_vehicle/ChConfigVehicle.h"
+#include "chrono_vehicle/ChVehicleModelData.h"
+#include "chrono_vehicle/terrain/FlatTerrain.h"
+#include "chrono_vehicle/terrain/RigidTerrain.h"
+#include "chrono_vehicle/utils/ChUtilsJSON.h"
+// #include "chrono/utils/ChUtils.h"
+
+#include "chrono_vehicle/wheeled_vehicle/vehicle/WheeledTrailer.h"
+#include "chrono_vehicle/wheeled_vehicle/vehicle/WheeledVehicle.h"
+// ----------------------------------------------------------------------
 
 std::atomic<bool> recieved_forced_close_signal{false};
 
@@ -35,6 +49,7 @@ void signalHandler(int signal) {
             break;
         case SIGABRT:
             signal_str = "SIGABRT";
+            std::_Exit(EXIT_FAILURE);  // exit immediately
             break;
         case SIGILL:
             signal_str = "SIGILL";
@@ -55,10 +70,12 @@ void initSignalHandler() {
     std::signal(SIGINT, signalHandler);
     std::signal(SIGTERM, signalHandler);
     std::signal(SIGSEGV, signalHandler);
-    std::signal(SIGABRT, signalHandler);
+    // std::signal(SIGABRT, signalHandler);
     std::signal(SIGILL, signalHandler);
     std::signal(SIGFPE, signalHandler);
 }
+
+chrono::vehicle::WheeledVehicle* m_vehicle;
 
 namespace v3d {
 void Engine::init() {
@@ -110,35 +127,64 @@ void Engine::init() {
     // auto entity4 = m_scene->instantiateEntity("Test object 2");
     // auto entity_car = m_scene->instantiateEntity("Brum brum");
 
-    Mesh* mesh = m_graphicsBackend->createMesh("EngineProject/stanford-bunny.obj");
+    // Mesh* mesh = m_graphicsBackend->createMesh("resources/primitives/3D/bunny.obj");
+    // Mesh* carMesh = m_graphicsBackend->createMesh("resources/test_models/beetle-alt.obj");
+    Mesh* carMesh = m_graphicsBackend->createMesh("resources/vehicle_model/sedan/sedan_chassis_col.obj");
 
     auto ground = m_scene->instantiateEntity("Ground");
     auto groundRigidBody = m_scene->getComponentOfType<RigidBody>(ground);
     auto groundTransform = m_scene->getComponentOfType<Transform>(ground);
     auto groundCollider = m_scene->createEntityComponentOfType<ColliderBox>(ground);
-    groundRigidBody->setFixed(true);
+    groundRigidBody->setFixed(false);
     groundRigidBody->setPos(0, -1, 0);
     groundCollider->setSize(1, .1, 1);
     groundTransform->setScale(1, .1, 1);
     auto groundRenderer = m_scene->createEntityComponentOfType<MeshRenderer>(ground);
     groundRenderer->setMesh(m_graphicsBackend->m_primitives.m_cube);
 
-    auto bunny = m_scene->instantiateEntity("Bunny");
-    auto bunnyCollider = m_scene->createEntityComponentOfType<ColliderBox>(bunny);
-    auto bunnyTransform = m_scene->getComponentOfType<Transform>(bunny);
-    auto bunnyRigidBody = m_scene->getComponentOfType<RigidBody>(bunny);
-    bunnyRigidBody->setVelocity(chrono::ChVector3d(0, 0, 0));
-    bunnyRigidBody->setPos(0, 2, 0);
-    bunnyCollider->setSize(1, 1, 1);
-    bunnyTransform->setScale(10, 10, 10);
-    auto bunnyRenderer = m_scene->createEntityComponentOfType<MeshRenderer>(bunny);
-    bunnyRenderer->setMesh(mesh);
+    // auto bunny = m_scene->instantiateEntity("Bunny");
+    // auto bunnyCollider = m_scene->createEntityComponentOfType<ColliderBox>(bunny);
+    // auto bunnyTransform = m_scene->getComponentOfType<Transform>(bunny);
+    // auto bunnyRigidBody = m_scene->getComponentOfType<RigidBody>(bunny);
+    // // bunnyRigidBody->setFixed(true);
+    // bunnyRigidBody->setVelocity(chrono::ChVector3d(0, 0, 0));
+    // bunnyRigidBody->setPos(0, 1, 0);
+    // bunnyCollider->setSize(1, 1, 1);
+    // bunnyTransform->setScale(10, 10, 10);
+    // auto bunnyRenderer = m_scene->createEntityComponentOfType<MeshRenderer>(bunny);
+    // bunnyRenderer->setMesh(mesh);
+
+    // // ------------------------------- TEMP ----------------------------------
+    // // Initial vehicle position and orientation (adjust for selected terrain)
+    // chrono::ChVector3d initLoc(0, 0, 0.5);
+    // chrono::ChQuaterniond initRot(1, 0, 0, 0);
+
+    // // "resources/vehicle_model/sedan/vehicle/Sedan_Vehicle.json"
+
+    // m_vehicle = new chrono::vehicle::WheeledVehicle(&m_phSystem.m_system, "resources/vehicle_model/sedan/vehicle/Sedan_Vehicle.json", true, true);
+    // m_vehicle->Initialize(chrono::ChCoordsys<>(initLoc, initRot));
+    // // m_vehicle->GetChassis()->SetFixed(false);
+    // // ------------------------------- TEMP ----------------------------------
+
+    int num_vehicles = 1;
+    float separation = 1;
+
+    for (int i = 0; i < num_vehicles; i++) {
+        auto vehicle = m_scene->instantiateEntity("WheeledVehicle");
+        auto vehicleComponent = m_scene->createEntityComponentOfType<Vehicle>(vehicle);
+        vehicleComponent->setFilePath(std::string("resources/vehicle_model/sedan/vehicle/Sedan_Vehicle.json"));
+        auto vehicleRenderer = m_scene->createEntityComponentOfType<MeshRenderer>(vehicle);
+        vehicleRenderer->setMesh(carMesh);
+
+        float angle = (float(i) / float(num_vehicles)) * 360.0f;
+        chrono::ChVector3d position = chrono::ChVector3d(sin(angle), .5, cos(angle)) * separation;
+        vehicleComponent->setInitialPosition(position);
+    }
 
     m_scene->print_entities();
 }
 
 void Engine::start() {
-    int delta = 0;
     m_scene->m_components.for_each([](ComponentBase& component) { component.start(); });
 }
 
@@ -156,6 +202,8 @@ void Engine::cleanup() {
 void Engine::mainLoop() {
     bool running = !recieved_forced_close_signal;
 
+    std::cout << "Initial Frame count " << m_last_frame_dt.count() << "\n";
+
     // Main game loop
     while (running) {
         running = !recieved_forced_close_signal && !m_window->shouldClose();
@@ -165,15 +213,32 @@ void Engine::mainLoop() {
         // Poll for window events
         m_window->pollEvents();
 
+        assert(m_last_frame_dt.count() >= 0 && std::isfinite(m_last_frame_dt.count()));
+
+        processInput(window);
+
         // Update logic
         m_scene->update(m_last_frame_dt.count());
 
         // Update Physics
-        m_phSystem.m_system.DoStepDynamics(m_last_frame_dt.count());
+        m_phSystem.stepSimulation();
+        m_phSystem.stepSimulation();
+        m_phSystem.stepSimulation();
+        m_phSystem.stepSimulation();
+
+        m_phSystem.stepSimulation();
+        m_phSystem.stepSimulation();
+        m_phSystem.stepSimulation();
+        m_phSystem.stepSimulation();
+        // std::cout << "Vehicle pos " << m_vehicle->GetChassis()->GetPos() << "\n";
+        // running = false;
 
         // Render frame
         // TODO: Pass time and dt, to be able to pass them to a shader
-        m_graphicsBackend->frame_update();
+        m_graphicsBackend->update();
+
+        // Enforce physics soft-realtime
+        // m_phSystem.spin(1 / 60);  // Target 60 fps
 
         // Update deltatime
         const auto frame_end = std::chrono::steady_clock::now();
@@ -182,4 +247,19 @@ void Engine::mainLoop() {
         // std::cout << "Last frame dt (ms): " << std::chrono::duration_cast<std::chrono::milliseconds>(diff).count() << "\n";
     }
 }
+
+void Engine::processInput(GLFWwindow* window) {
+
+    auto vehicle = m_scene->getComponentOfType<Vehicle>();
+
+    if (vehicle != nullptr){
+        vehicle->setThrottle(glfwGetKey(m_window->getWindow(), GLFW_KEY_I) == GLFW_PRESS? 1.0: 0.0);
+        vehicle->setBraking(glfwGetKey(m_window->getWindow(), GLFW_KEY_K) == GLFW_PRESS? 1.0: 0.0);
+        float steering = glfwGetKey(m_window->getWindow(), GLFW_KEY_J) == GLFW_PRESS? 1.0: 0.0;
+        steering -= glfwGetKey(m_window->getWindow(), GLFW_KEY_L) == GLFW_PRESS? 1.0: 0.0;
+        vehicle->setSteering(steering);
+
+    }
+}
+
 }  // namespace v3d

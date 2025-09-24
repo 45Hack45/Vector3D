@@ -26,13 +26,16 @@ glm::vec3 Transform::getScale() {
     return m_scale;
 }
 
-glm::vec3 Transform::getRotAxis() {
-    auto axis = m_rigidBody->m_body->GetRotAxis();
-    return glm::vec3(axis.x(), axis.y(), axis.z());
+glm::quat Transform::getRotation(){
+    auto quat = m_rigidBody->m_body->GetRot();
+    double t = quat.e0() + quat.e1() + quat.e2() + quat.e3();
+    return glm::quat(quat.e0(), quat.e1(), quat.e2(), quat.e3());
 }
 
-float Transform::getRotAngle() {
-    return m_rigidBody->m_body->GetRotAngle();
+glm::vec3 Transform::getRotationCardanAngles(){
+    auto quat = m_rigidBody->m_body->GetRot();
+    auto t = quat.GetCardanAnglesXYZ();
+    return glm::vec3(t.x(), t.y(), t.z());
 }
 
 void Transform::setParent(Transform* parent) {

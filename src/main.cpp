@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
         } else if (strcmp(argv[i], "--log-level") == 0) {
             if (i + 1 < argc) {
                 if (strcmp(argv[i + 1], "none") == 0) {
-                    severity = plog::none;
+                    severity = plog::none;  
                     i++;
                 } else if (strcmp(argv[i + 1], "fatal") == 0) {
                     severity = plog::fatal;
@@ -93,15 +93,17 @@ int main(int argc, char* argv[]) {
 
     PLOGN << LOG_START_MESSAGE;
 
-    // Create the 3D engine instance
-    v3d::Engine app(WIDTH, HEIGHT, graphicsBackend);
-    // v3d::Engine app(WIDTH, HEIGHT);
-
-    // v3d::Engine app = v3d::Engine();
-
     try {
+        {
+        // Create the 3D engine instance
+        v3d::Engine app(WIDTH, HEIGHT, graphicsBackend);
+        // v3d::Engine app(WIDTH, HEIGHT);
+
+        // v3d::Engine app = v3d::Engine();
+
         // Initialize and run the 3D engine
         app.run();
+        }
     } catch (const std::exception& e) {
         // std::cerr << e.what() << std::endl;
         PLOGE << "Exception: " << e.what();

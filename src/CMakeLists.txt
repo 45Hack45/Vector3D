@@ -14,6 +14,7 @@ set(vector_3d_core_SOURCES
 )
 
 set(vector_3d_core_HEADERS
+    ${CMAKE_SOURCE_DIR}/src/DefinitionCore.hpp
     ${CMAKE_SOURCE_DIR}/src/asset.h
     ${CMAKE_SOURCE_DIR}/src/camera.hpp
     ${CMAKE_SOURCE_DIR}/src/component.h
@@ -33,16 +34,22 @@ set(vector_3d_core_FILES
 message(STATUS "-- PHYSICS")
 
 set(vector_3d_physics_SOURCES
+    ${CMAKE_SOURCE_DIR}/src/physics/Vehicle.cpp
+    # ${CMAKE_SOURCE_DIR}/src/physics/VehicleInteractiveController.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/collider.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/physics.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/rigidbody.cpp
 )
 
 set(vector_3d_physics_HEADERS
+    ${CMAKE_SOURCE_DIR}/src/physics/DefinitionPhysics.hpp
+    ${CMAKE_SOURCE_DIR}/src/physics/Vehicle.h
+    # ${CMAKE_SOURCE_DIR}/src/physics/VehicleInteractiveController.h
     ${CMAKE_SOURCE_DIR}/src/physics/collider.h
     ${CMAKE_SOURCE_DIR}/src/physics/physics.h
     ${CMAKE_SOURCE_DIR}/src/physics/rigidbody.h
     ${CMAKE_SOURCE_DIR}/src/physics/test_chorno.hpp
+    ${CMAKE_SOURCE_DIR}/src/physics/utils.hpp
 )
 
 set(vector_3d_physics_FILES
@@ -53,6 +60,8 @@ set(vector_3d_physics_FILES
 message(STATUS "-- RENDERING")
 
 set(vector_3d_rendering_SOURCES
+    ${CMAKE_SOURCE_DIR}/src/rendering/GizmosManager.cpp
+    ${CMAKE_SOURCE_DIR}/src/rendering/graphics_backend.cpp
     ${CMAKE_SOURCE_DIR}/src/rendering/mesh.cpp
     ${CMAKE_SOURCE_DIR}/src/rendering/mesh_renderer.cpp
     ${CMAKE_SOURCE_DIR}/src/rendering/opengl_backend.cpp
@@ -61,6 +70,7 @@ set(vector_3d_rendering_SOURCES
 )
 
 set(vector_3d_rendering_HEADERS
+    ${CMAKE_SOURCE_DIR}/src/rendering/GizmosManager.h
     ${CMAKE_SOURCE_DIR}/src/rendering/graphics_backend.h
     ${CMAKE_SOURCE_DIR}/src/rendering/mesh.h
     ${CMAKE_SOURCE_DIR}/src/rendering/mesh_renderer.h
@@ -84,7 +94,6 @@ set(vector_3d_utils_SOURCES
 )
 
 set(vector_3d_utils_HEADERS
-    ${CMAKE_SOURCE_DIR}/src/utils/definitions.hpp
     ${CMAKE_SOURCE_DIR}/src/utils/exception.hpp
     ${CMAKE_SOURCE_DIR}/src/utils/keyed_stable_collection.hpp
     ${CMAKE_SOURCE_DIR}/src/utils/utils.hpp
@@ -109,13 +118,14 @@ set(vector_3d_FILES
 # Add the vector_3d library to the project
 message(STATUS "-- Adding Core Engine Library")
 
-add_library(vector_3d ${vector_3d_FILES})
+add_library(vector_3d STATIC ${vector_3d_FILES})
 target_include_directories(vector_3d PUBLIC
     ${ENGINE_INCLUDE}
 )
+# C:/Boost/include/boost-1_87
 
 # Set properties for the executable target
-target_compile_definitions(vector_3d PUBLIC "CHRONO_DATA_DIR=\"${CHRONO_DATA_DIR}\"")
+target_compile_definitions(vector_3d PUBLIC "CHRONO_DATA_DIR=\"${CMAKE_SOURCE_DIR}/resources\"")
 
 if(MSVC)
     set_target_properties(vector_3d PROPERTIES MSVC_RUNTIME_LIBRARY "${CHRONO_MSVC_RUNTIME_LIBRARY}")

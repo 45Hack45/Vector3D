@@ -2,6 +2,7 @@
 
 #include "component.h"
 #include "glm/glm.hpp"
+#include "glm/gtc/quaternion.hpp"
 
 namespace v3d {
 class RigidBody;
@@ -19,8 +20,8 @@ class Transform : public ComponentBase {
 
     glm::vec3 getPos();
     glm::vec3 getScale();
-    glm::vec3 getRotAxis();
-    float getRotAngle();
+    glm::quat getRotation();
+    glm::vec3 getRotationCardanAngles();
 
     void setScale(const glm::vec3 &scale){ m_scale = scale;}
     void setScale(float x, float y, float z){ m_scale = glm::vec3(x, y, z);}

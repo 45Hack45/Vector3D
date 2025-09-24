@@ -14,7 +14,7 @@ class Scene;
 template <typename Container, typename T, typename key = boost::uuids::uuid>
 class object_ptr {
    public:
-    object_ptr() : m_vec(nullptr), m_index(boost::uuids::nil_uuid()) {}
+    object_ptr() : m_vec(nullptr) {}
     object_ptr(Container& vec, key index)
         : m_vec(&vec), m_index(index) {
         // assert(index < static_cast<key>(m_vec->size()) && "object_ptr: index out of bounds at construction");
@@ -112,6 +112,12 @@ class object_ptr {
     void reset() noexcept {
         m_vec = nullptr;
         m_index = boost::uuids::nil_uuid();
+    }
+
+    void set(Container* vec, key index) noexcept {
+        assert(vec != nullptr && "object_ptr: invalid container");
+        m_vec = vec;
+        m_index = index;
     }
 
     // void update_index(key new_index) noexcept {
