@@ -10,6 +10,7 @@
 #include <sstream>
 #include <string>
 
+#include "input/KeyboardDevice.hpp"
 #include "physics/Vehicle.h"
 #include "physics/collider.h"
 #include "physics/rigidbody.h"
@@ -120,6 +121,9 @@ void Engine::init() {
     }
 
     m_graphicsBackend->init();
+
+    // Instantiate default keyboard device and mappings
+    initDefaultInput();
 
     m_initialized = true;
 
@@ -270,22 +274,36 @@ void Engine::mainLoop() {
     }
 }
 
+void Engine::initDefaultInput() {
+    input::InputProfile keyboardProfile;
+    keyboardProfile.bind(input::action::IAct_Accelerate, input::key::IK_I);
+    keyboardProfile.bind(input::action::IAct_Back, input::key::IK_K);
+    keyboardProfile.bind(input::action::IAct_Break, input::key::IK_SPACE);
+    keyboardProfile.bind(input::action::IAct_SteerLeft, input::key::IK_J);
+    keyboardProfile.bind(input::action::IAct_SteerRight, input::key::IK_L);
+
+    m_inputManager.addDevice(
+        std::make_unique<input::KeyboardDevice>(m_window, keyboardProfile));
+}
+
 void Engine::processInput(GLFWwindow* window) {
     auto vehicle = m_scene->getComponentOfType<Vehicle>();
 
     if (vehicle != nullptr) {
-        vehicle->setThrottle(
-            glfwGetKey(m_window->getWindow(), GLFW_KEY_I) == GLFW_PRESS ? 1.0
-                                                                        : 0.0);
-        vehicle->setBraking(
-            glfwGetKey(m_window->getWindow(), GLFW_KEY_K) == GLFW_PRESS ? 1.0
-                                                                        : 0.0);
-        float steering =
-            glfwGetKey(m_window->getWindow(), GLFW_KEY_J) == GLFW_PRESS ? 1.0
-                                                                        : 0.0;
-        steering -= glfwGetKey(m_window->getWindow(), GLFW_KEY_L) == GLFW_PRESS
-                        ? 1.0
-                        : 0.0;
+        float accelerate =
+            m_inputManager.getAction(input::action::IAct_Accelerate);
+        float back = m_inputManager.getAction(input::action::IAct_Back);
+        float brake = m_inputManager.getAction(input::action::IAct_Break);
+        float steerLeft =
+            m_inputManager.getAction(input::action::IAct_SteerLeft);
+        float steerRight =
+            m_inputManager.getAction(input::action::IAct_SteerRight);
+
+        float throtle = accelerate - back;
+        float steering = steerLeft - steerRight;
+
+        vehicle->setThrottle(throtle);
+        vehicle->setBraking(brake);
         vehicle->setSteering(steering);
     }
 }

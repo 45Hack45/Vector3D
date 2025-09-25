@@ -31,11 +31,29 @@ set(vector_3d_core_FILES
     ${vector_3d_core_HEADERS}
 )
 
+message(STATUS "-- INPUT")
+
+set(vector_3d_input_SOURCES
+)
+
+set(vector_3d_input_HEADERS
+    ${CMAKE_SOURCE_DIR}/src/input/InputDevice.hpp
+    ${CMAKE_SOURCE_DIR}/src/input/InputKeyCodes.hpp
+    ${CMAKE_SOURCE_DIR}/src/input/InputKeys.hpp
+    ${CMAKE_SOURCE_DIR}/src/input/InputManager.h
+    ${CMAKE_SOURCE_DIR}/src/input/KeyboardDevice.hpp
+)
+
+set(vector_3d_input_FILES
+    ${vector_3d_input_SOURCES}
+    ${vector_3d_input_HEADERS}
+)
+
 message(STATUS "-- PHYSICS")
 
 set(vector_3d_physics_SOURCES
     ${CMAKE_SOURCE_DIR}/src/physics/Vehicle.cpp
-    # ${CMAKE_SOURCE_DIR}/src/physics/VehicleInteractiveController.cpp
+    ${CMAKE_SOURCE_DIR}/src/physics/VehicleInteractiveController.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/collider.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/physics.cpp
     ${CMAKE_SOURCE_DIR}/src/physics/rigidbody.cpp
@@ -44,7 +62,7 @@ set(vector_3d_physics_SOURCES
 set(vector_3d_physics_HEADERS
     ${CMAKE_SOURCE_DIR}/src/physics/DefinitionPhysics.hpp
     ${CMAKE_SOURCE_DIR}/src/physics/Vehicle.h
-    # ${CMAKE_SOURCE_DIR}/src/physics/VehicleInteractiveController.h
+    ${CMAKE_SOURCE_DIR}/src/physics/VehicleInteractiveController.h
     ${CMAKE_SOURCE_DIR}/src/physics/collider.h
     ${CMAKE_SOURCE_DIR}/src/physics/physics.h
     ${CMAKE_SOURCE_DIR}/src/physics/rigidbody.h
@@ -108,6 +126,7 @@ message(STATUS "-- --")
 
 set(vector_3d_FILES
     ${vector_3d_core_FILES}
+    ${vector_3d_input_FILES}
     ${vector_3d_physics_FILES}
     ${vector_3d_rendering_FILES}
     ${vector_3d_utils_FILES}

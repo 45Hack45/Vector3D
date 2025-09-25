@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "rendering/GizmosManager.h"
 
 class Shader;

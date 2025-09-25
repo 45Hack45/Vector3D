@@ -1,5 +1,8 @@
+#pragma once
+
 #include <cstdint>
 #include <limits>
+#include <sstream>
 #include <stdexcept>
 #include <utility>
 #include <vector>
@@ -84,6 +87,16 @@ void forEachInTuple(Tuple &&, Func &&func) {
     using T = std::decay_t<Tuple>;
     forEachInTupleImpl<T>(std::forward<Func>(func),
                           std::make_index_sequence<std::tuple_size_v<T>>{});
+}
+
+// Hash function
+constexpr uint64_t fnv1a_64(std::string_view str) {
+    uint64_t hash = 1469598103934665603ull;  // FNV offset basis
+    for (char c : str) {
+        hash ^= static_cast<uint64_t>(c);
+        hash *= 1099511628211ull;  // FNV prime
+    }
+    return hash;
 }
 
 }  // namespace utils

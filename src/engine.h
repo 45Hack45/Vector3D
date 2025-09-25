@@ -7,6 +7,9 @@
 #include <iostream>
 #include <stdexcept>
 
+#include "input/InputDevice.hpp"
+#include "input/InputKeys.hpp"
+#include "input/InputManager.h"
 #include "physics/physics.h"
 #include "plog/Log.h"
 #include "rendering/null_graphics_backend.hpp"
@@ -64,6 +67,10 @@ class Engine {
     void processInput(GLFWwindow *window);
 
     GLFWwindow *window;
+
+    InputManager m_inputManager;
+
+    void initDefaultInput();
 
     Physics m_phSystem;
     std::shared_ptr<Scene> m_scene;

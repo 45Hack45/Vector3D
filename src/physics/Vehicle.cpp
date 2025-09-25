@@ -59,12 +59,13 @@ void Vehicle::update(double deltaTime) {
 void Vehicle::onDrawGizmos(rendering::GizmosManager* gizmos) {
     auto vehicle = m_vehicleHandle->vehicle;
 
-    gizmos->draw_cube(physics::toV3d(vehicle->GetPos()), .25,
-                      glm::vec4(1, 0, 0, 1));
+    // gizmos->draw_cube(physics::toV3d(vehicle->GetPos()), .25,
+    //                   glm::vec4(1, 0, 0, 1));
 
-    // Draw chasis
-    gizmos->draw_cube(physics::toV3d(vehicle->GetChassisBody()->GetPos()), .51,
-                      glm::vec4(1, 0, 0, 1));
+    // // Draw chasis
+    // gizmos->draw_cube(physics::toV3d(vehicle->GetChassisBody()->GetPos()),
+    // .51,
+    //                   glm::vec4(1, 0, 0, 1));
 
     // Draw wheels
     for (auto axle : vehicle->GetAxles()) {

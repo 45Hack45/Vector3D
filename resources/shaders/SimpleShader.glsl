@@ -34,7 +34,7 @@ void main()
 out vec4 FragColor;
 
 uniform vec4 dye_color;
-vec3 light_direction = vec3(-0.5, -1.0, -0.3);
+vec3 light_direction = vec3(-0.5, 1.0, -0.3);
 
 in vec4 pos;
 in vec3 Normal;
