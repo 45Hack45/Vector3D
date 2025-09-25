@@ -12,6 +12,7 @@
 
 #include "input/KeyboardDevice.hpp"
 #include "physics/Vehicle.h"
+#include "physics/VehicleInteractiveController.h"
 #include "physics/collider.h"
 #include "physics/rigidbody.h"
 #include "plog/Severity.h"
@@ -201,6 +202,11 @@ void Engine::init() {
         chrono::ChVector3d position =
             chrono::ChVector3d(sin(angle), .5, cos(angle)) * separation;
         vehicleComponent->setInitialPosition(position);
+
+        // Add controller
+        auto VehicleController =
+            m_scene->createEntityComponentOfType<VehicleInteractiveController>(
+                vehicle);
     }
 
     m_scene->print_entities();
@@ -281,31 +287,32 @@ void Engine::initDefaultInput() {
     keyboardProfile.bind(input::action::IAct_Break, input::key::IK_SPACE);
     keyboardProfile.bind(input::action::IAct_SteerLeft, input::key::IK_J);
     keyboardProfile.bind(input::action::IAct_SteerRight, input::key::IK_L);
+    keyboardProfile.bind(input::action::IAct_Clutch, input::key::IK_C);
 
     m_inputManager.addDevice(
         std::make_unique<input::KeyboardDevice>(m_window, keyboardProfile));
 }
 
 void Engine::processInput(GLFWwindow* window) {
-    auto vehicle = m_scene->getComponentOfType<Vehicle>();
+    // auto vehicle = m_scene->getComponentOfType<Vehicle>();
 
-    if (vehicle != nullptr) {
-        float accelerate =
-            m_inputManager.getAction(input::action::IAct_Accelerate);
-        float back = m_inputManager.getAction(input::action::IAct_Back);
-        float brake = m_inputManager.getAction(input::action::IAct_Break);
-        float steerLeft =
-            m_inputManager.getAction(input::action::IAct_SteerLeft);
-        float steerRight =
-            m_inputManager.getAction(input::action::IAct_SteerRight);
+    // if (vehicle != nullptr) {
+    //     float accelerate =
+    //         m_inputManager.getAction(input::action::IAct_Accelerate);
+    //     float back = m_inputManager.getAction(input::action::IAct_Back);
+    //     float brake = m_inputManager.getAction(input::action::IAct_Break);
+    //     float steerLeft =
+    //         m_inputManager.getAction(input::action::IAct_SteerLeft);
+    //     float steerRight =
+    //         m_inputManager.getAction(input::action::IAct_SteerRight);
 
-        float throtle = accelerate - back;
-        float steering = steerLeft - steerRight;
+    //     float throtle = accelerate - back;
+    //     float steering = steerLeft - steerRight;
 
-        vehicle->setThrottle(throtle);
-        vehicle->setBraking(brake);
-        vehicle->setSteering(steering);
-    }
+    //     vehicle->setThrottle(throtle);
+    //     vehicle->setBraking(brake);
+    //     vehicle->setSteering(steering);
+    // }
 }
 
 }  // namespace v3d

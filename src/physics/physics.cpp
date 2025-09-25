@@ -95,7 +95,7 @@ VehicleHandle Physics::createVehicle(std::string vehicleModelPath) {
     // double clutch
     m_vehicleInputs.push_back(
         {VehicleRaw_ptr(m_vehicles, m_vehicles.size() - 1),
-         chrono::vehicle::DriverInputs({0, 1, 0, 0})});
+         chrono::vehicle::DriverInputs({0, 0, 0, 0})});
 
     return VehicleHandle(m_vehicleInputs, m_vehicleInputs.size() -
                                               1);  // Provide pointer to Vehicle

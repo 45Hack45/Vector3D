@@ -48,6 +48,8 @@ class Engine {
         m_graphicsBackend->registerGizmosTarget(gizmosTarget);
     }
 
+    InputManager *getInputManager() { return &m_inputManager; }
+
    private:
     rendering::GraphicsBackendType m_gBackendType =
         rendering::GraphicsBackendType::VULKAN_API;

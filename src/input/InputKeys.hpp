@@ -14,6 +14,7 @@ namespace action {
 constexpr InputAction IAct_Accelerate = makeInputActionID("Accelerate");
 constexpr InputAction IAct_Back = makeInputActionID("Back");
 constexpr InputAction IAct_Break = makeInputActionID("Break");
+constexpr InputAction IAct_Clutch = makeInputActionID("Clutch");
 constexpr InputAction IAct_SteerLeft = makeInputActionID("SteerLeft");
 constexpr InputAction IAct_SteerRight = makeInputActionID("SteerRight");
 

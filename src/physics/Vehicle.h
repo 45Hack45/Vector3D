@@ -27,6 +27,35 @@ class Vehicle : public ComponentBase {
     // m_vehicle->vehicle; }; chrono::vehicle::DriverInputs*
     // getDriverInputsRaw() { return m_vehicle->driverInputs; };
 
+   public:
+    Vehicle() = default;
+    ~Vehicle() override = default;
+
+    // Remove Copy
+    Vehicle(const Vehicle&) = delete;
+    Vehicle& operator=(const Vehicle&) = delete;
+
+    // Enable move
+    Vehicle(Vehicle&&) = default;
+    Vehicle& operator=(Vehicle&&) = default;
+
+    void init() override;
+    void start() override;
+    void update(double deltaTime) override;
+
+    void onDrawGizmos(rendering::GizmosManager* gizmos) override;
+
+    void setFilePath(const std::string& filepath) {
+        m_vehicleModelPath = filepath;
+    }
+
+    void setInitialPosition(chrono::ChVector3d position) {
+        m_initPos = position;
+    }
+    void setInitialRotation(chrono::ChQuaterniond rotation) {
+        m_initRot = rotation;
+    }
+
     inline double getSteering() {
         return m_vehicleHandle->driverInputs.m_steering;
     }
@@ -56,35 +85,6 @@ class Vehicle : public ComponentBase {
         m_vehicleHandle->driverInputs.m_throttle = 0.0;
         m_vehicleHandle->driverInputs.m_braking = 0.0;
         m_vehicleHandle->driverInputs.m_clutch = 0.0;
-    }
-
-   public:
-    Vehicle() = default;
-    ~Vehicle() override = default;
-
-    // Remove Copy
-    Vehicle(const Vehicle&) = delete;
-    Vehicle& operator=(const Vehicle&) = delete;
-
-    // Enable move
-    Vehicle(Vehicle&&) = default;
-    Vehicle& operator=(Vehicle&&) = default;
-
-    void init() override;
-    void start() override;
-    void update(double deltaTime) override;
-
-    void onDrawGizmos(rendering::GizmosManager* gizmos) override;
-
-    void setFilePath(const std::string& filepath) {
-        m_vehicleModelPath = filepath;
-    }
-
-    void setInitialPosition(chrono::ChVector3d position) {
-        m_initPos = position;
-    }
-    void setInitialRotation(chrono::ChQuaterniond rotation) {
-        m_initRot = rotation;
     }
 };
 
