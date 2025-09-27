@@ -20,6 +20,7 @@ find_package(Vulkan REQUIRED)
 find_package(OpenGL REQUIRED)
 include_directories(${OPENGL_INCLUDE_DIRS} EXCLUDE_FROM_ALL)
 
+message(STATUS "GLFW")
 SET(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "Build the GLFW example programs")
 SET(GLFW_BUILD_TESTS OFF CACHE BOOL "GLM Build unit tests")
 SET(GLFW_BUILD_DOCS OFF CACHE BOOL "Build the GLFW documentation")
@@ -30,6 +31,7 @@ add_subdirectory(include/glm EXCLUDE_FROM_ALL)
 set(EiGEN3_INCLUDE_DIR "" CACHE STRING "Eigen include path")
 
 
+message(STATUS "Chrono")
 # Project Chrono
 find_package(Chrono
   COMPONENTS Vehicle
@@ -54,7 +56,7 @@ message(STATUS "CHRONO_STATIC = ${CHRONO_STATIC}")
 # ENDIF()
 
 SET(ENGINE_INCLUDE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include/OBJ-Loader-master/Source ${CMAKE_SOURCE_DIR}/src/thirdparty/imgui ${Boost_INCLUDE_DIRS} ${Chrono_INCLUDE_DIR} ${EiGEN3_INCLUDE_DIR} ${CHRONO_INCLUDE_DIRS})
-set(vector_3d_LIBS glfw ${GLFW_LIBRARIES} ${OPENGL_LIBRARIES} Vulkan::Vulkan glm::glm plog ${CHRONO_TARGETS} ${WINMM_LIB_PATH} ${CHRONO_LIBRARIES})
+set(vector_3d_LIBS glfw ${GLFW_LIBRARIES} ${OPENGL_LIBRARIES} Vulkan::Vulkan glm::glm plog ${CHRONO_TARGETS} ${WINMM_LIB_PATH} ${CHRONO_LIBRARIES} ${X11_X11_LIB})
 
 message(STATUS "ENGINE_INCLUDE = ${ENGINE_INCLUDE}")
 
