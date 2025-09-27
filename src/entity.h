@@ -1,32 +1,22 @@
 #pragma once
 
-#include <boost/poly_collection/base_collection.hpp>
-#include <boost/uuid/uuid.hpp>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 #include "DefinitionCore.hpp"
-#include "object_ptr.hpp"
-#include "scene.h"
 // #include "utils/vector_ptr.hpp"
 
 namespace v3d {
+class Scene;
 
-// typedef utils::vector_ptr<Entity> entity_ptr;
-struct EntityUuidHash {
-    std::size_t operator()(const entityID_t &uuid) const noexcept {
-        return boost::hash_range(uuid.begin(), uuid.end());
-    }
-};
-using EntityMap = boost::unordered_flat_map<entityID_t, Entity, EntityUuidHash>;
-using entity_ptr = object_ptr<EntityMap, Entity>;
-
-class Entity {
+class Entity : public IEditorGUISelectable {
     friend class Scene;
 
    public:
     const std::vector<entity_ptr> &getChilds() const { return m_childs; }
+
+    inline const entity_ptr getPtr();
 
     // template <typename T, typename... Args>
     // componentID_t addComponent(Args&&... args){
@@ -48,17 +38,20 @@ class Entity {
     //     // return *component;
     // }
 
-    // Get the first component of type T (if it exists)
-    template <typename T>
-    std::weak_ptr<T> getComponent() {
-        return {};
-    }
+    // // Get the first component of type T (if it exists)
+    // template <typename T>
+    // T *getComponent() {
+    //     return m_scene->getComponentOfType<T>(getPtr());
+    // }
 
     // // Get all components of type T
     // template <typename T>
-    // std::vector<std::weak_ptr<T>> getComponents() {
-    //     return result;
+    // std::vector<T *> getComponents() {
+    //     return m_scene->getAllComponentsOfType<T>(getPtr());
     // }
+
+    // Get all components
+    std::vector<ComponentBase *> getComponents();
 
     // // Remove the first component of type T
     // template <typename T>
@@ -91,6 +84,8 @@ class Entity {
     //    Entity& operator=(const Entity&) = delete;
 
     ~Entity() {};
+
+    void drawEditorGUI_Properties() override;
 
     Scene *m_scene;
     // TODO: Add reference to Transform and Rigidbody

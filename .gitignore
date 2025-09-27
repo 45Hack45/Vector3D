@@ -1052,3 +1052,4 @@ dkms.conf
 .vscode/settings.json
 .VSCodeCounter/
 .continue
+resources/test_models/*

@@ -7,6 +7,7 @@
 #include <iostream>
 #include <stdexcept>
 
+#include "Editor.h"
 #include "input/InputDevice.hpp"
 #include "input/InputKeys.hpp"
 #include "input/InputManager.h"
@@ -51,6 +52,8 @@ class Engine {
     InputManager *getInputManager() { return &m_inputManager; }
 
    private:
+    editor::Editor *m_editor;
+
     rendering::GraphicsBackendType m_gBackendType =
         rendering::GraphicsBackendType::VULKAN_API;
     rendering::GraphicsBackend *m_graphicsBackend;

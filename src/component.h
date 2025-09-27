@@ -15,7 +15,8 @@ class ComponentBase;
 
 using ComponentMap = utils::KeyedStableCollection<componentID_t, ComponentBase>;
 
-class ComponentBase : public rendering::IGizmosRenderable {
+class ComponentBase : public rendering::IGizmosRenderable,
+                      public IEditorGUISelectable {
     friend class Entity;
     friend class Scene;
 
@@ -27,11 +28,18 @@ class ComponentBase : public rendering::IGizmosRenderable {
     virtual void start() = 0;
     virtual void update(double deltaTime) = 0;
 
-    virtual std::string getComponentName() { return typeid(this).name(); }
+    virtual std::string getComponentName() = 0;
 
     static auto dependencies() { return std::tuple<>(); }
 
     entityID_t getEntity() { return m_entity; }
+
+    virtual void drawEditorGUI_Properties() {
+        // log_error("ERROR::COMPONENT::BASE_CLASS_VIRTUAL_METHOD_CALLED:
+        // drawEditorGUI_Properties\n");
+        ImGui::Text("No editor GUI available for %s",
+                    getComponentName().c_str());
+    };
 
    private:
    protected:
@@ -61,6 +69,8 @@ class TestComponent : public ComponentBase {
     void start() override {};
     void update(double deltaTime) override;
 
+    std::string getComponentName() override { return "TestComponent"; };
+
    private:
     int testVariable;
 };
@@ -73,6 +83,10 @@ class AbsoluteASCIIComponent : public ComponentBase {
 
     void start() override {};
     void update(double deltaTime) override;
+
+    std::string getComponentName() override {
+        return "AbsoluteASCIIComponent";
+    };
 
    private:
     int testVariable;
@@ -88,6 +102,8 @@ class CinemaASCIIComponent : public ComponentBase {
     void start() override {};
     void update(double deltaTime) override;
 
+    std::string getComponentName() override { return "CinemaASCIIComponent"; };
+
    private:
     int testVariable;
 };
@@ -97,6 +113,9 @@ class TestDataComponent : public DataComponent {
     TestDataComponent() = default;
     void start() override {};
     void update(double deltaTime) override {};
+
+    std::string getComponentName() override { return "TestDataComponent"; };
+
     int testDataComponentField;
 };
 

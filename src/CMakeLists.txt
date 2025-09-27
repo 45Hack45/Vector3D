@@ -3,6 +3,7 @@ message(STATUS "-- Generating Core Engine")
 message(STATUS "-- CORE")
 
 set(vector_3d_core_SOURCES
+    ${CMAKE_SOURCE_DIR}/src/Editor.cpp
     ${CMAKE_SOURCE_DIR}/src/component.cpp
     ${CMAKE_SOURCE_DIR}/src/engine.cpp
     ${CMAKE_SOURCE_DIR}/src/entity.cpp
@@ -15,6 +16,7 @@ set(vector_3d_core_SOURCES
 
 set(vector_3d_core_HEADERS
     ${CMAKE_SOURCE_DIR}/src/DefinitionCore.hpp
+    ${CMAKE_SOURCE_DIR}/src/Editor.h
     ${CMAKE_SOURCE_DIR}/src/asset.h
     ${CMAKE_SOURCE_DIR}/src/camera.hpp
     ${CMAKE_SOURCE_DIR}/src/component.h

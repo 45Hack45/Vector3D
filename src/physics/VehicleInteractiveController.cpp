@@ -21,19 +21,38 @@ void VehicleInteractiveController::start() {}
 void VehicleInteractiveController::update(double deltaTime) {
     auto inputManager = m_scene->getEngine()->getInputManager();
 
-    float accelerate = inputManager->getAction(input::action::IAct_Accelerate);
-    float back = inputManager->getAction(input::action::IAct_Back);
-    float brake = inputManager->getAction(input::action::IAct_Break);
-    float steerLeft = inputManager->getAction(input::action::IAct_SteerLeft);
-    float steerRight = inputManager->getAction(input::action::IAct_SteerRight);
-    float clutch = inputManager->getAction(input::action::IAct_Clutch);
+    if (!inputManager->isMuted()) {
+        accelerate = inputManager->getAction(input::action::IAct_Accelerate);
+        back = inputManager->getAction(input::action::IAct_Back);
+        brake = inputManager->getAction(input::action::IAct_Break);
+        steerLeft = inputManager->getAction(input::action::IAct_SteerLeft);
+        steerRight = inputManager->getAction(input::action::IAct_SteerRight);
+        clutch = inputManager->getAction(input::action::IAct_Clutch);
+    }
 
-    float throtle = accelerate - back;
-    float steering = steerLeft - steerRight;
+    throtle = accelerate - back;
+    steering = steerLeft - steerRight;
 
     m_vehicle->setThrottle(throtle);
     m_vehicle->setBraking(brake);
     m_vehicle->setSteering(steering);
     m_vehicle->setClutch(clutch);
 }
+
+void VehicleInteractiveController::drawEditorGUI_Properties() {
+    ImGui::Text("Raw Inputs");
+    ImGui::SliderFloat("Accelerate", &accelerate, 0, 1);
+    ImGui::SliderFloat("Back", &back, 0, 1);
+    ImGui::SliderFloat("Brake", &brake, 0, 1);
+    ImGui::SliderFloat("SteerLeft", &steerLeft, 0, 1);
+    ImGui::SliderFloat("SteerRight", &steerRight, 0, 1);
+    ImGui::SliderFloat("Clutch", &clutch, 0, 1);
+
+    ImGui::Spacing();
+
+    ImGui::Text("Compound Input");
+    ImGui::SliderFloat("Throtle", &throtle, -1, 1);
+    ImGui::SliderFloat("Steering", &steering, -1, 1);
+}
+
 }  // namespace v3d

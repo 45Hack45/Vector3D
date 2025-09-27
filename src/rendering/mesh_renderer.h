@@ -14,6 +14,8 @@ class MeshRenderer : public rendering::IRenderable, public ComponentBase {
     // TODO: Missing dependancy with Transform
     // static auto dependencies();
 
+    std::string getComponentName() override { return "MeshRenderer"; };
+
     void init() override;
     void start() override {};
     void update(double deltaTime) override {};

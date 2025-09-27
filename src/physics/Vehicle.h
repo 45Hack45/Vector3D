@@ -39,6 +39,8 @@ class Vehicle : public ComponentBase {
     Vehicle(Vehicle&&) = default;
     Vehicle& operator=(Vehicle&&) = default;
 
+    std::string getComponentName() override { return "Vehicle"; };
+
     void init() override;
     void start() override;
     void update(double deltaTime) override;

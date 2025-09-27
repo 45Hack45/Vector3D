@@ -25,6 +25,8 @@ class InputManager {
         for (auto& d : m_devices) d->update();
     }
 
+    bool isMuted() { return muted; }
+
     float getAction(input::InputAction action) const {
         if (muted) return 0;
         float value = 0.0f;

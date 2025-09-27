@@ -183,6 +183,9 @@ void Engine::init() {
 
     initImgui(m_window->getWindow(), mainScale, true);
 
+    m_editor = editor::Editor::Instance();
+    m_editor->Init(this);
+
     // Instantiate default keyboard device and mappings
     initDefaultInput();
 
@@ -323,11 +326,9 @@ void Engine::mainLoop() {
         // TODO: Pass time and dt, to be able to pass them to a shader
         m_graphicsBackend->update();
 
-        // Debbug UI
-        if (ImGui::Begin("Debbug"))
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
-                        1000.0f / io.Framerate, io.Framerate);
-        ImGui::End();
+        // Render GUI
+        m_editor->renderGui(m_last_frame_dt.count(), &m_scene->m_root.get(),
+                            m_scene.get());
 
         // Render Imgui UI
         imgui_RenderFrame();

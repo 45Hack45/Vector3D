@@ -13,6 +13,7 @@ class Transform : public ComponentBase {
     ~Transform() override = default;
 
     // static auto dependencies();
+    std::string getComponentName() override { return "Transform"; };
 
     void init() override;
     void start() override {};

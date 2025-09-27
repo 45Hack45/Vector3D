@@ -22,6 +22,8 @@ class ColliderBase : public ComponentBase {
     // ColliderBase();
     ~ColliderBase() override = default;
 
+    std::string getComponentName() override { return "ColliderBase"; };
+
     void init() override;
     void start() override {};
     void update(double deltaTime) override {};

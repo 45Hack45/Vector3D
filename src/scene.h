@@ -1,8 +1,5 @@
 #pragma once
 
-#include <boost/container/flat_map.hpp>
-#include <boost/unordered/unordered_flat_map.hpp>
-#include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <iostream>
@@ -142,12 +139,29 @@ class Scene {
         return m_components.getFirstOfType<T>();
     }
 
+    // Get all components of an entity of type T if found
     template <typename T>
-    std::vector<T*> getEntityComponents(entity_ptr entity) {
+    std::vector<T*> getAllComponentsOfType(entity_ptr entity) {
+        T* component = nullptr;
         std::vector<T*> componentList;
+        for (size_t i = 0; i < entity->m_components.size(); i++) {
+            auto cp = entity->m_components[i];
+            component = m_components.getAs<T>(cp);
+            if (component != nullptr) {
+                // Component found
+                componentList.push_back(component);
+            }
+        }
+        return componentList;
+    }
+
+    // Get all components of an entity
+    std::vector<ComponentBase*> getEntityComponents(entity_ptr entity) {
+        std::vector<ComponentBase*> componentList;
         for (auto const component : entity->m_components) {
-            auto component_ptr = m_components.getAs<T>(component);
-            if (component_ptr != nullptr) componentList.pushBack();
+            auto component_ptr = m_components.get(component);
+            if (component_ptr != nullptr)
+                componentList.push_back(component_ptr);
         }
         return componentList;
     }

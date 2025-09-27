@@ -22,6 +22,8 @@ class RigidBody : public ComponentBase {
     RigidBody() = default;
     ~RigidBody() override = default;
 
+    std::string getComponentName() override { return "RigidBody"; };
+
     void init() override;
     void start() override {};
     void update(double deltaTime) override;
