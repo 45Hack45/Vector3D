@@ -13,7 +13,8 @@ namespace v3d {
  *            WindowBackendHint::VULKAN_API, the window will not be
  *            resizable.
  */
-void Window::init(const char *title, rendering::WindowBackendHint api) {
+void Window::init(const char *title, rendering::WindowBackendHint api,
+                  float main_scale) {
     PLOGI << "Initializing window with size " << m_width << "x" << m_height
           << " and title \"" << title << "\"" << std::endl;
 
@@ -45,7 +46,9 @@ void Window::init(const char *title, rendering::WindowBackendHint api) {
             break;
     }
 
-    m_window = glfwCreateWindow(m_width, m_height, title, nullptr, nullptr);
+    m_window =
+        glfwCreateWindow((int)(m_width * main_scale),
+                         (int)(m_height * main_scale), title, nullptr, nullptr);
 
     if (m_window == NULL) {
         PLOG_ERROR << "Failed to create GLFW window" << std::endl;
@@ -54,6 +57,8 @@ void Window::init(const char *title, rendering::WindowBackendHint api) {
     }
 
     glfwMakeContextCurrent(m_window);
+    glfwSwapInterval(0);  // Disable vsync
+    // glfwSwapInterval(1);  // Enable vsync
 
     m_initialized = true;
 }

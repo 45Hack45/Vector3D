@@ -37,8 +37,7 @@ Physics::Physics() {
     // -9.8067
     m_system.SetGravitationalAcceleration(chrono::ChVector3d(0, -9.8067, 0));
 
-    m_terrain =
-        chrono_types::make_shared<chrono::vehicle::FlatTerrain>(-2, .8f);
+    m_terrain = chrono_types::make_shared<chrono::vehicle::FlatTerrain>(0, .7f);
 
     // double terrainLength = 50.0;
     // auto rigid_terrain =

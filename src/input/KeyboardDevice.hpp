@@ -14,6 +14,7 @@ class KeyboardDevice : public InputDevice {
     }
 
     float getInput(InputAction action) const override {
+        if (muted) return 0;
         if (auto mapping = m_profile.getMapping(action)) {
             return glfwGetKey(m_window->getWindow(), mapping->m_key.code)
                        ? 1.0f
@@ -22,6 +23,7 @@ class KeyboardDevice : public InputDevice {
         return 0.0f;
     }
     float getRawInput(InputAction action) const override {
+        if (muted) return 0;
         if (auto mapping = m_profile.getMapping(action)) {
             return glfwGetKey(m_window->getWindow(), mapping->m_key.code)
                        ? 1.0f
@@ -31,6 +33,7 @@ class KeyboardDevice : public InputDevice {
     }
 
     InputKeyResult getKey(InputKey key) const override {
+        if (muted) return IKey_None;
         int res = glfwGetKey(m_window->getWindow(), key.code);
         if (res == GLFW_PRESS) {
             return IKey_Press;

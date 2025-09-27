@@ -105,6 +105,7 @@ class InputDevice {
    protected:
     Window* m_window;
     InputProfile m_profile;
+    bool muted = false;
 };
 
 }  // namespace input

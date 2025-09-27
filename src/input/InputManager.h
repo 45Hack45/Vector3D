@@ -3,9 +3,15 @@
 #include "input/InputDevice.hpp"
 
 namespace v3d {
+class Engine;
 class InputManager {
+    friend class Engine;
+
    private:
     std::vector<std::unique_ptr<input::InputDevice>> m_devices;
+    bool muted = false;
+
+    void muteInput(bool mute) { muted = mute; }
 
    public:
     InputManager() = default;
@@ -15,10 +21,12 @@ class InputManager {
     }
 
     void update() {
+        if (muted) return;
         for (auto& d : m_devices) d->update();
     }
 
     float getAction(input::InputAction action) const {
+        if (muted) return 0;
         float value = 0.0f;
         for (auto& d : m_devices) {
             value = std::max(value, d->getInput(action));

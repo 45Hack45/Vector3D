@@ -3,5 +3,5 @@
 void v3d::rendering::GraphicsBackend::update() {
     frame_update();
     draw_gizmos();
-    present_frame();
 }
+void v3d::rendering::GraphicsBackend::present() { present_frame(); }

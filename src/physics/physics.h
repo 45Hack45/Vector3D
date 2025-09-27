@@ -43,10 +43,10 @@ class Physics {
     void stepSimulation();
 
     // Enforce soft-realtime
-    void spin(double step_size) { realtime_timer.Spin(m_step_size); }
+    void spin(double step_size) { realtime_timer.Spin(step_size); }
 
     // Simulation step sizes
-    const double m_step_size = 1e-3;
+    const double m_step_size = 4e-4;
     chrono::ChRealtimeStepTimer realtime_timer;
 
     void printPosition();

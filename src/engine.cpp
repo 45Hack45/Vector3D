@@ -10,6 +10,9 @@
 #include <sstream>
 #include <string>
 
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_opengl3.h"
+#include "imgui.h"
 #include "input/KeyboardDevice.hpp"
 #include "physics/Vehicle.h"
 #include "physics/VehicleInteractiveController.h"
@@ -77,7 +80,55 @@ void initSignalHandler() {
     std::signal(SIGFPE, signalHandler);
 }
 
-chrono::vehicle::WheeledVehicle* m_vehicle;
+static void glfw_error_callback(int error, const char* description) {
+    fprintf(stderr, "GLFW Error %d: %s\n", error, description);
+}
+
+void initImgui(GLFWwindow* window, float mainScale, bool darkMode = true) {
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    (void)io;
+    io.ConfigFlags |=
+        ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
+    io.ConfigFlags |=
+        ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
+
+    // Setup Dear ImGui style
+    if (darkMode)
+        ImGui::StyleColorsDark();
+    else
+        ImGui::StyleColorsClassic();
+
+    // Setup scaling
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.ScaleAllSizes(
+        mainScale);  // Bake a fixed style scale. (until we have a solution for
+                     // dynamic style scaling, changing this requires resetting
+                     // Style + calling this again)
+    style.FontScaleDpi =
+        mainScale;  // Set initial font scale. (using
+                    // io.ConfigDpiScaleFonts=true makes this unnecessary. We
+                    // leave both here for documentation purpose)
+
+    const char* glsl_version = "#version 130";
+
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init(glsl_version);
+}
+
+void imgui_beginFrame_() {
+    // GUI window
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
+}
+
+void imgui_RenderFrame() {
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
 
 namespace v3d {
 void Engine::init() {
@@ -91,26 +142,33 @@ void Engine::init() {
     PLOGI << "Initializing Engine" << std::endl;
 
     // Initialize GLFW and create a window
-    glfwInit();
+    glfwSetErrorCallback(glfw_error_callback);
+
+    if (!glfwInit()) throw std::runtime_error("Failed initializing GLFW!");
+
+    float mainScale =
+        ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor());
+
     switch (m_gBackendType) {
         case v3d::rendering::GraphicsBackendType::NONE:
-            m_window->init("Vector3D", rendering::WindowBackendHint::NONE);
+            m_window->init("Vector3D Headless",
+                           rendering::WindowBackendHint::NONE, mainScale);
 
             m_nullGraphicsBackend =
                 new rendering::NullGraphicsBackend(m_window);
             m_graphicsBackend = m_nullGraphicsBackend;
             break;
         case rendering::GraphicsBackendType::VULKAN_API:
-            m_window->init("Vector3D",
-                           rendering::WindowBackendHint::VULKAN_API);
+            m_window->init("Vector3D Vulkan",
+                           rendering::WindowBackendHint::VULKAN_API, mainScale);
 
             m_vulkanBackend = new rendering::VulkanBackend(m_window);
             m_graphicsBackend = m_vulkanBackend;
             // m_vulkanBackend->init();
             break;
         case rendering::GraphicsBackendType::OPENGL_API:
-            m_window->init("Vector3D",
-                           rendering::WindowBackendHint::OPENGL_API);
+            m_window->init("Vector3D OpenGL",
+                           rendering::WindowBackendHint::OPENGL_API, mainScale);
 
             m_openGlBackend = new rendering::OpenGlBackend(m_window);
             m_graphicsBackend = m_openGlBackend;
@@ -122,6 +180,8 @@ void Engine::init() {
     }
 
     m_graphicsBackend->init();
+
+    initImgui(m_window->getWindow(), mainScale, true);
 
     // Instantiate default keyboard device and mappings
     initDefaultInput();
@@ -148,7 +208,7 @@ void Engine::init() {
     auto groundTransform = m_scene->getComponentOfType<Transform>(ground);
     auto groundCollider =
         m_scene->createEntityComponentOfType<ColliderBox>(ground);
-    groundRigidBody->setFixed(false);
+    groundRigidBody->setFixed(true);
     groundRigidBody->setPos(0, -1, 0);
     groundCollider->setSize(1, .1, 1);
     groundTransform->setScale(1, .1, 1);
@@ -169,21 +229,6 @@ void Engine::init() {
     // auto bunnyRenderer =
     // m_scene->createEntityComponentOfType<MeshRenderer>(bunny);
     // bunnyRenderer->setMesh(mesh);
-
-    // // ------------------------------- TEMP
-    // ----------------------------------
-    // // Initial vehicle position and orientation (adjust for selected terrain)
-    // chrono::ChVector3d initLoc(0, 0, 0.5);
-    // chrono::ChQuaterniond initRot(1, 0, 0, 0);
-
-    // // "resources/vehicle_model/sedan/vehicle/Sedan_Vehicle.json"
-
-    // m_vehicle = new chrono::vehicle::WheeledVehicle(&m_phSystem.m_system,
-    // "resources/vehicle_model/sedan/vehicle/Sedan_Vehicle.json", true, true);
-    // m_vehicle->Initialize(chrono::ChCoordsys<>(initLoc, initRot));
-    // // m_vehicle->GetChassis()->SetFixed(false);
-    // // ------------------------------- TEMP
-    // ----------------------------------
 
     int num_vehicles = 1;
     float separation = 1;
@@ -221,6 +266,12 @@ void Engine::cleanup() {
     if (!m_initialized) {
         return;
     }
+
+    // Imgui cleanup
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
     m_graphicsBackend->cleanup();
     m_window->cleanup();
     glfwTerminate();
@@ -233,6 +284,9 @@ void Engine::mainLoop() {
 
     std::cout << "Initial Frame count " << m_last_frame_dt.count() << "\n";
 
+    ImGuiIO& io = ImGui::GetIO();
+    (void)io;
+
     // Main game loop
     while (running) {
         running = !recieved_forced_close_signal && !m_window->shouldClose();
@@ -241,34 +295,48 @@ void Engine::mainLoop() {
 
         // Poll for window events
         m_window->pollEvents();
+        if (glfwGetWindowAttrib(m_window->getWindow(), GLFW_ICONIFIED) != 0) {
+            ImGui_ImplGlfw_Sleep(10);
+            continue;
+        }
 
         assert(m_last_frame_dt.count() >= 0 &&
                std::isfinite(m_last_frame_dt.count()));
 
-        processInput(window);
+        if (io.WantCaptureMouse or io.WantCaptureKeyboard) {
+            m_inputManager.muteInput(true);
+        } else {
+            m_inputManager.muteInput(false);
+            processInput(m_window->getWindow());
+        }
+
+        // Start the Dear ImGui frame
+        imgui_beginFrame_();
 
         // Update logic
         m_scene->update(m_last_frame_dt.count());
 
         // Update Physics
-        m_phSystem.stepSimulation();
-        m_phSystem.stepSimulation();
-        m_phSystem.stepSimulation();
-        m_phSystem.stepSimulation();
-
-        m_phSystem.stepSimulation();
-        m_phSystem.stepSimulation();
-        m_phSystem.stepSimulation();
-        m_phSystem.stepSimulation();
-        // std::cout << "Vehicle pos " << m_vehicle->GetChassis()->GetPos() <<
-        // "\n"; running = false;
+        for (int i = 0; i < 16; i++) m_phSystem.stepSimulation();
 
         // Render frame
         // TODO: Pass time and dt, to be able to pass them to a shader
         m_graphicsBackend->update();
 
+        // Debbug UI
+        if (ImGui::Begin("Debbug"))
+            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)",
+                        1000.0f / io.Framerate, io.Framerate);
+        ImGui::End();
+
+        // Render Imgui UI
+        imgui_RenderFrame();
+
+        // Swap buffer
+        m_graphicsBackend->present();
+
         // Enforce physics soft-realtime
-        // m_phSystem.spin(1 / 60);  // Target 60 fps
+        m_phSystem.spin(.016666667);  // Target 60 fps
 
         // Update deltatime
         const auto frame_end = std::chrono::steady_clock::now();
@@ -293,26 +361,6 @@ void Engine::initDefaultInput() {
         std::make_unique<input::KeyboardDevice>(m_window, keyboardProfile));
 }
 
-void Engine::processInput(GLFWwindow* window) {
-    // auto vehicle = m_scene->getComponentOfType<Vehicle>();
-
-    // if (vehicle != nullptr) {
-    //     float accelerate =
-    //         m_inputManager.getAction(input::action::IAct_Accelerate);
-    //     float back = m_inputManager.getAction(input::action::IAct_Back);
-    //     float brake = m_inputManager.getAction(input::action::IAct_Break);
-    //     float steerLeft =
-    //         m_inputManager.getAction(input::action::IAct_SteerLeft);
-    //     float steerRight =
-    //         m_inputManager.getAction(input::action::IAct_SteerRight);
-
-    //     float throtle = accelerate - back;
-    //     float steering = steerLeft - steerRight;
-
-    //     vehicle->setThrottle(throtle);
-    //     vehicle->setBraking(brake);
-    //     vehicle->setSteering(steering);
-    // }
-}
+void Engine::processInput(GLFWwindow* window) {}
 
 }  // namespace v3d

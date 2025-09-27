@@ -18,7 +18,7 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
     // PLOGV << "Window resized to " << width << "x" << height << std::endl;
 }
 // Camera
-Camera cam = Camera(glm::vec3(0, 0, 3));
+Camera cam = Camera(glm::vec3(0, 2.5, 10));
 bool moveCam = false;
 // timing
 float deltaTime = 0.0f;  // time between current frame and last frame
@@ -96,6 +96,7 @@ glm::mat4 view;
 glm::mat4 projection;
 
 Shader *shader;
+Shader *shaderGrid;
 
 void v3d::rendering::OpenGlBackend::init() {
     if (m_initialized) {
@@ -119,6 +120,7 @@ void v3d::rendering::OpenGlBackend::init() {
     glfwSetMouseButtonCallback(m_window->getWindow(), mouse_button_callback);
 
     shader = new Shader("resources/shaders/SimpleShader.glsl");
+    shaderGrid = new Shader("resources/shaders/GridShader.glsl");
 
     glEnable(GL_DEPTH_TEST);
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -132,6 +134,74 @@ void v3d::rendering::OpenGlBackend::init() {
 
     initPrimitives();
 }
+
+namespace v3d {
+namespace rendering {
+GLuint createGridVAO(int halfSize, float spacing, GLsizei &vertexCount) {
+    std::vector<float> vertices;
+
+    for (int i = -halfSize; i <= halfSize; i++) {
+        float coord = i * spacing;
+
+        // line parallel to X axis
+        vertices.push_back(-halfSize * spacing);
+        vertices.push_back(0.0f);
+        vertices.push_back(coord);
+
+        vertices.push_back(halfSize * spacing);
+        vertices.push_back(0.0f);
+        vertices.push_back(coord);
+
+        // line parallel to Z axis
+        vertices.push_back(coord);
+        vertices.push_back(0.0f);
+        vertices.push_back(-halfSize * spacing);
+
+        vertices.push_back(coord);
+        vertices.push_back(0.0f);
+        vertices.push_back(halfSize * spacing);
+    }
+
+    GLuint VAO, VBO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float),
+                 vertices.data(), GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
+                          (void *)0);
+    glEnableVertexAttribArray(0);
+
+    glBindVertexArray(0);
+
+    // number of vertices = total floats / 3
+    vertexCount = static_cast<GLsizei>(vertices.size() / 3);
+
+    return VAO;
+}
+
+GLsizei gridVertexCount;
+GLuint gridVAO;
+
+void drawGrid() {
+    float size = 1;
+    glm::mat4 pmodel = glm::translate(glm::mat4(1.0f), glm::vec3());
+    glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(pmodel)));
+    pmodel = glm::scale(pmodel, size * glm::vec3(1, 1, 1));
+
+    shader->setMat4("model", pmodel);
+    shader->setMat3("normalMatrix", normalMatrix);
+
+    // Draw grid
+    glBindVertexArray(gridVAO);
+    glDrawArrays(GL_LINES, 0, gridVertexCount);
+}
+}  // namespace rendering
+
+}  // namespace v3d
 
 void v3d::rendering::OpenGlBackend::frame_update() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -157,6 +227,8 @@ void v3d::rendering::OpenGlBackend::frame_update() {
     shader->setMat4("view", view);
     shader->setMat4("projection", projection);
     shader->setVector("dye_color", glm::vec4(1, 1, 1, 1));
+
+    drawGrid();
 
     for (auto renderTarget : m_renderTargets) {
         renderTarget->setUniforms(shader);
@@ -247,5 +319,6 @@ void v3d::rendering::OpenGlBackend::initPrimitives() {
     PLOGD << "Loading primitives\n";
     m_primitives.m_cube = createMesh("resources/primitives/3D/cube.obj");
     m_primitives.m_sphere = createMesh("resources/primitives/3D/sphere.obj");
+    gridVAO = createGridVAO(100, 1.f, gridVertexCount);
     PLOGD << "\n";
 }

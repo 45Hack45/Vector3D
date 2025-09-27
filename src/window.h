@@ -14,7 +14,8 @@ class Window {
         : m_width(width), m_height(height) {}
     ~Window() { cleanup(); };
 
-    void init(const char *title, rendering::WindowBackendHint api);
+    void init(const char *title, rendering::WindowBackendHint api,
+              float main_scale = 1.f);
 
     void cleanup();
 

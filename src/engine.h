@@ -68,8 +68,6 @@ class Engine {
 
     void processInput(GLFWwindow *window);
 
-    GLFWwindow *window;
-
     InputManager m_inputManager;
 
     void initDefaultInput();

@@ -106,6 +106,30 @@ set(vector_3d_rendering_FILES
     ${vector_3d_rendering_HEADERS}
 )
 
+message(STATUS "-- THIRDPARTY")
+
+set(vector_3d_thirdparty_SOURCES
+    ${CMAKE_SOURCE_DIR}/src/thirdparty/imgui/imgui.cpp
+    ${CMAKE_SOURCE_DIR}/src/thirdparty/imgui/imgui_demo.cpp
+    ${CMAKE_SOURCE_DIR}/src/thirdparty/imgui/imgui_draw.cpp
+    ${CMAKE_SOURCE_DIR}/src/thirdparty/imgui/imgui_tables.cpp
+    ${CMAKE_SOURCE_DIR}/src/thirdparty/imgui/imgui_widgets.cpp
+)
+
+set(vector_3d_thirdparty_HEADERS
+    ${CMAKE_SOURCE_DIR}/src/thirdparty/imgui/imconfig.h
+    ${CMAKE_SOURCE_DIR}/src/thirdparty/imgui/imgui.h
+    ${CMAKE_SOURCE_DIR}/src/thirdparty/imgui/imgui_internal.h
+    ${CMAKE_SOURCE_DIR}/src/thirdparty/imgui/imstb_rectpack.h
+    ${CMAKE_SOURCE_DIR}/src/thirdparty/imgui/imstb_textedit.h
+    ${CMAKE_SOURCE_DIR}/src/thirdparty/imgui/imstb_truetype.h
+)
+
+set(vector_3d_thirdparty_FILES
+    ${vector_3d_thirdparty_SOURCES}
+    ${vector_3d_thirdparty_HEADERS}
+)
+
 message(STATUS "-- UTILS")
 
 set(vector_3d_utils_SOURCES
@@ -129,6 +153,7 @@ set(vector_3d_FILES
     ${vector_3d_input_FILES}
     ${vector_3d_physics_FILES}
     ${vector_3d_rendering_FILES}
+    ${vector_3d_thirdparty_FILES}
     ${vector_3d_utils_FILES}
 )
 
@@ -137,7 +162,14 @@ set(vector_3d_FILES
 # Add the vector_3d library to the project
 message(STATUS "-- Adding Core Engine Library")
 
-add_library(vector_3d STATIC ${vector_3d_FILES})
+set(extra_thirdparty_FILES
+${CMAKE_SOURCE_DIR}/src/thirdparty/imgui/backends/imgui_impl_glfw.h
+${CMAKE_SOURCE_DIR}/src/thirdparty/imgui/backends/imgui_impl_glfw.cpp
+${CMAKE_SOURCE_DIR}/src/thirdparty/imgui/backends/imgui_impl_opengl3.h
+${CMAKE_SOURCE_DIR}/src/thirdparty/imgui/backends/imgui_impl_opengl3.cpp
+)
+
+add_library(vector_3d STATIC ${vector_3d_FILES} ${extra_thirdparty_FILES})
 target_include_directories(vector_3d PUBLIC
     ${ENGINE_INCLUDE}
 )

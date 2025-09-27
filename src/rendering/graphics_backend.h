@@ -20,6 +20,7 @@ class GraphicsBackend {
     virtual void cleanup() = 0;
 
     void update();
+    void present();
 
     GraphicsBackend(Window *window) : m_window(window) {
         gizmos = new GizmosManager(this);
