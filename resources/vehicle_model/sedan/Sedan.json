@@ -13,7 +13,7 @@
     "Input File": "sedan/powertrain/Sedan_SimpleMapPowertrain.json"
   },
   "Tire": {
-    "Input File": "sedan/tire/Sedan_TMeasyTire.json",
+    "Input File": "sedan/tire/Sedan_Pac02Tire.json",
     "Visualization Type": "Mesh"
   },
   "Zombie": {

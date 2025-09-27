@@ -16,7 +16,7 @@
         {
             "label": "generate-cmakelists",
             "type": "shell",
-            "command": "python",
+            "command": "python3",
             "args": [
                 "scripts/generate_cmakelistsV2.py",
                 "--dir",

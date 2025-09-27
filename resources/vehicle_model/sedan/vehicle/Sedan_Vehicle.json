@@ -18,7 +18,7 @@
       "Right Wheel Input File": "sedan/wheel/Sedan_Wheel.json",
       "Left Brake Input File": "sedan/brake/Sedan_BrakeSimple.json",
       "Right Brake Input File": "sedan/brake/Sedan_BrakeSimple.json",
-      "Tire Input File": "sedan/tire/Sedan_TMeasyTire.json"
+      "Tire Input File": "sedan/tire/Sedan_Pac02Tire.json"
     },
     {
       "Suspension Input File": "sedan/suspension/Sedan_DoubleWishbone.json",
@@ -31,7 +31,7 @@
       "Right Wheel Input File": "sedan/wheel/Sedan_Wheel.json",
       "Left Brake Input File": "sedan/brake/Sedan_BrakeSimple.json",
       "Right Brake Input File": "sedan/brake/Sedan_BrakeSimple.json",
-      "Tire Input File": "sedan/tire/Sedan_TMeasyTire.json"
+      "Tire Input File": "sedan/tire/Sedan_Pac02Tire.json"
     }
   ],
   "Steering Subsystems": [
