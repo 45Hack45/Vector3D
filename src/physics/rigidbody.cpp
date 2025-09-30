@@ -44,4 +44,19 @@ void RigidBody::hardResetBody(chrono::ChBody *newBody) {
     m_body.reset(newBody);
 }
 
+void RigidBody::drawEditorGUI_Properties() {
+    bool fixed = isFixed();
+    if (ImGui::Checkbox("Is Fixed", &fixed)) setFixed(fixed);
+
+    chrono::ChVector3 velocity = getVeclocity();
+    chrono::ChVector3 acceleration = getAcceleration();
+
+    float vel[3] = {(float)velocity.x(), (float)velocity.y(),
+                    (float)velocity.z()};
+    float acc[3] = {(float)acceleration.x(), (float)acceleration.y(),
+                    (float)acceleration.z()};
+    ImGui::DragFloat3("Velocity", vel);
+    ImGui::DragFloat3("Acceleration", acc);
+}
+
 }  // namespace v3d

@@ -15,6 +15,8 @@ class Transform : public ComponentBase {
     // static auto dependencies();
     std::string getComponentName() override { return "Transform"; };
 
+    void drawEditorGUI_Properties() override;
+
     void init() override;
     void start() override {};
     void update(double deltaTime) override {};

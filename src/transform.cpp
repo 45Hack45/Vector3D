@@ -42,4 +42,17 @@ void Transform::setParent(Transform* parent) {
     m_parent = parent;
     // m_rigidBody->m_body->
 }
+
+void Transform::drawEditorGUI_Properties() {
+    // TODO: !!!!!!!!!!!!!!!!!!!!!!!!! Imgui wraper to convert classes and
+    // convinient flags
+    glm::vec3 og_position = getPos();
+    float position[3] = {og_position.x, og_position.y, og_position.z};
+    if (ImGui::InputFloat3("Position", position, "%.3f",
+                           ImGuiInputTextFlags_EnterReturnsTrue)) {
+        m_rigidBody->setPos(
+            chrono::ChVector3(position[0], position[1], position[2]));
+    }
+}
+
 }  // namespace v3d

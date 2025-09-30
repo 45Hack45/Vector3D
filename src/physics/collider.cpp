@@ -1,6 +1,7 @@
 
 #include "physics/collider.h"
 
+#include "collider.h"
 #include "physics/physics.h"
 
 namespace v3d {
@@ -17,5 +18,12 @@ void ColliderBase::init() {
     initColliderProperties();
 
     m_rigidBody->addCollider(*this);
+}
+
+void ColliderBox::onDrawGizmos(rendering::GizmosManager* gizmos) {
+    // auto hlenghts = m_collisionShape->GetHalflengths();
+
+    // gizmos->draw_cube(m_rigidBody->getPos(), physics::toV3d(hlenghts),
+    //                   glm::vec4(1), true);
 }
 }  // namespace v3d

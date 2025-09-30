@@ -63,6 +63,7 @@ class Engine {
     Window *m_window;
 
     bool m_initialized = false;
+    int m_targetFrameRate = 60;
 
     void init();
     void start();

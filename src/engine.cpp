@@ -204,39 +204,40 @@ void Engine::init() {
     // entity2); auto entity4 = m_scene->instantiateEntity("Test object 2");
     // auto entity_car = m_scene->instantiateEntity("Brum brum");
 
-    // Mesh* mesh =
-    // m_graphicsBackend->createMesh("resources/primitives/3D/bunny.obj"); Mesh*
-    // carMesh =
+    Mesh* mesh =
+        m_graphicsBackend->createMesh("resources/primitives/3D/bunny.obj");
+    // Mesh* carMesh =
     // m_graphicsBackend->createMesh("resources/test_models/beetle-alt.obj");
     Mesh* carMesh = m_graphicsBackend->createMesh(
-        "resources/vehicle_model/sedan/sedan_chassis_col.obj");
+        "resources/test_models/p911GT/Porsche_911_GT2.obj");
+    // "resources/vehicle_model/sedan/sedan_chassis_col.obj");
 
-    auto ground = m_scene->instantiateEntity("Ground");
+    auto ground = m_scene->instantiateEntity("Cube");
     auto groundRigidBody = m_scene->getComponentOfType<RigidBody>(ground);
     auto groundTransform = m_scene->getComponentOfType<Transform>(ground);
     auto groundCollider =
         m_scene->createEntityComponentOfType<ColliderBox>(ground);
     groundRigidBody->setFixed(true);
-    groundRigidBody->setPos(0, -1, 0);
+    groundRigidBody->setPos(0, 0, 0);
     groundCollider->setSize(1, .1, 1);
     groundTransform->setScale(1, .1, 1);
     auto groundRenderer =
         m_scene->createEntityComponentOfType<MeshRenderer>(ground);
     groundRenderer->setMesh(m_graphicsBackend->m_primitives.m_cube);
 
-    // auto bunny = m_scene->instantiateEntity("Bunny");
-    // auto bunnyCollider =
-    // m_scene->createEntityComponentOfType<ColliderBox>(bunny); auto
-    // bunnyTransform = m_scene->getComponentOfType<Transform>(bunny); auto
-    // bunnyRigidBody = m_scene->getComponentOfType<RigidBody>(bunny);
-    // // bunnyRigidBody->setFixed(true);
-    // bunnyRigidBody->setVelocity(chrono::ChVector3d(0, 0, 0));
-    // bunnyRigidBody->setPos(0, 1, 0);
-    // bunnyCollider->setSize(1, 1, 1);
-    // bunnyTransform->setScale(10, 10, 10);
-    // auto bunnyRenderer =
-    // m_scene->createEntityComponentOfType<MeshRenderer>(bunny);
-    // bunnyRenderer->setMesh(mesh);
+    auto bunny = m_scene->instantiateEntity("Bunny");
+    auto bunnyCollider =
+        m_scene->createEntityComponentOfType<ColliderBox>(bunny);
+    auto bunnyTransform = m_scene->getComponentOfType<Transform>(bunny);
+    auto bunnyRigidBody = m_scene->getComponentOfType<RigidBody>(bunny);
+    // bunnyRigidBody->setFixed(true);
+    bunnyRigidBody->setVelocity(chrono::ChVector3d(0, 0, 0));
+    bunnyRigidBody->setPos(0, 1, 0);
+    bunnyCollider->setSize(1, 1, 1);
+    bunnyTransform->setScale(10, 10, 10);
+    auto bunnyRenderer =
+        m_scene->createEntityComponentOfType<MeshRenderer>(bunny);
+    bunnyRenderer->setMesh(mesh);
 
     int num_vehicles = 1;
     float separation = 1;
@@ -250,6 +251,9 @@ void Engine::init() {
         auto vehicleRenderer =
             m_scene->createEntityComponentOfType<MeshRenderer>(vehicle);
         vehicleRenderer->setMesh(carMesh);
+        auto vehicleChassisColl =
+            m_scene->createEntityComponentOfType<ColliderBox>(vehicle);
+        vehicleChassisColl->setSize(1, 1, 1);
 
         float angle = (float(i) / float(num_vehicles)) * 360.0f;
         chrono::ChVector3d position =
@@ -325,7 +329,7 @@ void Engine::mainLoop() {
         m_scene->update(m_last_frame_dt.count());
 
         // Update Physics
-        for (int i = 0; i < 16; i++) m_phSystem.stepSimulation();
+        for (int i = 0; i < 20; i++) m_phSystem.stepSimulation();
 
         // Render frame
         // TODO: Pass time and dt, to be able to pass them to a shader
@@ -335,6 +339,19 @@ void Engine::mainLoop() {
         m_editor->renderGui(m_last_frame_dt.count(), &m_scene->m_root.get(),
                             m_scene.get());
 
+        // Render debbug window
+        ImGui::Begin("Debbug");
+        int targetFPS = m_targetFrameRate;
+        if (ImGui::InputInt("Target FPS", &targetFPS, 1, 10,
+                            ImGuiInputTextFlags_EnterReturnsTrue)) {
+            m_targetFrameRate = targetFPS;
+        }
+        ImGui::Spacing();
+        if (ImGui::CollapsingHeader("Physics")) m_phSystem.renderDebbugGUI();
+        ImGui::Spacing();
+
+        ImGui::End();
+
         // Render Imgui UI
         imgui_RenderFrame();
 
@@ -342,7 +359,7 @@ void Engine::mainLoop() {
         m_graphicsBackend->present();
 
         // Enforce physics soft-realtime
-        m_phSystem.spin(.016666667);  // Target 60 fps
+        m_phSystem.spin(1.f / (float)m_targetFrameRate);  // Target 60 fps
 
         // Update deltatime
         const auto frame_end = std::chrono::steady_clock::now();

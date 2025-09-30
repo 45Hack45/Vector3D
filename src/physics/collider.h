@@ -4,7 +4,7 @@
 
 #include "chrono/core/ChVector3.h"
 #include "chrono/physics/ChLinkMotorRotationSpeed.h"
-#include "chrono/physics/ChSystemNSC.h"
+#include "chrono/physics/ChSystemSMC.h"
 #include "component.h"
 #include "glm/glm.hpp"
 #include "physics/rigidbody.h"
@@ -35,7 +35,7 @@ class ColliderBase : public ComponentBase {
 
    protected:
     RigidBody* m_rigidBody = nullptr;
-    std::shared_ptr<chrono::ChContactMaterialNSC> m_collisionMaterial;
+    std::shared_ptr<chrono::ChContactMaterialSMC> m_collisionMaterial;
     // std::shared_ptr<T> m_collisionShape;
 
     virtual std::shared_ptr<chrono::ChCollisionShape> getRawShape() = 0;
@@ -45,6 +45,8 @@ class ColliderBase : public ComponentBase {
 
 class ColliderBox : public ColliderBase {
    public:
+    std::string getComponentName() override { return "Box Collider"; };
+
     void setSize(float x, float y, float z) {
         m_collisionShape.reset();
         m_collisionShape =
@@ -70,6 +72,8 @@ class ColliderBox : public ColliderBase {
             chrono_types::make_shared<chrono::ChCollisionShapeBox>(
                 m_collisionMaterial, 0.1, 0.2, 0.3);
     };
+
+    void onDrawGizmos(rendering::GizmosManager* gizmos);
 };
 
 // typedef ColliderBase<chrono::ChCollisionShape> Collider;

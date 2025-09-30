@@ -247,8 +247,9 @@ void v3d::rendering::OpenGlBackend::post_draw_gizmos_hook() {
 }
 
 void v3d::rendering::OpenGlBackend::draw_primitive_cube(glm::vec3 position,
-                                                        float size,
-                                                        glm::vec4 color) {
+                                                        glm::vec3 scale,
+                                                        glm::vec4 color,
+                                                        bool wireframe) {
     view = cam.GetViewMatrix();
     projection = glm::perspective(
         glm::radians(cam.Zoom),
@@ -261,17 +262,20 @@ void v3d::rendering::OpenGlBackend::draw_primitive_cube(glm::vec3 position,
 
     glm::mat4 pmodel = glm::translate(glm::mat4(1.0f), position);
     glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(pmodel)));
-    pmodel = glm::scale(pmodel, size * glm::vec3(1, 1, 1));
+    pmodel = glm::scale(pmodel, scale);
 
     shader->setMat4("model", pmodel);
     shader->setMat3("normalMatrix", normalMatrix);
 
+    if (wireframe) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     m_primitives.m_cube->draw();
+    if (wireframe) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 void v3d::rendering::OpenGlBackend::draw_primitive_sphere(glm::vec3 position,
-                                                          float size,
-                                                          glm::vec4 color) {
+                                                          glm::vec3 scale,
+                                                          glm::vec4 color,
+                                                          bool wireframe) {
     view = cam.GetViewMatrix();
     projection = glm::perspective(
         glm::radians(cam.Zoom),
@@ -284,12 +288,14 @@ void v3d::rendering::OpenGlBackend::draw_primitive_sphere(glm::vec3 position,
 
     glm::mat4 pmodel = glm::translate(glm::mat4(1.0f), position);
     glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(pmodel)));
-    pmodel = glm::scale(pmodel, size * glm::vec3(1, 1, 1));
+    pmodel = glm::scale(pmodel, scale);
 
     shader->setMat4("model", pmodel);
     shader->setMat3("normalMatrix", normalMatrix);
 
+    if (wireframe) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     m_primitives.m_sphere->draw();
+    if (wireframe) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 void v3d::rendering::OpenGlBackend::cleanup() {}

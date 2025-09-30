@@ -4,7 +4,7 @@
 
 #include "chrono/core/ChVector3.h"
 #include "chrono/physics/ChLinkMotorRotationSpeed.h"
-#include "chrono/physics/ChSystemNSC.h"
+#include "chrono/physics/ChSystemSMC.h"
 #include "component.h"
 
 namespace v3d {
@@ -34,22 +34,34 @@ class RigidBody : public ComponentBase {
         m_body->SetInertiaXX(inertia);
     }
 
+    void setPos(glm::vec3 position) {
+        m_body->SetPos(chrono::ChVector3d(position.x, position.y, position.z));
+    }
     void setPos(chrono::ChVector3d position) { m_body->SetPos(position); }
     void setPos(float x, float y, float z) {
         m_body->SetPos(chrono::ChVector3d(x, y, z));
+    }
+    glm::vec3 getPos() {
+        auto p = m_body->GetPos();
+        return glm::vec3(p.x(), p.y(), p.z());
     }
 
     void setVelocity(chrono::ChVector3d velocity) {
         m_body->SetPosDt(velocity);
     }
+    chrono::ChVector3d getVeclocity() { return m_body->GetPosDt(); }
 
     void setAcceleration(chrono::ChVector3d acceleration) {
         m_body->SetPosDt2(acceleration);
     }
+    chrono::ChVector3d getAcceleration() { return m_body->GetPosDt2(); }
 
     void setFixed(bool fixed) { m_body->SetFixed(fixed); }
+    bool isFixed() { return m_body->IsFixed(); }
 
     void addCollider(ColliderBase &collider);
+
+    void drawEditorGUI_Properties() override;
 
    private:
     std::shared_ptr<chrono::ChBody> m_body;

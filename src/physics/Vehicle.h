@@ -17,6 +17,7 @@ class Vehicle : public ComponentBase {
     std::string m_vehicleModelPath;
     RigidBody* m_rigidBody = nullptr;
     VehicleHandle m_vehicleHandle;
+    bool m_parkingBrake;  // Apply parking brake
 
     chrono::ChVector3d m_initPos{0, .5, 0};
     chrono::ChQuaterniond m_initRot{1, 0, 0, 0};
@@ -46,6 +47,8 @@ class Vehicle : public ComponentBase {
     void update(double deltaTime) override;
 
     void onDrawGizmos(rendering::GizmosManager* gizmos) override;
+
+    void drawEditorGUI_Properties() override;
 
     void setFilePath(const std::string& filepath) {
         m_vehicleModelPath = filepath;
@@ -88,6 +91,9 @@ class Vehicle : public ComponentBase {
         m_vehicleHandle->driverInputs.m_braking = 0.0;
         m_vehicleHandle->driverInputs.m_clutch = 0.0;
     }
+
+    inline void applyParking(bool parking) { m_parkingBrake = parking; }
+    inline bool isParked() { return m_parkingBrake; }
 };
 
 }  // namespace v3d

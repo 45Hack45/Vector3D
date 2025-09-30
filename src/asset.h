@@ -4,25 +4,24 @@
 #define ASSET_H
 
 // #include "logger.h"
+#include <plog/Log.h>
+
 #include <functional>  //required for the hash method
 #include <string>
 
-// #include "IEditorGUISelectable.h"
-
-#include <plog/Log.h>
+#include "DefinitionCore.hpp"
 
 #define DisplayedNameMaxSize 64
 
 namespace v3d {
-class Asset  //: public IEditorGUISelectable
-{
+class Asset : public IEditorGUISelectable {
    public:
     Asset(const std::string& file, const std::string& name) {
         filePath = file;
         assetName = name;
     }
 
-    // virtual void drawEditorGUI_Properties();
+    virtual void drawEditorGUI_Properties();
 
     std::string assetName;
     std::string filePath;

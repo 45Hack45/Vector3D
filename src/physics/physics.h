@@ -1,8 +1,10 @@
 #pragma once
 #include "chrono/core/ChRealtimeStep.h"
 #include "chrono/physics/ChSystemNSC.h"
+#include "chrono/physics/ChSystemSMC.h"
 #include "chrono_vehicle/terrain/FlatTerrain.h"
 #include "physics/DefinitionPhysics.hpp"
+#include "physics/utils.hpp"
 
 namespace v3d {
 class Engine;
@@ -24,15 +26,15 @@ class Physics {
 
     VehicleHandle createVehicle(std::string vehicleModelPath);
 
-    std::shared_ptr<chrono::ChContactMaterialNSC>
+    std::shared_ptr<chrono::ChContactMaterialSMC>
     getDefaultCollisionMaterial() {
         return m_defaultCollMat;
     }
 
    private:
-    chrono::ChSystemNSC m_system;
-    std::shared_ptr<chrono::ChContactMaterialNSC> m_defaultCollMat =
-        chrono_types::make_shared<chrono::ChContactMaterialNSC>();
+    chrono::ChSystemSMC m_system;
+    std::shared_ptr<chrono::ChContactMaterialSMC> m_defaultCollMat =
+        chrono_types::make_shared<chrono::ChContactMaterialSMC>();
 
     // Vehicle Simulation
     std::shared_ptr<chrono::vehicle::ChTerrain> m_terrain;
@@ -46,10 +48,11 @@ class Physics {
     void spin(double step_size) { realtime_timer.Spin(step_size); }
 
     // Simulation step sizes
-    const double m_step_size = 4e-4;
+    double m_step_size = 4e-4;
     chrono::ChRealtimeStepTimer realtime_timer;
 
     void printPosition();
+    void renderDebbugGUI();
 };
 
 }  // namespace v3d

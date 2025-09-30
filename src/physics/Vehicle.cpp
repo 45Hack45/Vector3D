@@ -70,8 +70,38 @@ void Vehicle::onDrawGizmos(rendering::GizmosManager* gizmos) {
     // Draw wheels
     for (auto axle : vehicle->GetAxles()) {
         for (auto wheel : axle->GetWheels()) {
-            gizmos->draw_sphere(physics::toV3d(wheel->GetPos()), .2);
+            gizmos->draw_sphere(physics::toV3d(wheel->GetPos()),
+                                (float)wheel->GetRadius() * glm::vec3(1));
         }
+    }
+}
+
+void Vehicle::drawEditorGUI_Properties() {
+    auto vehicle = m_vehicleHandle->vehicle;
+
+    ImGui::Text("Main");
+    float speed = vehicle->GetSpeed();
+    ImGui::DragFloat("Speed", &speed);
+
+    ImGui::Spacing();
+
+    ImGui::Text("Engine");
+    auto engine = vehicle->GetEngine();
+    float rpm = engine->GetMotorSpeed();
+    float torque = engine->GetOutputMotorshaftTorque();
+    ImGui::DragFloat("RPM", &rpm);
+    ImGui::DragFloat("Torque", &torque);
+
+    ImGui::Spacing();
+
+    ImGui::Text("Misc");
+    if (ImGui::Button("Toggle parking")) {
+        applyParking(!isParked());  // Toggle parking
+        vehicle->ApplyParkingBrake(isParked());
+    }
+    ImGui::SameLine();
+    if (isParked()) {
+        ImGui::Text("Parking brake applied");
     }
 }
 

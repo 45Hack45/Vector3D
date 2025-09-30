@@ -25,10 +25,10 @@ class OpenGlBackend : public GraphicsBackend {
     void post_draw_gizmos_hook() override;
 
     // Inmediate primitive draw
-    virtual void draw_primitive_cube(glm::vec3 position, float size,
-                                     glm::vec4 color);
-    virtual void draw_primitive_sphere(glm::vec3 position, float size,
-                                       glm::vec4 color);
+    virtual void draw_primitive_cube(glm::vec3 position, glm::vec3 scale,
+                                     glm::vec4 color, bool wireframe);
+    virtual void draw_primitive_sphere(glm::vec3 position, glm::vec3 scale,
+                                       glm::vec4 color, bool wireframe);
 
    private:
     std::vector<MeshOpenGL*> m_meshList;

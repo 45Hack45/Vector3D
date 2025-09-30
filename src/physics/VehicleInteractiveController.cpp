@@ -51,8 +51,10 @@ void VehicleInteractiveController::drawEditorGUI_Properties() {
     ImGui::Spacing();
 
     ImGui::Text("Compound Input");
-    ImGui::SliderFloat("Throtle", &throtle, -1, 1);
-    ImGui::SliderFloat("Steering", &steering, -1, 1);
+    ImGui::SliderFloat("Throtle", &throtle, -1, 1, "%.3f",
+                       ImGuiInputTextFlags_ReadOnly);
+    ImGui::SliderFloat("Steering", &steering, -1, 1, "%.3f",
+                       ImGuiInputTextFlags_ReadOnly);
 }
 
 }  // namespace v3d

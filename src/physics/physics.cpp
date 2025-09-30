@@ -7,7 +7,7 @@
 // ------------------------------- TEMP ----------------------------------
 #include "chrono/physics/ChBodyEasy.h"
 #include "chrono/physics/ChLinkMotorRotationSpeed.h"
-#include "chrono/physics/ChSystemNSC.h"
+#include "chrono/physics/ChSystemSMC.h"
 #include "chrono_vehicle/ChConfigVehicle.h"
 #include "chrono_vehicle/ChVehicleModelData.h"
 #include "chrono_vehicle/ChWorldFrame.h"
@@ -155,6 +155,13 @@ void Physics::printPosition() {
     for (auto body : bodies) {
         auto pos = body->GetPos();
         std::cout << pos << "\n";
+    }
+}
+void Physics::renderDebbugGUI() {
+    double step_size = m_step_size;
+    if (ImGui::InputDouble("Sim Step Size", &step_size, 0, 0, "%.6f",
+                           ImGuiInputTextFlags_EnterReturnsTrue)) {
+        m_step_size = step_size;
     }
 };
 }  // namespace v3d
