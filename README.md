@@ -1,19 +1,26 @@
-# Vulkan Game Engine README
+# Vector3D
+
 
 ## Overview
 
-Vulkan Game Engine is a C++ library for creating 3D games using Vulkan. This project aims to provide a custom implementation of a game engine using Vulkan.
+Vector3D is a C++ library for creating 3D games using Vulkan. This project aims to provide a custom implementation of a game engine for learning purposes.
+
 ## Features
-*   **Physics**: Implement physics-based simulations for realistic gameplay experiences.
-*   **Graphics**: OpenGL and Bulkan renderer
+*   **Physics**: Implement physics-based simulations ([Project Chrono](https://projectchrono.org))
+*   **Graphics**: OpenGL and Vulkan renderer
+*   **Multiple 3D model formats**: Compatible with multiple 3d model formats usin [Assimp](https://github.com/assimp/assimp)
 
 ## TODO
 
-*   **Graphics**: Utilize Vulkan's graphics capabilities for high-performance rendering.
-*   **Procedural Generation**: Procedurally generate maps from OpenStreetMap (OSM) data.
-*   **Multiplayer**: Support multiplayer racing game with up to 2 players.
+*   **Graphics**: Implement Vulkan renderer (partially implemented)
+*   **PBR**: Implement Physically based rendering
+*   **Reflections AO**: Implement screen space reflection and ambient occlusion
+*   **Shadows**
+*   **Volumetric lighting**
+*   **Terrain**: Large-scale terrain and foliage system
+*   **Procedural Generation**: Dynamically load and generate maps from OpenStreetMap (OSM) data.
 
-## Build Requirements
+## Build
 
 ### Prerequisites
 
@@ -21,23 +28,13 @@ Vulkan Game Engine is a C++ library for creating 3D games using Vulkan. This pro
 *   Vulkan SDK (version 1.2 or higher)
 *   OpenGL
 *   Boost
+*   Eigen
 *   Chrono
 
 ### Build Process
 
-1.  Clone the repository using Git
-2.  Create a build directory and navigate to it
-3.  Run CMake to generate Makefiles
-4.  Compile the source code using your chosen compiler
-
-## Running the Game Engine
-
-1.  Navigate to the build directory
-2.  Run the game engine executable
+## Running
 
 ## Troubleshooting
 
-*   **Vulkan errors**: Check the Vulkan documentation and error codes for solutions.
-*   **OpenGL errors**: Check the OpenGL documentation and error codes for solutions.
-*   **Build issues**: Check the CMake output and compiler messages for errors.
 ## License
