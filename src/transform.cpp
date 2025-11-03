@@ -48,8 +48,7 @@ void Transform::drawEditorGUI_Properties() {
     // convinient flags
     glm::vec3 og_position = getPos();
     float position[3] = {og_position.x, og_position.y, og_position.z};
-    if (ImGui::InputFloat3("Position", position, "%.3f",
-                           ImGuiInputTextFlags_EnterReturnsTrue)) {
+    if (ImGui::InputFloat3("Position", position, "%.3f")) {
         m_rigidBody->setPos(
             chrono::ChVector3(position[0], position[1], position[2]));
     }

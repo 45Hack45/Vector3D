@@ -342,8 +342,7 @@ void Engine::mainLoop() {
         // Render debbug window
         ImGui::Begin("Debbug");
         int targetFPS = m_targetFrameRate;
-        if (ImGui::InputInt("Target FPS", &targetFPS, 1, 10,
-                            ImGuiInputTextFlags_EnterReturnsTrue)) {
+        if (ImGui::InputInt("Target FPS", &targetFPS, 1, 10)) {
             m_targetFrameRate = targetFPS;
         }
         ImGui::Spacing();

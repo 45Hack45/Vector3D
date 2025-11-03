@@ -159,8 +159,7 @@ void Physics::printPosition() {
 }
 void Physics::renderDebbugGUI() {
     double step_size = m_step_size;
-    if (ImGui::InputDouble("Sim Step Size", &step_size, 0, 0, "%.6f",
-                           ImGuiInputTextFlags_EnterReturnsTrue)) {
+    if (ImGui::InputDouble("Sim Step Size", &step_size, 0, 0, "%.6f")) {
         m_step_size = step_size;
     }
 };
