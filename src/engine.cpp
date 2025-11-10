@@ -1,5 +1,8 @@
 #include "engine.h"
 
+#include <ModelLoader.h>
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
 #include <plog/Log.h>
 
 #include <atomic>
@@ -191,6 +194,14 @@ void Engine::init() {
     m_editor = editor::Editor::Instance();
     m_editor->Init(this);
 
+    // Init Model manager with Assimp as loader
+    Assimp::DefaultLogger::create("AssimpLog.txt", Assimp::Logger::VERBOSE);
+    AssimpLoader::attachDefaultLogger();
+
+    AssimpLoaderPropertes properties;
+    m_modelManager = ModelManager::make_unique(
+        std::make_unique<AssimpLoader>(std::move(properties)));
+
     // Instantiate default keyboard device and mappings
     initDefaultInput();
 
@@ -202,15 +213,34 @@ void Engine::init() {
     // auto entity2 = m_scene->instantiateEntity("Test child object", entity);
     // auto entity3 = m_scene->instantiateEntity("Test grandchild object",
     // entity2); auto entity4 = m_scene->instantiateEntity("Test object 2");
+
     // auto entity_car = m_scene->instantiateEntity("Brum brum");
+
+    auto modelpath =
+        "resources/test_models/p911GT/"
+        "Porsche_911_GT2.obj";
+
+    Model* porscheModel =
+        m_modelManager->importModel<MeshOpenGL>(modelpath, "Porsche 911 GT2");
+    for (auto mesh : porscheModel->getMeshes()) {
+        auto porscheEntity =
+            m_scene->instantiateEntity(std::string(mesh->getName()));
+        auto porscheRigidBody =
+            m_scene->getComponentOfType<RigidBody>(porscheEntity);
+        porscheRigidBody->setFixed(true);
+        auto porscheTransform =
+            m_scene->getComponentOfType<Transform>(porscheEntity);
+        auto porscheRenderer =
+            m_scene->createEntityComponentOfType<MeshRenderer>(porscheEntity);
+        porscheRenderer->setMesh(mesh);
+    }
 
     Mesh* mesh =
         m_graphicsBackend->createMesh("resources/primitives/3D/bunny.obj");
     // Mesh* carMesh =
     // m_graphicsBackend->createMesh("resources/test_models/beetle-alt.obj");
     Mesh* carMesh = m_graphicsBackend->createMesh(
-        "resources/test_models/p911GT/Porsche_911_GT2.obj");
-    // "resources/vehicle_model/sedan/sedan_chassis_col.obj");
+        "resources/vehicle_model/sedan/sedan_chassis_col.obj");
 
     auto ground = m_scene->instantiateEntity("Cube");
     auto groundRigidBody = m_scene->getComponentOfType<RigidBody>(ground);
@@ -278,6 +308,9 @@ void Engine::cleanup() {
     if (!m_initialized) {
         return;
     }
+
+    // Clenup assimp logger
+    Assimp::DefaultLogger::kill();
 
     // Imgui cleanup
     ImGui_ImplOpenGL3_Shutdown();

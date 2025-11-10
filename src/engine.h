@@ -8,6 +8,7 @@
 #include <stdexcept>
 
 #include "Editor.h"
+#include "ModelManager.hpp"
 #include "input/InputDevice.hpp"
 #include "input/InputKeys.hpp"
 #include "input/InputManager.h"
@@ -40,27 +41,29 @@ class Engine {
         cleanup();
     }
 
-    inline void registerRenderTarget(rendering::IRenderable *renderTarget) {
+    inline void registerRenderTarget(rendering::IRenderable* renderTarget) {
         m_graphicsBackend->registerRenderTarget(renderTarget);
     }
 
     inline void registerGizmosTarget(
-        rendering::IGizmosRenderable *gizmosTarget) {
+        rendering::IGizmosRenderable* gizmosTarget) {
         m_graphicsBackend->registerGizmosTarget(gizmosTarget);
     }
 
-    InputManager *getInputManager() { return &m_inputManager; }
+    InputManager* getInputManager() { return &m_inputManager; }
 
    private:
-    editor::Editor *m_editor;
+    // TODO: change member pointers to smart pointers
+    editor::Editor* m_editor;
+    std::unique_ptr<ModelManager> m_modelManager = nullptr;
 
     rendering::GraphicsBackendType m_gBackendType =
         rendering::GraphicsBackendType::VULKAN_API;
-    rendering::GraphicsBackend *m_graphicsBackend;
-    rendering::VulkanBackend *m_vulkanBackend;
-    rendering::OpenGlBackend *m_openGlBackend;
-    rendering::NullGraphicsBackend *m_nullGraphicsBackend;
-    Window *m_window;
+    rendering::GraphicsBackend* m_graphicsBackend;
+    rendering::VulkanBackend* m_vulkanBackend;
+    rendering::OpenGlBackend* m_openGlBackend;
+    rendering::NullGraphicsBackend* m_nullGraphicsBackend;
+    Window* m_window;
 
     bool m_initialized = false;
     int m_targetFrameRate = 60;
@@ -70,7 +73,7 @@ class Engine {
     void mainLoop();
     void cleanup();
 
-    void processInput(GLFWwindow *window);
+    void processInput(GLFWwindow* window);
 
     InputManager m_inputManager;
 

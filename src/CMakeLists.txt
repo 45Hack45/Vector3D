@@ -4,6 +4,8 @@ message(STATUS "-- CORE")
 
 set(vector_3d_core_SOURCES
     ${CMAKE_SOURCE_DIR}/src/Editor.cpp
+    ${CMAKE_SOURCE_DIR}/src/Mesh.cpp
+    ${CMAKE_SOURCE_DIR}/src/ModelLoader.cpp
     ${CMAKE_SOURCE_DIR}/src/asset.cpp
     ${CMAKE_SOURCE_DIR}/src/component.cpp
     ${CMAKE_SOURCE_DIR}/src/engine.cpp
@@ -18,6 +20,10 @@ set(vector_3d_core_SOURCES
 set(vector_3d_core_HEADERS
     ${CMAKE_SOURCE_DIR}/src/DefinitionCore.hpp
     ${CMAKE_SOURCE_DIR}/src/Editor.h
+    ${CMAKE_SOURCE_DIR}/src/Mesh.h
+    ${CMAKE_SOURCE_DIR}/src/Model.h
+    ${CMAKE_SOURCE_DIR}/src/ModelLoader.h
+    ${CMAKE_SOURCE_DIR}/src/ModelManager.hpp
     ${CMAKE_SOURCE_DIR}/src/asset.h
     ${CMAKE_SOURCE_DIR}/src/camera.hpp
     ${CMAKE_SOURCE_DIR}/src/component.h
@@ -83,7 +89,6 @@ message(STATUS "-- RENDERING")
 set(vector_3d_rendering_SOURCES
     ${CMAKE_SOURCE_DIR}/src/rendering/GizmosManager.cpp
     ${CMAKE_SOURCE_DIR}/src/rendering/graphics_backend.cpp
-    ${CMAKE_SOURCE_DIR}/src/rendering/mesh.cpp
     ${CMAKE_SOURCE_DIR}/src/rendering/mesh_renderer.cpp
     ${CMAKE_SOURCE_DIR}/src/rendering/opengl_backend.cpp
     ${CMAKE_SOURCE_DIR}/src/rendering/shader.cpp
@@ -93,9 +98,7 @@ set(vector_3d_rendering_SOURCES
 set(vector_3d_rendering_HEADERS
     ${CMAKE_SOURCE_DIR}/src/rendering/GizmosManager.h
     ${CMAKE_SOURCE_DIR}/src/rendering/graphics_backend.h
-    ${CMAKE_SOURCE_DIR}/src/rendering/mesh.h
     ${CMAKE_SOURCE_DIR}/src/rendering/mesh_renderer.h
-    ${CMAKE_SOURCE_DIR}/src/rendering/model.h
     ${CMAKE_SOURCE_DIR}/src/rendering/null_graphics_backend.hpp
     ${CMAKE_SOURCE_DIR}/src/rendering/opengl_backend.h
     ${CMAKE_SOURCE_DIR}/src/rendering/primitives.hpp

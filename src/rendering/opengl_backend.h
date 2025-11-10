@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-#include "mesh.h"
+#include "Mesh.h"
 #include "rendering/graphics_backend.h"
 
 namespace v3d {

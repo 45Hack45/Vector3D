@@ -20,7 +20,7 @@ class MeshRenderer : public rendering::IRenderable, public ComponentBase {
     void start() override {};
     void update(double deltaTime) override {};
 
-    void setMesh(Mesh* mesh) {
+    void setMesh(const Mesh* mesh) {
         m_mesh = mesh;
         registerRenderTarget();
     };
@@ -31,7 +31,7 @@ class MeshRenderer : public rendering::IRenderable, public ComponentBase {
 
    private:
     Transform* m_transform = nullptr;
-    Mesh* m_mesh = nullptr;
+    const Mesh* m_mesh = nullptr;
 
     void renderElement() override;
     void renderElementInstanced() override;

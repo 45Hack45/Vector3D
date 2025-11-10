@@ -16,12 +16,12 @@ typedef boost::uuids::uuid componentID_t;
 
 // typedef utils::vector_ptr<Entity> entity_ptr;
 struct EntityUuidHash {
-    std::size_t operator()(const entityID_t &uuid) const noexcept {
+    std::size_t operator()(const entityID_t& uuid) const noexcept {
         return boost::hash_range(uuid.begin(), uuid.end());
     }
 };
 using EntityMap = boost::unordered_flat_map<entityID_t, Entity, EntityUuidHash>;
-using entity_ptr = object_ptr<EntityMap, Entity>;
+using entity_ptr = object_ptr<EntityMap, Entity, entityID_t>;
 
 // Component
 class ComponentBase;

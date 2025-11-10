@@ -3,8 +3,8 @@
 
 #include <glm/gtc/quaternion.hpp>
 
+#include "Mesh.h"
 #include "engine.h"
-#include "rendering/mesh.h"
 #include "rendering/shader.h"
 #include "scene.h"
 #include "transform.h"
@@ -40,7 +40,7 @@ void MeshRenderer::renderElementInstanced() {
     throw exception::NotImplemented();
 }
 
-void MeshRenderer::setUniforms(Shader *shader) {
+void MeshRenderer::setUniforms(Shader* shader) {
     glm::mat4 model = glm::mat4(1.0f);
     glm::vec3 pos = m_transform->getPos();
     glm::vec3 scale = m_transform->getScale();

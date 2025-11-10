@@ -11,18 +11,22 @@
 
 #include "DefinitionCore.hpp"
 
+namespace v3d {
 #define DisplayedNameMaxSize 64
 
-namespace v3d {
+typedef boost::uuids::uuid assetID_t;
+
 class Asset : public IEditorGUISelectable {
    public:
     Asset(const std::string& file, const std::string& name) {
         filePath = file;
         assetName = name;
     }
+    virtual ~Asset() = default;
 
     virtual void drawEditorGUI_Properties();
 
+    assetID_t m_assetID;
     std::string assetName;
     std::string filePath;
 

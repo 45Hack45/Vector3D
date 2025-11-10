@@ -6,14 +6,15 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "Mesh.h"
+#include "ModelLoader.h"
 #include "OBJ-Loader-master/Source/OBJ_Loader.h"
 #include "camera.hpp"
 #include "engine.h"
 #include "glm/glm.hpp"
-#include "mesh.h"
 #include "rendering/shader.h"
 
-void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
     // PLOGV << "Window resized to " << width << "x" << height << std::endl;
 }
@@ -24,7 +25,7 @@ bool moveCam = false;
 float deltaTime = 0.0f;  // time between current frame and last frame
 float lastFrame = 0.0f;
 
-void processInput(GLFWwindow *window) {
+void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
@@ -44,7 +45,7 @@ void processInput(GLFWwindow *window) {
     }
 }
 
-void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
+void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
     static bool firstMouse = true;
     // TODO: not hardcoded
     static float lastX = 800 / 2.0f;
@@ -67,7 +68,7 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos) {
     // std::cout << xpos << ",	" << ypos << std::endl;
 }
 
-void mouse_button_callback(GLFWwindow *window, int button, int action,
+void mouse_button_callback(GLFWwindow* window, int button, int action,
                            int mods) {
     if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
         glfwSetInputMode(window, GLFW_CURSOR,
@@ -84,7 +85,7 @@ void mouse_button_callback(GLFWwindow *window, int button, int action,
 
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
 // ----------------------------------------------------------------------
-void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
     if (moveCam) cam.ProcessMouseScroll(yoffset);
 }
 
@@ -95,8 +96,8 @@ glm::mat4 model = glm::rotate(glm::mat4(1.0f), glm::radians(-55.0f),
 glm::mat4 view;
 glm::mat4 projection;
 
-Shader *shader;
-Shader *shaderGrid;
+Shader* shader;
+Shader* shaderGrid;
 
 void v3d::rendering::OpenGlBackend::init() {
     if (m_initialized) {
@@ -137,7 +138,7 @@ void v3d::rendering::OpenGlBackend::init() {
 
 namespace v3d {
 namespace rendering {
-GLuint createGridVAO(int halfSize, float spacing, GLsizei &vertexCount) {
+GLuint createGridVAO(int halfSize, float spacing, GLsizei& vertexCount) {
     std::vector<float> vertices;
 
     for (int i = -halfSize; i <= halfSize; i++) {
@@ -172,7 +173,7 @@ GLuint createGridVAO(int halfSize, float spacing, GLsizei &vertexCount) {
                  vertices.data(), GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
-                          (void *)0);
+                          (void*)0);
     glEnableVertexAttribArray(0);
 
     glBindVertexArray(0);
@@ -300,7 +301,7 @@ void v3d::rendering::OpenGlBackend::draw_primitive_sphere(glm::vec3 position,
 
 void v3d::rendering::OpenGlBackend::cleanup() {}
 
-v3d::Mesh *v3d::rendering::OpenGlBackend::createMesh(std::string filePath) {
+v3d::Mesh* v3d::rendering::OpenGlBackend::createMesh(std::string filePath) {
     // Initialize Loader
     objl::Loader obj_loader;
 
@@ -310,7 +311,7 @@ v3d::Mesh *v3d::rendering::OpenGlBackend::createMesh(std::string filePath) {
 
     if (loadout) {
         // FIXME: use smart ptr? improve lifetime handeling
-        MeshOpenGL *mesh = new v3d::MeshOpenGL(obj_loader.LoadedMeshes[0]);
+        MeshOpenGL* mesh = new v3d::MeshOpenGL(obj_loader.LoadedMeshes[0]);
         m_meshList.push_back(mesh);
         return mesh;
     } else {

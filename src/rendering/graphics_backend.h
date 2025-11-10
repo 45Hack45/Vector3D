@@ -22,23 +22,23 @@ class GraphicsBackend {
     void update();
     void present();
 
-    GraphicsBackend(Window *window) : m_window(window) {
+    GraphicsBackend(Window* window) : m_window(window) {
         gizmos = new GizmosManager(this);
     }
     virtual ~GraphicsBackend() { delete gizmos; }
 
-    virtual Mesh *createMesh(std::string filePath) = 0;
+    virtual Mesh* createMesh(std::string filePath) = 0;
 
     /**
      * @brief Registers a render target object to the list of render targets.
      *
      * @param renderTarget Pointer to the IRenderable object to register.
      */
-    inline void registerRenderTarget(IRenderable *renderTarget) {
+    inline void registerRenderTarget(IRenderable* renderTarget) {
         m_renderTargets.push_back(renderTarget);
     }
 
-    inline void registerGizmosTarget(IGizmosRenderable *gizmosTarget) {
+    inline void registerGizmosTarget(IGizmosRenderable* gizmosTarget) {
         m_gizmosTargets.push_back(gizmosTarget);
     }
 
@@ -57,15 +57,15 @@ class GraphicsBackend {
     //     }
     // }
 
-    GizmosManager *gizmos;
+    GizmosManager* gizmos;
     MeshPrimitives m_primitives;  // FIXME: Make private/protected
 
    protected:
-    Window *m_window = nullptr;
+    Window* m_window = nullptr;
     bool m_initialized = false;
 
-    std::vector<IRenderable *> m_renderTargets;
-    std::vector<IGizmosRenderable *> m_gizmosTargets;
+    std::vector<IRenderable*> m_renderTargets;
+    std::vector<IGizmosRenderable*> m_gizmosTargets;
 
     virtual void initPrimitives() = 0;
 
@@ -85,10 +85,12 @@ class GraphicsBackend {
     // Inmediate primitive draw
     virtual void draw_primitive_point(glm::vec3 a, float size) {};
     virtual void draw_primitive_line(glm::vec3 a, glm::vec3 b, float size) {};
-    virtual void draw_primitive_cube(glm::vec3 position, float size,
-                                     glm::vec4 color) {};
-    virtual void draw_primitive_sphere(glm::vec3 position, float size,
-                                       glm::vec4 color) {};
+    virtual void draw_primitive_cube(glm::vec3 position, glm::vec3 scale,
+                                     glm::vec4 color,
+                                     bool wireframe = false) {};
+    virtual void draw_primitive_sphere(glm::vec3 position, glm::vec3 scale,
+                                       glm::vec4 color,
+                                       bool wireframe = false) {};
 
    private:
     friend class GizmosManager;

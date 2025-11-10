@@ -1,5 +1,5 @@
 
-#include "rendering/mesh.h"
+#include "Mesh.h"
 
 namespace v3d {
 namespace rendering {
