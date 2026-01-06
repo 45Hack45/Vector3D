@@ -15,10 +15,10 @@ namespace editor {
 void Editor::Init(Engine* engine) { m_engine = engine; }
 
 void Editor::renderHierarchyGui(Entity* entity) {
-    std::string name = entity->m_name;
+    std::string name = entity->getName();
 
     std::string itemid = "##";
-    itemid += entity->m_name;
+    itemid += name;
     itemid += "_GUI_Selectable";
 
     ImGuiTreeNodeFlags flags = 0;
@@ -96,12 +96,12 @@ void Editor::renderHierarchyGui(Entity* entity) {
 void Editor::renderEntityEditorPropertiesGui(Entity* entity) {
     if (!entity) return;
 
-    char* name = new char[_nameMaxSize];
+    char nameBuffer[_nameMaxSize];
 
-    name = (char*)entity->m_name.c_str();
+    entity->getName().copy(nameBuffer, _nameMaxSize);
 
-    ImGui::InputText("Entity", name, _nameMaxSize);
-    entity->m_name = name;
+    ImGui::InputText("Entity", nameBuffer, _nameMaxSize);
+    entity->setName(std::string(nameBuffer));
 
     // ImGui::Text(entity->m_name.c_str());
     ImGui::Spacing();

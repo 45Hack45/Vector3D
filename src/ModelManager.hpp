@@ -43,7 +43,6 @@ class ModelManager {
         static_assert(std::is_base_of<Mesh, MeshType>::value,
                       "MeshType must inherit from the base class Mesh");
 
-        // ModelLoader loader = dynamic_cast<ModelLoader>(Loader(filepath));
         m_loader->loadFile(filepath);
         std::unique_ptr<Model> model = Model::make_unique(filepath, name);
         Model* model_ptr = model.get();
