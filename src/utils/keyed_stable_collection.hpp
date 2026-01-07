@@ -12,8 +12,10 @@
 namespace v3d {
 namespace utils {
 
-// A collection that stores polymorphic objects (derived from a common base)
-// with a stable handle system and key-based lookup.
+/// @brief A collection that stores polymorphic objects (derived from a common
+/// base) with a stable handle system and key-based lookup.
+/// @tparam Key Index
+/// @tparam Base Polymorfic Base class
 template <typename Key, typename Base>
 class KeyedStableCollection {
    public:
@@ -52,6 +54,32 @@ class KeyedStableCollection {
         typed.generations.push_back(0);
 
         Handle handle{typeid(Derived), typed.entries.size() - 1, 0};
+        m_keyToHandle[key] = handle;
+        return true;
+    }
+
+    /// @brief Insert a constructed instance of Derived under the specified key,
+    /// taking ownership of the instance. Note: Derived must be registered
+    /// before inserting any instance of Derived.
+    /// @param key index
+    /// @param derived Instance of the Derived class upcasted to Base.
+    /// @return True if inserted succesfully, False if key already has value.
+    bool insert(const Key& key, std::unique_ptr<Base> derived) {
+        if (m_keyToHandle.contains(key)) return false;
+
+        auto derivedType = std::type_index(typeid(*derived));
+
+        auto storage = getStorage(derivedType);
+
+        // using Dep = std::decay_t<decltype(derived.get())>;
+        // // auto& storage = getStorage<Dep>();
+
+        storage->push_back(std::move(derived));
+        storage->generations.push_back(0);
+
+        auto size = storage->size();
+
+        Handle handle{derivedType, size - 1, 0};
         m_keyToHandle[key] = handle;
         return true;
     }
@@ -126,7 +154,6 @@ class KeyedStableCollection {
         }
     }
 
-   private:
     // Abstract base class for storing derived objects.
     struct TypedVectorBase {
         TypedVectorBase() = default;
@@ -135,7 +162,9 @@ class KeyedStableCollection {
         std::vector<std::size_t> generations;
 
         virtual Base* get(std::size_t idx) = 0;
+        virtual std::size_t size() = 0;
         virtual void erase(std::size_t idx) = 0;
+        virtual void push_back(std::unique_ptr<Base> derived) = 0;
         virtual void compact() = 0;
         virtual void for_each(std::function<void(Base&)>&& func) = 0;
     };
@@ -143,6 +172,15 @@ class KeyedStableCollection {
     // Template implementation of TypedVectorBase for a specific derived type.
     template <typename Derived>
     struct TypedVector : TypedVectorBase {
+        TypedVector() {
+            static_assert(std::is_copy_constructible_v<Derived> ||
+                              std::is_move_constructible_v<Derived>,
+                          "Derived must be copy or move constructible");
+
+            static_assert(std::is_copy_assignable_v<Derived> ||
+                              std::is_move_assignable_v<Derived>,
+                          "Derived must be copy or move assignable");
+        }
         std::deque<Derived> entries;
 
         Base* get(std::size_t idx) override {
@@ -152,11 +190,18 @@ class KeyedStableCollection {
             return &entries[idx];
         }
 
+        std::size_t size() override { return entries.size(); }
+
         void erase(std::size_t idx) override {
             if (idx < entries.size()) {
-                entries[idx] = Derived();  // Reset the object
+                entries[idx] = std::move(Derived());  // Reset the object
                 this->generations[idx]++;
             }
+        }
+
+        void push_back(std::unique_ptr<Base> derived) override {
+            Derived* ptr = static_cast<Derived*>(derived.release());
+            entries.push_back(std::move(*ptr));
         }
 
         // Remove unused entries and update generations vector accordingly.
@@ -185,6 +230,37 @@ class KeyedStableCollection {
         }
     };
 
+    /// @brief Register type, initialize the internal container for the Derived
+    /// type. Required for inserting when the Derived type is not known at
+    /// compile time, call before first insertion.
+    /// @tparam Derived
+    template <typename Derived>
+    void registerType() {
+        auto typeIndex = std::type_index(typeid(Derived));
+        auto it = m_derivedStorage.find(typeIndex);
+
+        if (it != m_derivedStorage.end()) {
+            // Already registered
+            return;
+        }
+
+        auto ptr = std::make_unique<TypedVector<Derived>>();
+        m_derivedStorage[typeIndex] = std::move(ptr);
+    }
+
+    /// @brief Register type, use provided container for typeIndex. Required for
+    /// inserting when the Derived type is not known at compile time, call
+    /// before first insertion.
+    /// @param typeIndex The Derived type (std::type_index) of typeVector    
+    /// @param typeVector Container for Derived type
+    void registerType(
+        std::type_index typeIndex,
+        std::unique_ptr<TypedVectorBase>
+            typeVector) {
+        m_derivedStorage[typeIndex] = std::move(typeVector);
+    }
+
+   private:
     // Get (or create if not present) the TypedVector for a specific Derived
     // type.
     template <typename Derived>
@@ -199,6 +275,14 @@ class KeyedStableCollection {
         }
         return *static_cast<TypedVector<Derived>*>(
             m_derivedStorage[type].get());
+    }
+
+    TypedVectorBase* getStorage(std::type_index type) {
+        auto it = m_derivedStorage.find(type);
+        if (it == m_derivedStorage.end()) {
+            return nullptr;
+        }
+        return static_cast<TypedVectorBase*>(m_derivedStorage[type].get());
     }
 
     // Get a raw pointer to a Base using a Handle.

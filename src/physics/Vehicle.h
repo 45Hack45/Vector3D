@@ -15,6 +15,9 @@ class Vehicle : public ComponentBase {
     // friend VehicleInteractiveController;
    private:
     std::string m_vehicleModelPath;
+    bool m_vehicleModelPathDirty = false;
+    bool m_isLoaded = false;
+
     RigidBody* m_rigidBody = nullptr;
     VehicleHandle m_vehicleHandle;
     bool m_parkingBrake;  // Apply parking brake
@@ -51,6 +54,7 @@ class Vehicle : public ComponentBase {
     void drawEditorGUI_Properties() override;
 
     void setFilePath(const std::string& filepath) {
+        m_vehicleModelPathDirty = true;
         m_vehicleModelPath = filepath;
     }
 

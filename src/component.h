@@ -70,6 +70,7 @@ class TestComponent : public ComponentBase {
     void update(double deltaTime) override;
 
     std::string getComponentName() override { return "TestComponent"; };
+    static std::string getName() { return "TestComponent"; };
 
    private:
     int testVariable;
@@ -87,6 +88,7 @@ class AbsoluteASCIIComponent : public ComponentBase {
     std::string getComponentName() override {
         return "AbsoluteASCIIComponent";
     };
+    static std::string getName() { return "AbsoluteASCIIComponent"; };
 
    private:
     int testVariable;
@@ -103,6 +105,7 @@ class CinemaASCIIComponent : public ComponentBase {
     void update(double deltaTime) override;
 
     std::string getComponentName() override { return "CinemaASCIIComponent"; };
+    static std::string getName() { return "CinemaASCIIComponent"; };
 
    private:
     int testVariable;

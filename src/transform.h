@@ -8,6 +8,8 @@ namespace v3d {
 class RigidBody;
 
 class Transform : public ComponentBase {
+    friend class Entity;
+
    public:
     Transform() = default;
     ~Transform() override = default;
@@ -30,7 +32,7 @@ class Transform : public ComponentBase {
     void setScale(float x, float y, float z) { m_scale = glm::vec3(x, y, z); }
 
    private:
-    Transform* m_parent;
+    Transform* m_parent = nullptr;
     glm::vec3 m_scale = glm::vec3(1, 1, 1);
     RigidBody* m_rigidBody = nullptr;
 

@@ -1,6 +1,8 @@
 
 #include "physics/Vehicle.h"
 
+#include <plog/Log.h>
+
 #include "Vehicle.h"
 #include "chrono_vehicle/ChVehicleModelData.h"
 #include "chrono_vehicle/utils/ChUtilsJSON.h"
@@ -15,6 +17,9 @@
 namespace v3d {
 
 void Vehicle::init() {
+    m_vehicleModelPathDirty = true;
+    m_isLoaded = false;
+
     // Set the rigidbody to this instance
     auto rigidBody = m_scene->getComponentOfType<RigidBody>(m_entity);
     assert(rigidBody != nullptr &&
@@ -115,6 +120,11 @@ void Vehicle::loadVehicleModelJSON() {
         "Tried to load Vehicle JSON but rigidbody not defined");  // Can only
                                                                   // load once
 
+    if (m_isLoaded && !m_vehicleModelPathDirty) {
+        PLOGW << "Tried to load Vehicle JSON it has already been loaded";
+        return;
+    }
+
     // Load model
 
     Physics* physics = m_scene->getPhysics();
@@ -133,6 +143,9 @@ void Vehicle::loadVehicleModelJSON() {
     // Set rigidbody internal body to vehicle chasis body
     m_rigidBody->hardResetBody(
         (chrono::ChBody*)vehicle->GetChassisBody().get());
+
+    m_vehicleModelPathDirty = false;
+    m_isLoaded = true;
 }
 
 }  // namespace v3d

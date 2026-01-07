@@ -1,12 +1,14 @@
 
-// required to include first to be able to include <cstddef>
 #include <engine.h>
 #include <plog/Appenders/ColorConsoleAppender.h>
 #include <plog/Appenders/RollingFileAppender.h>
 #include <plog/Formatters/TxtFormatter.h>
 #include <plog/Init.h>
 #include <plog/Log.h>
+// required to include first to be able to include <cstddef>
 #include <stddef.h>
+
+#include "demos/demo_defines.h"
 
 // PLOG levels
 // none = 0,
@@ -32,11 +34,18 @@ const char* LOG_START_MESSAGE = R"(
 int main(int argc, char* argv[]) {
     // Parse command line arguments
 
+    // Default resolution
+    uint32_t width = WIDTH;
+    uint32_t height = HEIGHT;
+
     // Default logging options
     plog::Severity severity = plog::verbose;
     const char* log_file_name = "vector3d_log.txt";
     size_t log_file_max_size = 1000000;  // 1 MB
     int log_file_max_count = 5;
+
+    // Default demo
+    int demoIndex = 1;
 
     // Default graphics backend
     v3d::rendering::GraphicsBackendType graphicsBackend =
@@ -44,7 +53,11 @@ int main(int argc, char* argv[]) {
 
     for (int i = 1; i < argc; i++) {
         // Parse logging options
-        if (strcmp(argv[i], "--log-file") == 0 && i + 1 < argc) {
+        if (strcmp(argv[i], "--width") == 0 && i + 1 < argc) {
+            width = std::stoul(argv[++i]);
+        } else if (strcmp(argv[i], "--height") == 0 && i + 1 < argc) {
+            height = std::stoul(argv[++i]);
+        } else if (strcmp(argv[i], "--log-file") == 0 && i + 1 < argc) {
             log_file_name = argv[++i];
         } else if (strcmp(argv[i], "--log-size") == 0 && i + 1 < argc) {
             log_file_max_size = std::stoul(argv[++i]);
@@ -75,6 +88,13 @@ int main(int argc, char* argv[]) {
                     i++;
                 }
             }
+        } else if (strcmp(argv[i], "--demo") == 0) {
+            if (i + 1 < argc) {
+                if (strcmp(argv[i + 1], "sedan_vehicle") == 0) {
+                    demoIndex = 1;
+                    i++;
+                }
+            }
         } else if (strcmp(argv[i], "--backend") == 0 && i + 1 < argc) {
             if (i + 1 < argc) {
                 if (strcmp(argv[i + 1], "vulkan") == 0) {
@@ -95,22 +115,12 @@ int main(int argc, char* argv[]) {
 
     PLOGN << LOG_START_MESSAGE;
 
-    try {
-        {
-            // Create the 3D engine instance
-            v3d::Engine app(WIDTH, HEIGHT, graphicsBackend);
-            // v3d::Engine app(WIDTH, HEIGHT);
-
-            // v3d::Engine app = v3d::Engine();
-
-            // Initialize and run the 3D engine
-            app.run();
-        }
-    } catch (const std::exception& e) {
-        // std::cerr << e.what() << std::endl;
-        PLOGE << "Exception: " << e.what();
-        return EXIT_FAILURE;
+    switch (demoIndex) {
+        case 1:
+            demoSedanVehicle(width, height, graphicsBackend);
+            break;
+        default:
+            break;
     }
-
     return EXIT_SUCCESS;
 }

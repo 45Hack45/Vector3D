@@ -1,5 +1,6 @@
-#include "physics.h"
+#include "physics/physics.h"
 
+#include "physics/ConstrainLink.h"
 #include "physics/Vehicle.h"
 #include "physics/collider.h"
 #include "physics/rigidbody.h"
@@ -67,6 +68,16 @@ void Physics::addBody(RigidBody& body) {
 void Physics::removeBody(RigidBody& body) {
     m_system.RemoveBody(body.m_body);
     // m_system.ShowHierarchy(std::cout);
+}
+
+void Physics::addLink(ConstrainLink& link) {
+    m_system.AddLink(link.m_link);
+    // std::cout << "Link added to system" << std::endl;
+    // m_system.ShowHierarchy(std::cout);
+}
+
+void Physics::removeLink(ConstrainLink& link) {
+    m_system.RemoveLink(link.m_link);
 }
 
 // chrono::vehicle::WheeledVehicle* Physics::createVehicle(std::string

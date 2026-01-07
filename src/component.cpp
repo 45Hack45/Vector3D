@@ -5,8 +5,13 @@
 
 #include "engine.h"
 #include "scene.h"
+#include "editor/ComponentRegistry.h"
 
 namespace v3d {
+
+REGISTER_COMPONENT(AbsoluteASCIIComponent);
+REGISTER_COMPONENT(CinemaASCIIComponent);
+REGISTER_COMPONENT(TestComponent);
 
 void ComponentBase::_init() {
     m_scene->getEngine()->registerGizmosTarget(this);

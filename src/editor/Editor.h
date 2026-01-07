@@ -5,32 +5,28 @@ namespace v3d {
 class Engine;
 class Scene;
 namespace editor {
+#define _nameMaxSize 64;
+constexpr std::string_view EditorPopup_PropertiesAddComponent =
+    "editorPropretiesAddComponent";
+
 class Editor {
    private:
     // Variables-----------------------------------
     Engine* m_engine;
 
     // Methods-------------------------------------
-    Editor() {}
     Editor(Editor const&) = delete;
     Editor& operator=(Editor const&) = delete;
     ~Editor() {};
 
    public:
     // Methods-------------------------------------
-    static Editor* Instance() {
-        static Editor* instance;
 
-        if (!instance) instance = new Editor();
-
-        return instance;
-    }
-
-    void Init(Engine* m_engine);
+    Editor(Engine* engine) : m_engine(engine) {};
 
     void renderGui(float deltaTime, Entity* root, Scene* scene);
     void renderHierarchyGui(Entity* entity);
-    void renderEntityEditorPropertiesGui(Entity* entity);
+    void renderEntityEditorPropertiesGui(Entity* entity, Scene* scene);
     // void renderAssetsGui();
 
     // static Mesh* GUI_PropertySelector(const char* propName, Mesh*

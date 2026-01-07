@@ -10,6 +10,7 @@ namespace v3d {
 class Engine;
 class RigidBody;
 class ColliderBase;
+class ConstrainLink;
 
 class Physics {
     friend class Engine;
@@ -19,10 +20,13 @@ class Physics {
     ~Physics() {};
 
     void addBody(
-        RigidBody &body);  // TOOD: Refactor addBody to createBody, instead of
+        RigidBody& body);  // TOOD: Refactor addBody to createBody, instead of
                            // registering the body create it directly from
                            // Physics because it owns the resource
-    void removeBody(RigidBody &body);
+    void removeBody(RigidBody& body);
+
+    void addLink(ConstrainLink& link);
+    void removeLink(ConstrainLink& link);
 
     VehicleHandle createVehicle(std::string vehicleModelPath);
 

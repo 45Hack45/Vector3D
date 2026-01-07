@@ -1,6 +1,6 @@
 #include "asset.h"
 
-#include "Editor.h"
+#include "editor/Editor.h"
 
 namespace v3d {
 void Asset::drawEditorGUI_Properties() {

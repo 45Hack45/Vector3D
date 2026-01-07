@@ -3,7 +3,6 @@ message(STATUS "-- Generating Core Engine")
 message(STATUS "-- CORE")
 
 set(vector_3d_core_SOURCES
-    ${CMAKE_SOURCE_DIR}/src/Editor.cpp
     ${CMAKE_SOURCE_DIR}/src/Mesh.cpp
     ${CMAKE_SOURCE_DIR}/src/ModelLoader.cpp
     ${CMAKE_SOURCE_DIR}/src/asset.cpp
@@ -19,7 +18,6 @@ set(vector_3d_core_SOURCES
 
 set(vector_3d_core_HEADERS
     ${CMAKE_SOURCE_DIR}/src/DefinitionCore.hpp
-    ${CMAKE_SOURCE_DIR}/src/Editor.h
     ${CMAKE_SOURCE_DIR}/src/Mesh.h
     ${CMAKE_SOURCE_DIR}/src/Model.h
     ${CMAKE_SOURCE_DIR}/src/ModelLoader.h
@@ -30,6 +28,7 @@ set(vector_3d_core_HEADERS
     ${CMAKE_SOURCE_DIR}/src/engine.h
     ${CMAKE_SOURCE_DIR}/src/entity.h
     ${CMAKE_SOURCE_DIR}/src/object_ptr.hpp
+    ${CMAKE_SOURCE_DIR}/src/observer_ptr.hpp
     ${CMAKE_SOURCE_DIR}/src/scene.h
     ${CMAKE_SOURCE_DIR}/src/transform.h
     ${CMAKE_SOURCE_DIR}/src/window.h
@@ -38,6 +37,39 @@ set(vector_3d_core_HEADERS
 set(vector_3d_core_FILES
     ${vector_3d_core_SOURCES}
     ${vector_3d_core_HEADERS}
+)
+
+message(STATUS "-- DEMOS")
+
+set(vector_3d_demos_SOURCES
+)
+
+set(vector_3d_demos_HEADERS
+    ${CMAKE_SOURCE_DIR}/src/demos/demo_common.h
+    ${CMAKE_SOURCE_DIR}/src/demos/demo_defines.h
+    ${CMAKE_SOURCE_DIR}/src/demos/demo_vehicle.hpp
+)
+
+set(vector_3d_demos_FILES
+    ${vector_3d_demos_SOURCES}
+    ${vector_3d_demos_HEADERS}
+)
+
+message(STATUS "-- EDITOR")
+
+set(vector_3d_editor_SOURCES
+    ${CMAKE_SOURCE_DIR}/src/editor/ComponentRegistry.cpp
+    ${CMAKE_SOURCE_DIR}/src/editor/Editor.cpp
+)
+
+set(vector_3d_editor_HEADERS
+    ${CMAKE_SOURCE_DIR}/src/editor/ComponentRegistry.h
+    ${CMAKE_SOURCE_DIR}/src/editor/Editor.h
+)
+
+set(vector_3d_editor_FILES
+    ${vector_3d_editor_SOURCES}
+    ${vector_3d_editor_HEADERS}
 )
 
 message(STATUS "-- INPUT")
@@ -69,6 +101,7 @@ set(vector_3d_physics_SOURCES
 )
 
 set(vector_3d_physics_HEADERS
+    ${CMAKE_SOURCE_DIR}/src/physics/ConstrainLink.h
     ${CMAKE_SOURCE_DIR}/src/physics/DefinitionPhysics.hpp
     ${CMAKE_SOURCE_DIR}/src/physics/Vehicle.h
     ${CMAKE_SOURCE_DIR}/src/physics/VehicleInteractiveController.h
@@ -97,6 +130,7 @@ set(vector_3d_rendering_SOURCES
 
 set(vector_3d_rendering_HEADERS
     ${CMAKE_SOURCE_DIR}/src/rendering/GizmosManager.h
+    ${CMAKE_SOURCE_DIR}/src/rendering/VertexFormats.h
     ${CMAKE_SOURCE_DIR}/src/rendering/graphics_backend.h
     ${CMAKE_SOURCE_DIR}/src/rendering/mesh_renderer.h
     ${CMAKE_SOURCE_DIR}/src/rendering/null_graphics_backend.hpp
@@ -156,6 +190,8 @@ message(STATUS "-- --")
 
 set(vector_3d_FILES
     ${vector_3d_core_FILES}
+    ${vector_3d_demos_FILES}
+    ${vector_3d_editor_FILES}
     ${vector_3d_input_FILES}
     ${vector_3d_physics_FILES}
     ${vector_3d_rendering_FILES}
@@ -173,6 +209,8 @@ ${CMAKE_SOURCE_DIR}/src/thirdparty/imgui/backends/imgui_impl_glfw.h
 ${CMAKE_SOURCE_DIR}/src/thirdparty/imgui/backends/imgui_impl_glfw.cpp
 ${CMAKE_SOURCE_DIR}/src/thirdparty/imgui/backends/imgui_impl_opengl3.h
 ${CMAKE_SOURCE_DIR}/src/thirdparty/imgui/backends/imgui_impl_opengl3.cpp
+${CMAKE_SOURCE_DIR}/src/thirdparty/imgui/misc/cpp/imgui_stdlib.h
+${CMAKE_SOURCE_DIR}/src/thirdparty/imgui/misc/cpp/imgui_stdlib.cpp
 )
 
 add_library(vector_3d STATIC ${vector_3d_FILES} ${extra_thirdparty_FILES})

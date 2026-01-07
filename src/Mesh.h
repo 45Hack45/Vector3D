@@ -31,38 +31,15 @@ struct VertexLayout {
     std::vector<VertexAttribute> attributes;
 };
 
-// template <typename MeshType>
 class Mesh {
     friend class ModelManager;
 
    private:
-    // std::unique_ptr<MeshType> m_instance;
-
-    // static void internal_validate_constructor() {
-    //     // Validate that the derived class implements the base constructor
-    //     static_assert(
-    //         std::is_constructible_v<MeshType, void*, size_t, VertexLayout,
-    //                                 unsigned int*, size_t>,
-    //         "Derived must have a constructor (void*, size_t, VertexLayout, "
-    //         "unsigned int*, size_t)");
-    // }
-
    protected:
     std::string m_name;
     Mesh() {}
 
    public:
-    // Mesh() { internal_validate_constructor(); }
-    // Mesh(void* vertexDataBuffer, size_t vertexDataBufferSize,
-    //      VertexLayout vertexLayout, unsigned int* indicesBuffer,
-    //      size_t indicesBufferSize) {
-    //     // internal_validate_constructor();
-
-    //     // // Create the Derived instance
-    //     // m_instance = std::make_unique<MeshType>(
-    //     //     vertexDataBuffer, vertexDataBufferSize, vertexLayout,
-    //     //     indicesBuffer, indicesBufferSize);
-    // }
     virtual ~Mesh() = default;
 
     virtual void draw() const = 0;

@@ -40,7 +40,11 @@ glm::vec3 Transform::getRotationCardanAngles() {
 
 void Transform::setParent(Transform* parent) {
     m_parent = parent;
-    // m_rigidBody->m_body->
+    if (parent == nullptr) {
+        m_rigidBody->setParent(nullptr);
+    } else {
+        m_rigidBody->setParent(parent->m_rigidBody);
+    }
 }
 
 void Transform::drawEditorGUI_Properties() {

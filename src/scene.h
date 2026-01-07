@@ -13,6 +13,7 @@
 #include "entity.h"
 #include "object_ptr.hpp"
 #include "utils/utils.hpp"
+#include <cassert>
 
 namespace v3d {
 class Engine;
@@ -59,21 +60,12 @@ class Scene {
                       "T must inherit from ComponentBase");
 
         // Instantiate all unmet dependencies first
-        utils::forEachInTuple(T::dependencies(), [this, entity](auto dummy) {
-            // Calc dependancy component specific type
-            using Dep = std::decay_t<decltype(dummy)>;
-
-            // Check if the entity has the component
-            if (this->hasComponent<Dep>(entity)) return;
-
-            // Create component and its recursive dependancies
-            this->instantiateEntityComponent<Dep>(
-                entity);  // Each gets its own UUID
-        });
+        instantiateComponentDependancies<T>(entity);
 
         // Create Component
         componentID_t uuid = boost::uuids::random_generator()();
         m_components.insert<T>(uuid, std::forward<Args>(args)...);
+
         // Assign entity to component and vice versa
         auto component = m_components.get(uuid);
         component->m_scene = this;
@@ -90,6 +82,37 @@ class Scene {
         return uuid;
     }
 
+    componentID_t insertEntityComponent(
+        entity_ptr entity, std::unique_ptr<ComponentBase> component) {
+        // TODO: Instantiate dependancies
+        // // Instantiate all unmet dependencies first
+        // instantiateComponentDependancies<T>(entity);
+
+        // using Dep = std::decay_t<decltype(dummy)>;
+
+        assert(component && "Null component");
+
+        // Add Component
+        componentID_t uuid = boost::uuids::random_generator()();
+        ComponentBase* componentRef = component.get();
+        m_components.insert(uuid, std::move(component));
+
+        // Assign entity to component and vice versa
+        // auto component = m_components.get(uuid);
+        componentRef->m_scene = this;
+        componentRef->m_entity = entity.index();
+        entity->m_components.push_back(uuid);
+
+        // Initialize component base
+        componentRef->_init();
+
+        // Initialize component specialization
+        componentRef->init();
+        componentRef->start();
+
+        return uuid;
+    }
+
     template <typename T, typename... Args>
     T* createEntityComponentOfType(entity_ptr entity, Args&&... args) {
         auto component_id =
@@ -97,13 +120,7 @@ class Scene {
         return getComponent<T>(component_id);
     }
 
-    entity_ptr getEntity(entityID_t entityID) {
-        if (m_entities.contains(entityID)) {
-            return entity_ptr(m_entities, entityID);
-        } else {
-            return entity_ptr();
-        }
-    }
+    entity_ptr getEntity(entityID_t entityID);
 
     // Get instance of a specific component
     template <typename T>
@@ -210,15 +227,7 @@ class Scene {
     EntityMap m_entities;
     ComponentMap m_components;
 
-    void init() {
-        // Clear existing entities
-        if (m_entities.size()) {
-            m_entities.clear();
-        }
-
-        m_root = createEntity();
-        m_root->m_name = "root";
-    };
+    void init();
 
     entity_ptr createEntity() {
         entityID_t uuid = boost::uuids::random_generator()();
@@ -232,6 +241,21 @@ class Scene {
         parent->m_childs.push_back(entity);
         return entity;
     };
+
+    template <typename T>
+    void instantiateComponentDependancies(entity_ptr entity) {
+        utils::forEachInTuple(T::dependencies(), [this, entity](auto dummy) {
+            // Calc dependancy component specific type
+            using Dep = std::decay_t<decltype(dummy)>;
+
+            // Check if the entity has the component
+            if (this->hasComponent<Dep>(entity)) return;
+
+            // Create component and its recursive dependancies
+            this->instantiateEntityComponent<Dep>(
+                entity);  // Each gets its own UUID
+        });
+    }
 };
 
 }  // namespace v3d

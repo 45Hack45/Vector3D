@@ -6,6 +6,7 @@
 namespace v3d {
 class Physics;
 class Vehicle;
+class ConstrainLink;
 
 using VehicleRaw_ptr = object_ptr<std::vector<chrono::vehicle::WheeledVehicle>,
                                   chrono::vehicle::WheeledVehicle, size_t>;

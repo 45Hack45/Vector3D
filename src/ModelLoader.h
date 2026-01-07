@@ -16,6 +16,9 @@
 namespace v3d {
 struct VertexLayout;
 
+// TODO: Unify loader properties, to be able to set properties regardless of
+// the loader
+
 class ModelLoader {
    private:
    protected:

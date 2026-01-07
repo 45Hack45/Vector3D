@@ -10,8 +10,6 @@
 
 namespace v3d {
 
-// MeshOpenGL::MeshOpenGL() {}
-
 MeshOpenGL::MeshOpenGL(void* vertexDataBuffer, size_t vertexDataBufferSize,
                        VertexLayout vertexLayout, unsigned int* indicesBuffer,
                        size_t indicesBufferSize) {
@@ -46,7 +44,7 @@ MeshOpenGL::MeshOpenGL(void* vertexDataBuffer, size_t vertexDataBufferSize,
 
     glBindVertexArray(0);  // unbind VAO
 
-    PLOGI << "Buffer handles: " << m_VBO << "; " << m_VAO << "; " << m_EBO
+    PLOGV << "Buffer handles: " << m_VBO << "; " << m_VAO << "; " << m_EBO
           << "\n";
 }
 

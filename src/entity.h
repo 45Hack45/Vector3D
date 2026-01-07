@@ -9,12 +9,17 @@
 
 namespace v3d {
 class Scene;
+class Transform;
+class RigidBody;
 
 class Entity : public IEditorGUISelectable {
     friend class Scene;
 
    public:
-    const std::vector<entity_ptr> &getChilds() const { return m_childs; }
+    std::string getName() const { return m_name; }
+    void setName(std::string name) { m_name = name; }
+
+    const std::vector<entity_ptr>& getChilds() const { return m_childs; }
 
     inline const entity_ptr getPtr();
 
@@ -51,7 +56,7 @@ class Entity : public IEditorGUISelectable {
     // }
 
     // Get all components
-    std::vector<ComponentBase *> getComponents();
+    std::vector<ComponentBase*> getComponents();
 
     // // Remove the first component of type T
     // template <typename T>
@@ -69,13 +74,13 @@ class Entity : public IEditorGUISelectable {
 
     // }
 
-    std::string m_name = "entity";
-
     Entity() = default;
-    Entity(Scene *scene, entityID_t uuid)
+    Entity(Scene* scene, entityID_t uuid)
         : m_scene(scene), m_id(uuid), m_parent() {};
-    Entity(Scene *scene, entityID_t uuid, entity_ptr parent)
-        : m_scene(scene), m_id(uuid), m_parent(parent) {};
+    Entity(Scene* scene, entityID_t uuid, entity_ptr parent)
+        : m_scene(scene), m_id(uuid) {
+        setParent(parent);
+    };
     //    Entity(Entity&&) = default;
     //    Entity& operator=(Entity&&) = default;
 
@@ -86,17 +91,25 @@ class Entity : public IEditorGUISelectable {
     ~Entity() {};
 
     void drawEditorGUI_Properties() override;
+    void setParent(entity_ptr newParent);
 
-    Scene *m_scene;
+    Scene* m_scene;
     // TODO: Add reference to Transform and Rigidbody
 
    protected:
+    std::string m_name = "entity";
+
     entityID_t m_id;
     entity_ptr m_parent;
     std::vector<entity_ptr> m_childs;
     std::vector<componentID_t> m_components;
 
+    Transform* m_transform = nullptr;
+    RigidBody* m_rigidBody = nullptr;
+
    private:
+    void removeChild(entity_ptr child);
+    void addChild(entity_ptr child);
 };
 
 }  // namespace v3d

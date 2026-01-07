@@ -191,16 +191,12 @@ void Engine::init() {
 
     initImgui(m_window->getWindow(), mainScale, true);
 
-    m_editor = editor::Editor::Instance();
-    m_editor->Init(this);
+    m_componentRegistry = &editor::EditorComponentRegistry::instance();
+    m_editor = new editor::Editor(this);
 
-    // Init Model manager with Assimp as loader
-    Assimp::DefaultLogger::create("AssimpLog.txt", Assimp::Logger::VERBOSE);
-    AssimpLoader::attachDefaultLogger();
-
-    AssimpLoaderPropertes properties;
-    m_modelManager = ModelManager::make_unique(
-        std::make_unique<AssimpLoader>(std::move(properties)));
+    // Init Model loader and manager
+    std::unique_ptr<ModelLoader> modelLoader = makeModelLoader();
+    m_modelManager = std::make_unique<ModelManager>(std::move(modelLoader));
 
     // Instantiate default keyboard device and mappings
     initDefaultInput();
@@ -209,99 +205,20 @@ void Engine::init() {
 
     // Initialize the scene and add entities
     m_scene = Scene::create(this, &m_phSystem);
-    // auto entity = m_scene->instantiateEntity("Test object");
-    // auto entity2 = m_scene->instantiateEntity("Test child object", entity);
-    // auto entity3 = m_scene->instantiateEntity("Test grandchild object",
-    // entity2); auto entity4 = m_scene->instantiateEntity("Test object 2");
 
-    // auto entity_car = m_scene->instantiateEntity("Brum brum");
-
-    auto modelpath =
-        "resources/test_models/p911GT/"
-        "Porsche_911_GT2.obj";
-
-    Model* porscheModel =
-        m_modelManager->importModel<MeshOpenGL>(modelpath, "Porsche 911 GT2");
-    for (auto mesh : porscheModel->getMeshes()) {
-        auto porscheEntity =
-            m_scene->instantiateEntity(std::string(mesh->getName()));
-        auto porscheRigidBody =
-            m_scene->getComponentOfType<RigidBody>(porscheEntity);
-        porscheRigidBody->setFixed(true);
-        auto porscheTransform =
-            m_scene->getComponentOfType<Transform>(porscheEntity);
-        auto porscheRenderer =
-            m_scene->createEntityComponentOfType<MeshRenderer>(porscheEntity);
-        porscheRenderer->setMesh(mesh);
-    }
-
-    Mesh* mesh =
-        m_graphicsBackend->createMesh("resources/primitives/3D/bunny.obj");
-    // Mesh* carMesh =
-    // m_graphicsBackend->createMesh("resources/test_models/beetle-alt.obj");
-    Mesh* carMesh = m_graphicsBackend->createMesh(
-        "resources/vehicle_model/sedan/sedan_chassis_col.obj");
-
-    auto ground = m_scene->instantiateEntity("Cube");
-    auto groundRigidBody = m_scene->getComponentOfType<RigidBody>(ground);
-    auto groundTransform = m_scene->getComponentOfType<Transform>(ground);
-    auto groundCollider =
-        m_scene->createEntityComponentOfType<ColliderBox>(ground);
-    groundRigidBody->setFixed(true);
-    groundRigidBody->setPos(0, 0, 0);
-    groundCollider->setSize(1, .1, 1);
-    groundTransform->setScale(1, .1, 1);
-    auto groundRenderer =
-        m_scene->createEntityComponentOfType<MeshRenderer>(ground);
-    groundRenderer->setMesh(m_graphicsBackend->m_primitives.m_cube);
-
-    auto bunny = m_scene->instantiateEntity("Bunny");
-    auto bunnyCollider =
-        m_scene->createEntityComponentOfType<ColliderBox>(bunny);
-    auto bunnyTransform = m_scene->getComponentOfType<Transform>(bunny);
-    auto bunnyRigidBody = m_scene->getComponentOfType<RigidBody>(bunny);
-    // bunnyRigidBody->setFixed(true);
-    bunnyRigidBody->setVelocity(chrono::ChVector3d(0, 0, 0));
-    bunnyRigidBody->setPos(0, 1, 0);
-    bunnyCollider->setSize(1, 1, 1);
-    bunnyTransform->setScale(10, 10, 10);
-    auto bunnyRenderer =
-        m_scene->createEntityComponentOfType<MeshRenderer>(bunny);
-    bunnyRenderer->setMesh(mesh);
-
-    int num_vehicles = 1;
-    float separation = 1;
-
-    for (int i = 0; i < num_vehicles; i++) {
-        auto vehicle = m_scene->instantiateEntity("WheeledVehicle");
-        auto vehicleComponent =
-            m_scene->createEntityComponentOfType<Vehicle>(vehicle);
-        vehicleComponent->setFilePath(std::string(
-            "resources/vehicle_model/sedan/vehicle/Sedan_Vehicle.json"));
-        auto vehicleRenderer =
-            m_scene->createEntityComponentOfType<MeshRenderer>(vehicle);
-        vehicleRenderer->setMesh(carMesh);
-        auto vehicleChassisColl =
-            m_scene->createEntityComponentOfType<ColliderBox>(vehicle);
-        vehicleChassisColl->setSize(1, 1, 1);
-
-        float angle = (float(i) / float(num_vehicles)) * 360.0f;
-        chrono::ChVector3d position =
-            chrono::ChVector3d(sin(angle), .5, cos(angle)) * separation;
-        vehicleComponent->setInitialPosition(position);
-
-        // Add controller
-        auto VehicleController =
-            m_scene->createEntityComponentOfType<VehicleInteractiveController>(
-                vehicle);
-    }
+    // Pre-initialize scene component vectors, required to be able to add
+    // components dynamically (not known at compile-time, for example adding a
+    // component through the GUI)
+    registerComponents(m_scene.get(), m_componentRegistry);
 
     m_scene->print_entities();
 }
 
 void Engine::start() {
+    engineStartPre();
     m_scene->m_components.for_each(
         [](ComponentBase& component) { component.start(); });
+    engineStart();
 }
 
 void Engine::cleanup() {
@@ -417,5 +334,13 @@ void Engine::initDefaultInput() {
 }
 
 void Engine::processInput(GLFWwindow* window) {}
+
+void Engine::registerComponents(
+    Scene* scene, editor::EditorComponentRegistry* componentRegistry) {
+        std::vector<const editor::ComponentEditorRegistrationInfo*> componentsInfo = componentRegistry->getAllInfo();
+        for (auto info : componentsInfo){
+            scene->m_components.registerType(info->componentType, info->componentCollectionFactory());
+        }
+    }
 
 }  // namespace v3d

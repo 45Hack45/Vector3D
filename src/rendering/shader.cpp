@@ -208,7 +208,7 @@ void Shader::loadFile() {
 
     // shader Program
     m_ID = glCreateProgram();
-    PLOGD << "	Shader Program ID: " << m_ID << "\n";
+    PLOGV << "	Shader Program ID: " << m_ID << "\n";
     glAttachShader(m_ID, vertex);
     glAttachShader(m_ID, fragment);
     if (hasGeometryCode) glAttachShader(m_ID, geometry);
@@ -325,7 +325,7 @@ void ComputeShader::loadFile() {
 
     // shader Program
     m_ID = glCreateProgram();
-    PLOGD << "	Shader Program ID: " << m_ID << "\n";
+    PLOGV << "	Shader Program ID: " << m_ID << "\n";
     glAttachShader(m_ID, compute);
 
     // 3. link shader program

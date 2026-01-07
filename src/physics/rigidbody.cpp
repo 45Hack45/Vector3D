@@ -1,12 +1,17 @@
 
 #include "physics/rigidbody.h"
 
+#include "editor/ComponentRegistry.h"
+#include "entity.h"
 #include "physics/collider.h"
 #include "physics/physics.h"
 #include "plog/Log.h"
+#include "rigidbody.h"
 #include "scene.h"
 
 namespace v3d {
+REGISTER_COMPONENT(RigidBody);
+
 void RigidBody::init() {
     // Initialize chrono rigidbody and add to the system
     // TODO: Relate to the parent
@@ -31,17 +36,30 @@ void RigidBody::update(double deltaTime) {
     // m_body->GetPos() << "\n";
 };
 
-void RigidBody::addCollider(ColliderBase &collider) {
+void RigidBody::addCollider(ColliderBase& collider) {
     auto shape = collider.getRawShape();
     m_body->AddCollisionShape(shape);
     m_body->EnableCollision(true);
 }
 
-void RigidBody::hardResetBody(chrono::ChBody *newBody) {
+void RigidBody::hardResetBody(chrono::ChBody* newBody) {
     // Remove the current body from the system
     // it will be deleted if it doesn't have external references
     m_scene->getPhysics()->removeBody(*this);
     m_body.reset(newBody);
+}
+
+void RigidBody::setParent(RigidBody* parent) {
+    // Remove the existing constraint from the physics system
+    if (m_parentRelConstrain) m_parentRelConstrain.reset();
+
+    if (parent == nullptr) return;
+
+    // Add the new constraint,
+    // this constraint fixes the relative motion of the bodies
+    Physics* phsystem = m_scene->getPhysics();
+    m_parentRelConstrain =
+        std::make_unique<ConstraintParentChild>(phsystem, *parent, *this);
 }
 
 void RigidBody::drawEditorGUI_Properties() {
@@ -55,8 +73,31 @@ void RigidBody::drawEditorGUI_Properties() {
                     (float)velocity.z()};
     float acc[3] = {(float)acceleration.x(), (float)acceleration.y(),
                     (float)acceleration.z()};
-    ImGui::DragFloat3("Velocity", vel);
-    ImGui::DragFloat3("Acceleration", acc);
+    if (ImGui::DragFloat3("Velocity", vel)) {
+        setVelocity(chrono::ChVector3(vel[0], vel[1], vel[2]));
+    }
+    if (ImGui::DragFloat3("Acceleration", acc)) {
+        setAcceleration(chrono::ChVector3(acc[0], acc[1], acc[2]));
+    }
 }
 
 }  // namespace v3d
+
+v3d::ConstraintParentChild::ConstraintParentChild(Physics* phSystem,
+                                                  RigidBody& parent,
+                                                  RigidBody& child)
+    : ConstrainLink(phSystem) {
+    std::shared_ptr<chrono::ChLinkMateFix> link =
+        chrono_types::make_shared<chrono::ChLinkMateFix>();
+    static int count = 0;
+    link->SetName("constraint_parent_child_" + std::to_string(count++));
+    link->Initialize(parent.m_body, child.m_body);
+    m_link = link;
+    m_linkMateFix = link.get();
+
+    m_phSystem->addLink(*this);
+}
+
+v3d::ConstraintParentChild::~ConstraintParentChild() {
+    m_phSystem->removeLink(*this);
+}

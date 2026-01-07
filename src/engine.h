@@ -7,8 +7,9 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "Editor.h"
 #include "ModelManager.hpp"
+#include "editor/ComponentRegistry.h"
+#include "editor/Editor.h"
 #include "input/InputDevice.hpp"
 #include "input/InputKeys.hpp"
 #include "input/InputManager.h"
@@ -22,7 +23,6 @@
 #include "window.h"
 
 namespace v3d {
-
 class Engine {
    public:
     Engine() : m_window(new Window()) {};
@@ -32,6 +32,7 @@ class Engine {
            rendering::GraphicsBackendType graphicsBackendType)
         : m_window(new Window(width, height)),
           m_gBackendType(graphicsBackendType) {};
+    virtual ~Engine() {}
 
     void run() {
         m_engineStartTime = std::chrono::steady_clock::now();
@@ -52,7 +53,7 @@ class Engine {
 
     InputManager* getInputManager() { return &m_inputManager; }
 
-   private:
+   protected:
     // TODO: change member pointers to smart pointers
     editor::Editor* m_editor;
     std::unique_ptr<ModelManager> m_modelManager = nullptr;
@@ -68,13 +69,6 @@ class Engine {
     bool m_initialized = false;
     int m_targetFrameRate = 60;
 
-    void init();
-    void start();
-    void mainLoop();
-    void cleanup();
-
-    void processInput(GLFWwindow* window);
-
     InputManager m_inputManager;
 
     void initDefaultInput();
@@ -84,5 +78,45 @@ class Engine {
     std::chrono::steady_clock::time_point m_engineStartTime;
     std::chrono::duration<double> m_last_frame_dt =
         std::chrono::duration<double>(1 / 60);
+
+    /// @brief Called after engine initialization, but before all components
+    /// have been initialized
+    virtual void engineStartPre() {}
+    /// @brief Called after all components have been initialized and before the
+    /// main loop starts
+    virtual void engineStart() {}
+
+    // TODO: Implement
+    virtual void logicFrameUpdate() {}
+    virtual void physicsFrameUpdate() {}
+    virtual void graphicsFrameUpdate() {}
+    virtual void editorGUIFrameUpdate() {}
+
+    virtual void cleanupHook() {}
+
+    virtual std::unique_ptr<ModelLoader> makeModelLoader() {
+        // Init Model manager with Assimp as loader
+        Assimp::DefaultLogger::create("AssimpLog.txt", Assimp::Logger::VERBOSE);
+        AssimpLoader::attachDefaultLogger();
+
+        AssimpLoaderPropertes properties;
+        return std::make_unique<AssimpLoader>(std::move(properties));
+    }
+
+   private:
+    editor::EditorComponentRegistry* m_componentRegistry;
+
+    void init();
+    void start();
+    void mainLoop();
+    void cleanup();
+
+    void processInput(GLFWwindow* window);
+    /// @brief Pre-initialize scene component vectors, required to be able to
+    /// add components dynamically
+    /// @param scene
+    /// @param componentRegistry
+    void registerComponents(Scene* scene,
+                            editor::EditorComponentRegistry* componentRegistry);
 };
 }  // namespace v3d

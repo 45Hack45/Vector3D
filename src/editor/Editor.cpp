@@ -1,6 +1,6 @@
 
 
-#include "Editor.h"
+#include "editor/Editor.h"
 
 #include <string>
 
@@ -8,11 +8,8 @@
 #include "backends/imgui_impl_opengl3.h"
 #include "scene.h"
 
-#define _nameMaxSize 64
-
 namespace v3d {
 namespace editor {
-void Editor::Init(Engine* engine) { m_engine = engine; }
 
 void Editor::renderHierarchyGui(Entity* entity) {
     std::string name = entity->getName();
@@ -90,53 +87,6 @@ void Editor::renderHierarchyGui(Entity* entity) {
         }
 
         ImGui::TreePop();
-    }
-}
-
-void Editor::renderEntityEditorPropertiesGui(Entity* entity) {
-    if (!entity) return;
-
-    char nameBuffer[_nameMaxSize];
-
-    entity->getName().copy(nameBuffer, _nameMaxSize);
-
-    ImGui::InputText("Entity", nameBuffer, _nameMaxSize);
-    entity->setName(std::string(nameBuffer));
-
-    // ImGui::Text(entity->m_name.c_str());
-    ImGui::Spacing();
-
-    // // Draw Transform
-    // if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
-    // {
-    //     entity->transform.drawEditorGUI_Properties();
-    // }
-
-    // ImGui::Spacing();
-    // ImGui::Spacing();
-
-    // // Draw meshrenderer
-    // if (ImGui::CollapsingHeader("MeshRenderer"))
-    //     entity->meshRenderer.drawEditorGUI_Properties();
-
-    // ImGui::Spacing();
-    // ImGui::Spacing();
-
-    // // Draw material
-    // if (entity->meshRenderer.m_material)
-    //     if (ImGui::CollapsingHeader("Material",
-    //     ImGuiTreeNodeFlags_DefaultOpen))
-    //         entity->meshRenderer.m_material->drawEditorGUI_Properties();
-
-    // ImGui::Spacing();
-    // ImGui::Spacing();
-
-    // Draw components
-    for (auto component : entity->getComponents()) {
-        if (ImGui::CollapsingHeader(component->getComponentName().c_str())) {
-            component->drawEditorGUI_Properties();
-        }
-        ImGui::Spacing();
     }
 }
 
