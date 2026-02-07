@@ -1,6 +1,10 @@
 #pragma once
 
+#include <fstream>
+
 #include "input/InputDevice.hpp"
+#include "input/KeyboardDevice.h"
+#include <boost/serialization/unique_ptr.hpp>
 
 namespace v3d {
 class Engine;
@@ -51,6 +55,13 @@ class InputManager {
 
     inline std::size_t getNumDevices() const noexcept {
         return m_devices.size();
+    }
+
+    void storeDevice(uint8_t deviceId, std::string filename){
+        std::ofstream ofs(filename);
+        boost::archive::text_oarchive oa(ofs);
+        oa.register_type<v3d::input::KeyboardDevice>();
+        oa << m_devices[deviceId];
     }
 };
 }  // namespace v3d

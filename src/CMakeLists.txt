@@ -30,6 +30,7 @@ set(vector_3d_core_HEADERS
     ${CMAKE_SOURCE_DIR}/src/object_ptr.hpp
     ${CMAKE_SOURCE_DIR}/src/observer_ptr.hpp
     ${CMAKE_SOURCE_DIR}/src/scene.h
+    ${CMAKE_SOURCE_DIR}/src/serialization.hpp
     ${CMAKE_SOURCE_DIR}/src/transform.h
     ${CMAKE_SOURCE_DIR}/src/window.h
 )
@@ -75,6 +76,7 @@ set(vector_3d_editor_FILES
 message(STATUS "-- INPUT")
 
 set(vector_3d_input_SOURCES
+    ${CMAKE_SOURCE_DIR}/src/input/KeyboardDevice.cpp
 )
 
 set(vector_3d_input_HEADERS
@@ -82,7 +84,7 @@ set(vector_3d_input_HEADERS
     ${CMAKE_SOURCE_DIR}/src/input/InputKeyCodes.hpp
     ${CMAKE_SOURCE_DIR}/src/input/InputKeys.hpp
     ${CMAKE_SOURCE_DIR}/src/input/InputManager.h
-    ${CMAKE_SOURCE_DIR}/src/input/KeyboardDevice.hpp
+    ${CMAKE_SOURCE_DIR}/src/input/KeyboardDevice.h
 )
 
 set(vector_3d_input_FILES

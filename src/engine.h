@@ -125,5 +125,8 @@ class Engine {
     /// @param componentRegistry
     void registerComponents(Scene* scene,
                             editor::EditorComponentRegistry* componentRegistry);
+
+    void saveScene(std::string filename);
+    void loadScene(std::string filename);
 };
 }  // namespace v3d

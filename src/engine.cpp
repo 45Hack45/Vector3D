@@ -9,6 +9,7 @@
 #include <boost/stacktrace.hpp>
 #include <cassert>
 #include <csignal>
+#include <fstream>
 #include <ostream>
 #include <sstream>
 #include <string>
@@ -16,7 +17,7 @@
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
 #include "imgui.h"
-#include "input/KeyboardDevice.hpp"
+#include "input/KeyboardDevice.h"
 #include "physics/Vehicle.h"
 #include "physics/VehicleInteractiveController.h"
 #include "physics/collider.h"
@@ -24,6 +25,7 @@
 #include "plog/Severity.h"
 #include "rendering/mesh_renderer.h"
 #include "rendering/null_graphics_backend.hpp"
+#include "serialization.hpp"
 #include "transform.h"
 
 // ------------------------------- TEMP ----------------------------------
@@ -296,6 +298,18 @@ void Engine::mainLoop() {
             m_targetFrameRate = targetFPS;
         }
         ImGui::Spacing();
+
+        if (ImGui::Button("Test save keyboard bindings")) {
+            m_inputManager.storeDevice(0, "KeyboardConfig.txt");
+        }
+        if (ImGui::Button("Test save scene")) {
+            saveScene("testSceneSave.xml");
+        }
+        if (ImGui::Button("Test load scene")) {
+            loadScene("testSceneSave.xml");
+        }
+
+        ImGui::Spacing();
         if (ImGui::CollapsingHeader("Physics")) m_phSystem.renderDebbugGUI();
         ImGui::Spacing();
 
@@ -344,5 +358,19 @@ void Engine::registerComponents(
                                          info->componentCollectionFactory());
         }
     }
+
+void Engine::saveScene(std::string filename) {
+    std::ofstream ofs(filename);
+    boost::archive::text_oarchive oa(ofs);
+    oa << boost::serialization::make_nvp("scene", m_scene);
+}
+
+void Engine::loadScene(std::string filename) {
+    std::ifstream ifs(filename);
+    boost::archive::text_iarchive ia(ifs);
+    Scene* scene;
+    ia >> boost::serialization::make_nvp("scene", m_scene);
+    scene->init();
+}
 
 }  // namespace v3d

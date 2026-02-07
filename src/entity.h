@@ -14,6 +14,7 @@ class RigidBody;
 
 class Entity : public IEditorGUISelectable {
     friend class Scene;
+    friend class boost::serialization::access;
 
    public:
     std::string getName() const { return m_name; }
@@ -110,6 +111,15 @@ class Entity : public IEditorGUISelectable {
    private:
     void removeChild(entity_ptr child);
     void addChild(entity_ptr child);
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int version) {
+        ar & m_id;
+        ar & m_name;
+        ar & m_parent;
+        ar & m_childs;
+        ar & m_components;
+    }
 };
 
 }  // namespace v3d

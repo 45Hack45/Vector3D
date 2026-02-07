@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <stdexcept>
 #include <vector>
+#include <boost/serialization/serialization.hpp>
 
 namespace v3d {
 class Entity;
@@ -13,6 +14,8 @@ class Scene;
 
 template <typename Container, typename T, typename key = boost::uuids::uuid>
 class object_ptr {
+    friend class boost::serialization::access;
+
    public:
     object_ptr() : m_vec(nullptr) {}
     object_ptr(Container& vec, key index) : m_vec(&vec), m_index(index) {
@@ -130,6 +133,12 @@ class object_ptr {
    private:
     Container* m_vec;
     key m_index;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int version) {
+        ar & m_index;
+        ar & m_vec;
+    }
 };
 
 }  // namespace v3d

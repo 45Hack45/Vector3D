@@ -5,6 +5,7 @@
 #include <string_view>
 #include <unordered_map>
 
+#include "serialization.hpp"
 #include "utils/utils.hpp"
 #include "window.h"
 
@@ -18,6 +19,11 @@ struct InputKey {
     }
     constexpr bool operator!=(const InputKey& other) const noexcept {
         return code != other.code;
+    }
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int version) {
+        ar & code;
     }
 };
 
@@ -41,6 +47,11 @@ struct InputAction {
     constexpr bool operator!=(const InputAction& other) const noexcept {
         return code != other.code;
     }
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int version) {
+        ar & code;
+    }
 };
 
 struct InputActionHasher {
@@ -57,9 +68,17 @@ inline constexpr InputAction makeInputActionID(std::string_view name) {
 struct InputMap {
     InputAction m_action;
     InputKey m_key;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int version) {
+        ar & m_key;
+        ar & m_action;
+    }
 };
 
 class InputProfile {
+    friend class boost::serialization::access;
+
    public:
     InputProfile() = default;
     ~InputProfile() = default;
@@ -74,6 +93,11 @@ class InputProfile {
 
    private:
     std::unordered_map<InputAction, InputMap, InputActionHasher> m_mappings;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int version) {
+        ar & m_mappings;
+    }
 };
 
 enum InputDeviceType {
@@ -84,6 +108,8 @@ enum InputDeviceType {
 };
 
 class InputDevice {
+    friend class boost::serialization::access;
+
    public:
     InputDevice(Window* window, InputProfile profile)
         : m_window(window), m_profile(std::move(profile)) {};
@@ -106,6 +132,12 @@ class InputDevice {
     Window* m_window;
     InputProfile m_profile;
     bool muted = false;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int version) {
+        ar & m_profile;
+        ar & m_profile;
+    }
 };
 
 }  // namespace input
