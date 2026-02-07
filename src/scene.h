@@ -2,6 +2,10 @@
 
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
+<<<<<<< HEAD
+=======
+#include <boost/serialization/version.hpp>
+>>>>>>> 329ddcc (WIP: Serialization)
 #include <cassert>
 #include <iostream>
 #include <memory>
@@ -13,6 +17,7 @@
 #include "component.h"
 #include "entity.h"
 #include "object_ptr.hpp"
+#include "serialization.hpp"
 #include "utils/utils.hpp"
 
 namespace v3d {
@@ -23,6 +28,7 @@ const uint8_t MAX_ENTITY_NESTED_DEPTH = 255;
 
 class Scene {
     friend class Engine;
+    friend class boost::serialization::access;
 
     struct Private {
         explicit Private() = default;
@@ -34,6 +40,7 @@ class Scene {
      * @param
      */
     Scene(Private) {};
+    Scene() {};
     ~Scene() {};
 
     /**
@@ -116,7 +123,11 @@ class Scene {
     componentID_t insertEntityComponent(
         entity_ptr entity, std::unique_ptr<ComponentBase> component) {
         return insertEntityComponent(entity, std::move(component),
+<<<<<<< HEAD
                                      boost::uuids::random_generator()());
+=======
+                              boost::uuids::random_generator()());
+>>>>>>> 329ddcc (WIP: Serialization)
     }
 
     template <typename T, typename... Args>
@@ -233,6 +244,43 @@ class Scene {
     EntityMap m_entities;
     ComponentMap m_components;
 
+    template<class Archive>
+    void serialize(Archive & ar, const unsigned int version)
+    {
+        int degrees = 32, minutes = 64, seconds = 128, v = version;
+        ar & BOOST_SERIALIZATION_NVP(degrees);
+        ar & BOOST_SERIALIZATION_NVP(minutes);
+        ar & BOOST_SERIALIZATION_NVP(seconds);
+        ar & BOOST_SERIALIZATION_NVP(v);
+    }
+
+    // template <class Archive>
+    // void serialize(Archive& ar, const unsigned int version) {
+    //     // ar & m_components;
+    //     // ar & m_entities;
+    //     // ar & m_root;
+    //     std::cout << "Serializing file, version:  " << version << "\n" ;
+    //     int pollo = 1024;
+    //     ar & pollo;
+    // }
+
+    // template <class Archive>
+    // void save(Archive& ar, const unsigned int version) const {
+    //     ar << m_entities;
+    //     ar << m_root;
+    // }
+
+    // template <class Archive>
+    // void load(Archive& ar, const unsigned int version) {
+    //     ar >> m_entities;
+    //     ar >> m_root;
+    // }
+
+    // template <class Archive>
+    // void serialize(Archive& ar, const unsigned int file_version) {
+    //     boost::serialization::split_member(ar, *this, file_version);
+    // }
+
     void init();
 
     entity_ptr createEntity() {
@@ -263,5 +311,6 @@ class Scene {
         });
     }
 };
-
 }  // namespace v3d
+
+// BOOST_CLASS_VERSION(v3d::Scene, 1);
