@@ -23,23 +23,17 @@
 #include "window.h"
 
 namespace v3d {
+#define DEFAULT_GRAPHICS_BACKEND_TYPE rendering::GraphicsBackendType::VULKAN_API
 class Engine {
    public:
-    Engine() : m_window(new Window()) {};
-    Engine(uint32_t width, uint32_t height)
-        : m_window(new Window(width, height)) {};
     Engine(uint32_t width, uint32_t height,
-           rendering::GraphicsBackendType graphicsBackendType)
-        : m_window(new Window(width, height)),
-          m_gBackendType(graphicsBackendType) {};
-    virtual ~Engine() {}
+           rendering::GraphicsBackendType graphicsBackendType =
+               DEFAULT_GRAPHICS_BACKEND_TYPE);
+    virtual ~Engine();
 
     void run() {
-        m_engineStartTime = std::chrono::steady_clock::now();
-        init();
         start();
         mainLoop();
-        cleanup();
     }
 
     inline void registerRenderTarget(rendering::IRenderable* renderTarget) {
@@ -62,18 +56,17 @@ class Engine {
 
    protected:
     // TODO: change member pointers to smart pointers
-    editor::Editor* m_editor;
+    std::unique_ptr<editor::Editor> m_editor;
     std::unique_ptr<ModelManager> m_modelManager = nullptr;
 
     rendering::GraphicsBackendType m_gBackendType =
-        rendering::GraphicsBackendType::VULKAN_API;
-    rendering::GraphicsBackend* m_graphicsBackend;
-    rendering::VulkanBackend* m_vulkanBackend;
-    rendering::OpenGlBackend* m_openGlBackend;
-    rendering::NullGraphicsBackend* m_nullGraphicsBackend;
-    Window* m_window;
+        DEFAULT_GRAPHICS_BACKEND_TYPE;
+    std::unique_ptr<rendering::GraphicsBackend> m_graphicsBackend;
+    // rendering::VulkanBackend* m_vulkanBackend;
+    // rendering::OpenGlBackend* m_openGlBackend;
+    // rendering::NullGraphicsBackend* m_nullGraphicsBackend;
+    std::unique_ptr<Window> m_window;
 
-    bool m_initialized = false;
     int m_targetFrameRate = 60;
 
     InputManager m_inputManager;
@@ -113,10 +106,8 @@ class Engine {
    private:
     editor::EditorComponentRegistry* m_componentRegistry;
 
-    void init();
     void start();
     void mainLoop();
-    void cleanup();
 
     void processInput(GLFWwindow* window);
     /// @brief Pre-initialize scene component vectors, required to be able to

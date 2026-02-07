@@ -24,6 +24,52 @@ const bool enableValidationLayers = true;
 
 namespace v3d {
 namespace rendering {
+std::optional<uint32_t> getGraphicsQueueFamilyIndex(
+    const vk::PhysicalDevice& physicalDevice, const vk::SurfaceKHR& surface);
+
+VulkanBackend::VulkanBackend(Window* window) : GraphicsBackend(window) {
+    PLOGI << "Initializing Vulkan" << std::endl;
+
+#ifdef _DEBUG
+    m_debug_utils_create_info = createDebugMessenger();
+    m_instance = createInstance(m_debug_utils_create_info);
+    m_debugMessenger =
+        m_instance.createDebugUtilsMessengerEXT(m_debug_utils_create_info);
+#else
+    m_instance = createInstance();
+#endif
+
+    m_vulkanDevice.surface = createSurface(m_instance, m_window->getWindow());
+
+    m_vulkanDevice.physicalDevice =
+        getSuitablePhysicalDevice(m_vulkanDevice.surface, deviceExtensions);
+    m_vulkanDevice.graphicsQueueFamilyIndex =
+        getGraphicsQueueFamilyIndex(m_vulkanDevice.physicalDevice,
+                                    m_vulkanDevice.surface)
+            .value();
+    m_vulkanDevice.device =
+        createLogicalDevice(m_vulkanDevice, deviceExtensions, {});
+    m_vulkanDevice.deviceQueue = m_vulkanDevice.device.getQueue(
+        m_vulkanDevice.graphicsQueueFamilyIndex, 0);
+
+    m_vulkanDevice.initialized = true;
+
+    PLOGI << "Vulkan initialized" << std::endl;
+}
+
+VulkanBackend::~VulkanBackend() {
+    if (m_vulkanDevice.initialized) {
+        m_vulkanDevice.device.destroy();
+    }
+
+#ifdef _DEBUG
+    cleanupDebugMessenger();
+#endif
+
+    if (m_vulkanDevice.initialized)
+        m_instance.destroySurfaceKHR(m_vulkanDevice.surface);
+    m_instance.destroy();
+}
 
 Mesh* VulkanBackend::createMesh(std::string filePath) {
     throw exception::NotImplemented();
@@ -339,57 +385,8 @@ vk::Device v3d::rendering::VulkanBackend::createLogicalDevice(
     }
 }
 
-void VulkanBackend::initVulkan() {
-    PLOGI << "Initializing Vulkan" << std::endl;
-
-#ifdef _DEBUG
-    m_debug_utils_create_info = createDebugMessenger();
-    m_instance = createInstance(m_debug_utils_create_info);
-    m_debugMessenger =
-        m_instance.createDebugUtilsMessengerEXT(m_debug_utils_create_info);
-#else
-    m_instance = createInstance();
-#endif
-
-    m_vulkanDevice.surface = createSurface(m_instance, m_window->getWindow());
-
-    m_vulkanDevice.physicalDevice =
-        getSuitablePhysicalDevice(m_vulkanDevice.surface, deviceExtensions);
-    m_vulkanDevice.graphicsQueueFamilyIndex =
-        getGraphicsQueueFamilyIndex(m_vulkanDevice.physicalDevice,
-                                    m_vulkanDevice.surface)
-            .value();
-    m_vulkanDevice.device =
-        createLogicalDevice(m_vulkanDevice, deviceExtensions, {});
-    m_vulkanDevice.deviceQueue = m_vulkanDevice.device.getQueue(
-        m_vulkanDevice.graphicsQueueFamilyIndex, 0);
-
-    m_vulkanDevice.initialized = true;
-
-    PLOGI << "Vulkan initialized" << std::endl;
-}
-
 void VulkanBackend::frame_update() {}
 
-void VulkanBackend::cleanup_vulkan() {
-    if (!m_initialized) {
-        return;
-    }
-
-    if (m_vulkanDevice.initialized) {
-        m_vulkanDevice.device.destroy();
-    }
-
-#ifdef _DEBUG
-    cleanupDebugMessenger();
-#endif
-
-    if (m_vulkanDevice.initialized)
-        m_instance.destroySurfaceKHR(m_vulkanDevice.surface);
-    m_instance.destroy();
-
-    m_initialized = false;
-}
 }  // namespace rendering
 
 }  // namespace v3d

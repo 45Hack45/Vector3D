@@ -82,7 +82,7 @@ MeshOpenGL::MeshOpenGL(objl::Mesh& mesh) {
 
     glBindVertexArray(0);  // unbind VAO
 
-    PLOGI << "Buffer handles: " << m_VBO << "; " << m_VAO << "; " << m_EBO
+    PLOGV << "Buffer handles: " << m_VBO << "; " << m_VAO << "; " << m_EBO
           << "\n";
 };
 

@@ -3,33 +3,21 @@
 
 #include <plog/Log.h>
 
+#include <cassert>
+
 namespace v3d {
 
-/**
- * @brief Initializes the window with the given title and rendering API.
- *
- * @param title The title of the window.
- * @param api The rendering API to use for the window. If set to
- *            WindowBackendHint::VULKAN_API, the window will not be
- *            resizable.
- */
-void Window::init(const char *title, rendering::WindowBackendHint api,
-                  float main_scale) {
+Window::Window(const char* title, rendering::WindowBackendHint api,
+               uint32_t width, uint32_t height, float windowScale,
+               bool enableVsync) {
     PLOGI << "Initializing window with size " << m_width << "x" << m_height
           << " and title \"" << title << "\"" << std::endl;
-
-    if (m_initialized) {
-        PLOG_WARNING << "Tried to initialize window that was already "
-                        "initialized"
-                     << std::endl;
-        return;
-    }
 
     switch (api) {
         case v3d::rendering::WindowBackendHint::NONE:
             PLOGI << "  - Windowless mode";
             m_window = NULL;
-            m_initialized = true;
+            m_glfwWindowInitialized = true;
             return;
         case rendering::WindowBackendHint::VULKAN_API:
             glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -46,9 +34,15 @@ void Window::init(const char *title, rendering::WindowBackendHint api,
             break;
     }
 
-    m_window =
-        glfwCreateWindow((int)(m_width * main_scale),
-                         (int)(m_height * main_scale), title, nullptr, nullptr);
+    assert(windowScale >= 1 && "Invalid window scale");
+    assert(width > 0 && height > 0 && "Invalid window resolution");
+
+    m_width = width;
+    m_height = height;
+
+    m_window = glfwCreateWindow((int)(m_width * windowScale),
+                                (int)(m_height * windowScale), title, nullptr,
+                                nullptr);
 
     if (m_window == NULL) {
         PLOG_ERROR << "Failed to create GLFW window" << std::endl;
@@ -57,18 +51,16 @@ void Window::init(const char *title, rendering::WindowBackendHint api,
     }
 
     glfwMakeContextCurrent(m_window);
-    glfwSwapInterval(0);  // Disable vsync
-    // glfwSwapInterval(1);  // Enable vsync
 
-    m_initialized = true;
+    glfwSwapInterval(enableVsync ? 1 : 0);  // Enable/Disable vsync
+
+    m_glfwWindowInitialized = true;
 }
 
-void Window::cleanup() {
-    if (m_initialized) {
+Window::~Window() {
+    if (m_glfwWindowInitialized) {
         glfwDestroyWindow(m_window);
-    } else {
-        PLOG_WARNING << "Tried to cleanup window that was not initialized"
-                     << std::endl;
     }
 }
+
 }  // namespace v3d

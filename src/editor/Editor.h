@@ -10,6 +10,8 @@ constexpr std::string_view EditorPopup_PropertiesAddComponent =
     "editorPropretiesAddComponent";
 
 class Editor {
+    friend class Engine;
+
    private:
     // Variables-----------------------------------
     Engine* m_engine;
@@ -17,12 +19,12 @@ class Editor {
     // Methods-------------------------------------
     Editor(Editor const&) = delete;
     Editor& operator=(Editor const&) = delete;
-    ~Editor() {};
 
    public:
     // Methods-------------------------------------
 
     Editor(Engine* engine) : m_engine(engine) {};
+    ~Editor() {};
 
     void renderGui(float deltaTime, Entity* root, Scene* scene);
     void renderHierarchyGui(Entity* entity);

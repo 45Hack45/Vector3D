@@ -10,10 +10,7 @@ namespace rendering {
 
 class OpenGlBackend : public GraphicsBackend {
    public:
-    OpenGlBackend(Window* window) : GraphicsBackend(window) {}
-
-    void init() override;
-    void cleanup() override;
+    OpenGlBackend(Window* window);
 
     Mesh* createMesh(std::string filePath) override;
 

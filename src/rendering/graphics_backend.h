@@ -17,8 +17,6 @@ class GraphicsBackend {
     friend class Engine;
 
    public:
-    virtual void init() = 0;
-    virtual void cleanup() = 0;
 
     void update();
     void present();
@@ -46,7 +44,7 @@ class GraphicsBackend {
      * @param renderTarget Pointer to the IRenderable object to unregister.
      */
     inline void unregisterRenderTarget(IRenderable* renderTarget) {
-if (!renderTarget) return;
+        if (!renderTarget) return;
 
         auto it = std::find(m_renderTargets.begin(), m_renderTargets.end(),
                             renderTarget);
@@ -54,7 +52,7 @@ if (!renderTarget) return;
         if (it != m_renderTargets.end()) m_renderTargets.erase(it);
     }
 
-/**
+    /**
      * @brief Registers a gizmos target object to the list of gizmos targets.
      *
      * @param gizmosTarget Pointer to the IGizmosRenderable object to register.
@@ -64,20 +62,20 @@ if (!renderTarget) return;
     }
 
     /**
-    * @brief Unregisters a gizmos target object from the list of gizmos
+     * @brief Unregisters a gizmos target object from the list of gizmos
      * targets. Removes the first occurrence of the given gizmos target from the
      * list.
-    *
-* @param gizmosTarget Pointer to the IGizmosRenderable object to
+     *
+     * @param gizmosTarget Pointer to the IGizmosRenderable object to
      * unregister.
-    */
+     */
     inline void unregisterGizmosTarget(IGizmosRenderable* gizmosTarget) {
-    if (!gizmosTarget) return;
+        if (!gizmosTarget) return;
 
-auto it = std::find(m_gizmosTargets.begin(), m_gizmosTargets.end(),
-    gizmosTarget);
+        auto it = std::find(m_gizmosTargets.begin(), m_gizmosTargets.end(),
+                            gizmosTarget);
 
-if (it != m_gizmosTargets.end()) m_gizmosTargets.erase(it);
+        if (it != m_gizmosTargets.end()) m_gizmosTargets.erase(it);
     }
 
     GizmosManager* gizmos;
@@ -85,7 +83,6 @@ if (it != m_gizmosTargets.end()) m_gizmosTargets.erase(it);
 
    protected:
     Window* m_window = nullptr;
-    bool m_initialized = false;
 
     std::vector<IRenderable*> m_renderTargets;
     std::vector<IGizmosRenderable*> m_gizmosTargets;
