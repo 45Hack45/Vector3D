@@ -12,6 +12,13 @@
 namespace v3d {
 REGISTER_COMPONENT(RigidBody);
 
+RigidBody::~RigidBody() {
+    if (m_body && m_scene) {
+        // Ensure that the chBody is cleared.
+        m_scene->getPhysics()->removeBody(*this);
+    }
+}
+
 void RigidBody::init() {
     // Initialize chrono rigidbody and add to the system
     // TODO: Relate to the parent
@@ -42,11 +49,13 @@ void RigidBody::addCollider(ColliderBase& collider) {
     m_body->EnableCollision(true);
 }
 
-void RigidBody::hardResetBody(chrono::ChBody* newBody) {
+void RigidBody::hardResetBody(std::shared_ptr<chrono::ChBody> newBody) {
     // Remove the current body from the system
     // it will be deleted if it doesn't have external references
     m_scene->getPhysics()->removeBody(*this);
-    m_body.reset(newBody);
+    m_body.reset();
+
+    m_body = newBody;
 }
 
 void RigidBody::setParent(RigidBody* parent) {

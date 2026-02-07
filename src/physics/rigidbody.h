@@ -38,7 +38,7 @@ class RigidBody : public ComponentBase {
 
    public:
     RigidBody() = default;
-    ~RigidBody() override = default;
+    ~RigidBody() override;
 
     RigidBody(RigidBody&&) = default;
     RigidBody& operator=(RigidBody&&) = default;
@@ -90,7 +90,7 @@ class RigidBody : public ComponentBase {
     RigidBody* m_parent = nullptr;
     std::unique_ptr<ConstraintParentChild> m_parentRelConstrain = nullptr;
 
-    void hardResetBody(chrono::ChBody* newBody);
+    void hardResetBody(std::shared_ptr<chrono::ChBody> newBody);
     void setParent(RigidBody* parent);
 };
 }  // namespace v3d

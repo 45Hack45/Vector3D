@@ -93,7 +93,7 @@ class Entity : public IEditorGUISelectable {
     void drawEditorGUI_Properties() override;
     void setParent(entity_ptr newParent);
 
-    Scene* m_scene;
+    Scene* m_scene = nullptr;
     // TODO: Add reference to Transform and Rigidbody
 
    protected:

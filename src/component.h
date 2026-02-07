@@ -22,7 +22,7 @@ class ComponentBase : public rendering::IGizmosRenderable,
 
    public:
     ComponentBase() = default;
-    virtual ~ComponentBase() = default;
+    virtual ~ComponentBase();
 
     virtual void init() {};
     virtual void start() = 0;
@@ -45,7 +45,7 @@ class ComponentBase : public rendering::IGizmosRenderable,
    protected:
     componentID_t m_id;
     entityID_t m_entity;
-    Scene* m_scene;
+    Scene* m_scene = nullptr;
 
     void setEntity(entityID_t entity) { m_entity = entity; }
 

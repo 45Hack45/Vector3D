@@ -3,9 +3,9 @@
 
 #include <iostream>
 
+#include "editor/ComponentRegistry.h"
 #include "engine.h"
 #include "scene.h"
-#include "editor/ComponentRegistry.h"
 
 namespace v3d {
 
@@ -13,8 +13,12 @@ REGISTER_COMPONENT(AbsoluteASCIIComponent);
 REGISTER_COMPONENT(CinemaASCIIComponent);
 REGISTER_COMPONENT(TestComponent);
 
+ComponentBase::~ComponentBase() {
+    if (m_scene != nullptr) m_scene->getEngine()->unregisterGizmosTarget(this);
+}
+
 void ComponentBase::_init() {
-    m_scene->getEngine()->registerGizmosTarget(this);
+    if (m_scene != nullptr) m_scene->getEngine()->registerGizmosTarget(this);
 }
 
 const char* CINEMA_ART_IMAGE = R"(

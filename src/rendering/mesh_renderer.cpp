@@ -12,7 +12,7 @@
 
 namespace v3d {
 MeshRenderer::MeshRenderer() {}
-MeshRenderer::~MeshRenderer() {}
+MeshRenderer::~MeshRenderer() { resetMesh(); }
 
 // auto MeshRenderer::dependencies() {
 //     // return std::tuple<Transform>{};
@@ -33,6 +33,12 @@ void MeshRenderer::init() {
 
 void MeshRenderer::registerRenderTarget() {
     m_scene->getEngine()->registerRenderTarget(this);
+}
+
+void MeshRenderer::unregisterRenderTarget() {
+    if (m_scene != nullptr){
+        m_scene->getEngine()->unregisterRenderTarget(this);
+    }
 }
 
 void MeshRenderer::renderElement() { m_mesh->draw(); }

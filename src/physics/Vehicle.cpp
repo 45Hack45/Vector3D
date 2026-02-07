@@ -142,7 +142,7 @@ void Vehicle::loadVehicleModelJSON() {
 
     // Set rigidbody internal body to vehicle chasis body
     m_rigidBody->hardResetBody(
-        (chrono::ChBody*)vehicle->GetChassisBody().get());
+        (std::shared_ptr<chrono::ChBody>)vehicle->GetChassisBody());
 
     m_vehicleModelPathDirty = false;
     m_isLoaded = true;

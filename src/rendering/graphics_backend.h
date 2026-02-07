@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -38,24 +39,46 @@ class GraphicsBackend {
         m_renderTargets.push_back(renderTarget);
     }
 
+    /**
+     * @brief Unregisters a render target object from the list of rendertargets.
+     * Removes the first occurrence of the given render target from the list.
+     *
+     * @param renderTarget Pointer to the IRenderable object to unregister.
+     */
+    inline void unregisterRenderTarget(IRenderable* renderTarget) {
+if (!renderTarget) return;
+
+        auto it = std::find(m_renderTargets.begin(), m_renderTargets.end(),
+                            renderTarget);
+
+        if (it != m_renderTargets.end()) m_renderTargets.erase(it);
+    }
+
+/**
+     * @brief Registers a gizmos target object to the list of gizmos targets.
+     *
+     * @param gizmosTarget Pointer to the IGizmosRenderable object to register.
+     */
     inline void registerGizmosTarget(IGizmosRenderable* gizmosTarget) {
         m_gizmosTargets.push_back(gizmosTarget);
     }
 
-    // /**
-    //  * @brief Unregisters a render target object from the list of render
-    //  targets.
-    //  *
-    //  * Removes the first occurrence of the given render target from the list.
-    //  *
-    //  * @param renderTarget Pointer to the IRenderable object to unregister.
-    //  */
-    // void unregisterRenderable(IRenderable *renderable) {
-    //     auto it = std::find(m_renderTargets.begin(), m_renderTargets.end(),
-    //     renderable); if (it != m_renderTargets.end()) {
-    //         m_renderTargets.erase(it);
-    //     }
-    // }
+    /**
+    * @brief Unregisters a gizmos target object from the list of gizmos
+     * targets. Removes the first occurrence of the given gizmos target from the
+     * list.
+    *
+* @param gizmosTarget Pointer to the IGizmosRenderable object to
+     * unregister.
+    */
+    inline void unregisterGizmosTarget(IGizmosRenderable* gizmosTarget) {
+    if (!gizmosTarget) return;
+
+auto it = std::find(m_gizmosTargets.begin(), m_gizmosTargets.end(),
+    gizmosTarget);
+
+if (it != m_gizmosTargets.end()) m_gizmosTargets.erase(it);
+    }
 
     GizmosManager* gizmos;
     MeshPrimitives m_primitives;  // FIXME: Make private/protected

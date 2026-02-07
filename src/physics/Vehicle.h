@@ -33,6 +33,7 @@ class Vehicle : public ComponentBase {
 
    public:
     Vehicle() = default;
+    // TODO: Restore the Rigidbody chBody when the vehicle instance is destroyed
     ~Vehicle() override = default;
 
     // Remove Copy

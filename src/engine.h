@@ -45,10 +45,17 @@ class Engine {
     inline void registerRenderTarget(rendering::IRenderable* renderTarget) {
         m_graphicsBackend->registerRenderTarget(renderTarget);
     }
+    inline void unregisterRenderTarget(rendering::IRenderable* renderTarget) {
+        m_graphicsBackend->unregisterRenderTarget(renderTarget);
+    }
 
     inline void registerGizmosTarget(
         rendering::IGizmosRenderable* gizmosTarget) {
         m_graphicsBackend->registerGizmosTarget(gizmosTarget);
+    }
+    inline void unregisterGizmosTarget(
+        rendering::IGizmosRenderable* gizmosTarget) {
+        m_graphicsBackend->unregisterGizmosTarget(gizmosTarget);
     }
 
     InputManager* getInputManager() { return &m_inputManager; }

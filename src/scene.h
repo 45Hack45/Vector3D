@@ -83,7 +83,8 @@ class Scene {
     }
 
     componentID_t insertEntityComponent(
-        entity_ptr entity, std::unique_ptr<ComponentBase> component) {
+        entity_ptr entity, std::unique_ptr<ComponentBase> component,
+        componentID_t uuid) {
         // TODO: Instantiate dependancies
         // // Instantiate all unmet dependencies first
         // instantiateComponentDependancies<T>(entity);

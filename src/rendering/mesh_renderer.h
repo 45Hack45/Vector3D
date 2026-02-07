@@ -25,8 +25,8 @@ class MeshRenderer : public rendering::IRenderable, public ComponentBase {
         registerRenderTarget();
     };
     void resetMesh() {
+        unregisterRenderTarget();
         m_mesh = nullptr;
-        // TODO: Unregister render target
     };
 
    private:
@@ -39,6 +39,6 @@ class MeshRenderer : public rendering::IRenderable, public ComponentBase {
     void setUniforms(Shader* shader) override;
 
     void registerRenderTarget();
-    // TODO: Implement unregisterRenderTarget
+    void unregisterRenderTarget();
 };
 }  // namespace v3d

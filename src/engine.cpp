@@ -337,9 +337,11 @@ void Engine::processInput(GLFWwindow* window) {}
 
 void Engine::registerComponents(
     Scene* scene, editor::EditorComponentRegistry* componentRegistry) {
-        std::vector<const editor::ComponentEditorRegistrationInfo*> componentsInfo = componentRegistry->getAllInfo();
-        for (auto info : componentsInfo){
-            scene->m_components.registerType(info->componentType, info->componentCollectionFactory());
+    std::vector<const editor::ComponentEditorRegistrationInfo*> componentsInfo =
+        componentRegistry->getAllInfo();
+    for (auto info : componentsInfo) {
+        scene->m_components.registerType(info->componentType,
+                                         info->componentCollectionFactory());
         }
     }
 
