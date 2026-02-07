@@ -122,5 +122,6 @@ int main(int argc, char* argv[]) {
         default:
             break;
     }
+    PLOGI << "Exiting" << std::endl;
     return EXIT_SUCCESS;
 }

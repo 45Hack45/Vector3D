@@ -2,6 +2,7 @@
 
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
+#include <cassert>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -13,7 +14,6 @@
 #include "entity.h"
 #include "object_ptr.hpp"
 #include "utils/utils.hpp"
-#include <cassert>
 
 namespace v3d {
 class Engine;
@@ -94,7 +94,6 @@ class Scene {
         assert(component && "Null component");
 
         // Add Component
-        componentID_t uuid = boost::uuids::random_generator()();
         ComponentBase* componentRef = component.get();
         m_components.insert(uuid, std::move(component));
 
@@ -112,6 +111,12 @@ class Scene {
         componentRef->start();
 
         return uuid;
+    }
+
+    componentID_t insertEntityComponent(
+        entity_ptr entity, std::unique_ptr<ComponentBase> component) {
+        return insertEntityComponent(entity, std::move(component),
+                                     boost::uuids::random_generator()());
     }
 
     template <typename T, typename... Args>

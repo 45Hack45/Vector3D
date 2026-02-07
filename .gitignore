@@ -3,6 +3,9 @@ libraries/boost*
 libraries/projectchrono_build
 build
 
+# obj material
+*.mtl
+
 ##### Windows
 # Windows thumbnail cache files
 Thumbs.db

@@ -35,14 +35,6 @@ void Entity::drawEditorGUI_Properties() {
                          ImGuiPopupFlags_NoOpenOverExistingPopup);
     }
     if (ImGui::BeginPopup(editor::EditorPopup_PropertiesAddComponent.data())) {
-        if (ImGui::MenuItem("Test 1")) {
-            std::cout << "aAAAAAAAAAA\n";
-            // m_scene->instantiateEntity
-        }
-        ImGui::MenuItem("Test 2");
-        ImGui::MenuItem("Test 3");
-        ImGui::MenuItem("Test 4");
-
         auto componentRegistry = editor::EditorComponentRegistry::instance();
 
         std::vector<std::string> componentsList =
