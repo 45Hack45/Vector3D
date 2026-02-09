@@ -100,10 +100,9 @@ glm::mat4 projection;
 Shader* shader;
 Shader* shaderGrid;
 
-
 namespace v3d {
 namespace rendering {
-OpenGlBackend::OpenGlBackend(Window* window) : GraphicsBackend(window){
+OpenGlBackend::OpenGlBackend(Window* window) : GraphicsBackend(window) {
     PLOGI << "Initializing OpenGL" << std::endl;
 
     PLOGD << "Initializing GLAD" << std::endl;
@@ -202,7 +201,7 @@ void drawGrid() {
 
 }  // namespace v3d
 
-void v3d::rendering::OpenGlBackend::frame_update() {
+void v3d::rendering::OpenGlBackend::frameUpdate() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     float currentFrame = glfwGetTime();
@@ -235,20 +234,26 @@ void v3d::rendering::OpenGlBackend::frame_update() {
     }
 }
 
-void v3d::rendering::OpenGlBackend::present_frame() {
+void v3d::rendering::OpenGlBackend::presentFrame() {
     glfwSwapBuffers(m_window->getWindow());
 }
-void v3d::rendering::OpenGlBackend::pre_draw_gizmos_hook() {
+void v3d::rendering::OpenGlBackend::preDrawGizmosHook() {
     glDisable(GL_DEPTH_TEST);
 }
-void v3d::rendering::OpenGlBackend::post_draw_gizmos_hook() {
+void v3d::rendering::OpenGlBackend::postDrawGizmosHook() {
     glEnable(GL_DEPTH_TEST);
 }
 
-void v3d::rendering::OpenGlBackend::draw_primitive_cube(glm::vec3 position,
-                                                        glm::vec3 scale,
-                                                        glm::vec4 color,
-                                                        bool wireframe) {
+void v3d::rendering::OpenGlBackend::drawPrimitiveLine(glm::vec3 a, glm::vec3 b,
+                                                      float size,
+                                                      glm::vec4 color) {
+    return;
+}
+
+void v3d::rendering::OpenGlBackend::drawPrimitiveCube(glm::vec3 position,
+                                                      glm::vec3 scale,
+                                                      glm::vec4 color,
+                                                      bool wireframe) {
     view = cam.GetViewMatrix();
     projection = glm::perspective(
         glm::radians(cam.Zoom),
@@ -271,10 +276,10 @@ void v3d::rendering::OpenGlBackend::draw_primitive_cube(glm::vec3 position,
     if (wireframe) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
-void v3d::rendering::OpenGlBackend::draw_primitive_sphere(glm::vec3 position,
-                                                          glm::vec3 scale,
-                                                          glm::vec4 color,
-                                                          bool wireframe) {
+void v3d::rendering::OpenGlBackend::drawPrimitiveSphere(glm::vec3 position,
+                                                        glm::vec3 scale,
+                                                        glm::vec4 color,
+                                                        bool wireframe) {
     view = cam.GetViewMatrix();
     projection = glm::perspective(
         glm::radians(cam.Zoom),

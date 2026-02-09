@@ -78,6 +78,12 @@ class GraphicsBackend {
         if (it != m_gizmosTargets.end()) m_gizmosTargets.erase(it);
     }
 
+    /// @brief Command to draw a gizmos on the next frame.
+    /// @param gizmosTarget 
+    inline void immediateDrawGizmos(std::unique_ptr<IGizmosRenderable> gizmosTarget) {
+        m_immediateGgizmosTargets.push_back(std::move(gizmosTarget));
+    }
+
     GizmosManager* gizmos;
     MeshPrimitives m_primitives;  // FIXME: Make private/protected
 
@@ -86,29 +92,39 @@ class GraphicsBackend {
 
     std::vector<IRenderable*> m_renderTargets;
     std::vector<IGizmosRenderable*> m_gizmosTargets;
+    // Internal storage of immediate render targets
+    std::vector<std::unique_ptr<IGizmosRenderable>> m_immediateGgizmosTargets;
 
     virtual void initPrimitives() = 0;
 
-    virtual void frame_update() = 0;
-    virtual void present_frame() = 0;
+    virtual void frameUpdate() = 0;
+    virtual void presentFrame() = 0;
 
-    virtual void pre_draw_gizmos_hook() {};
-    virtual void post_draw_gizmos_hook() {};
-    void draw_gizmos() {
-        pre_draw_gizmos_hook();
-        for (auto renderTarget : m_gizmosTargets) {
-            renderTarget->onDrawGizmos(gizmos);
+    virtual void preDrawGizmosHook() {};
+    virtual void postDrawGizmosHook() {};
+    void drawGizmos() {
+        preDrawGizmosHook();
+        // Callback gizmos draw routines
+        for (auto gizmosTarget : m_gizmosTargets) {
+            gizmosTarget->onDrawGizmos(gizmos);
         }
-        post_draw_gizmos_hook();
+
+        // Draw and clear immediate gizmos calls
+        for (auto &gizmosTarget : m_immediateGgizmosTargets) {
+            gizmosTarget->onDrawGizmos(gizmos);
+        }
+        m_immediateGgizmosTargets.clear();
+
+        postDrawGizmosHook();
     };
 
-    // Inmediate primitive draw
-    virtual void draw_primitive_point(glm::vec3 a, float size) {};
-    virtual void draw_primitive_line(glm::vec3 a, glm::vec3 b, float size) {};
-    virtual void draw_primitive_cube(glm::vec3 position, glm::vec3 scale,
+    // Primitive draw
+    virtual void drawPrimitivePoint(glm::vec3 a, float size, glm::vec4 color) {};
+    virtual void drawPrimitiveLine(glm::vec3 a, glm::vec3 b, float size, glm::vec4 color) {};
+    virtual void drawPrimitiveCube(glm::vec3 position, glm::vec3 scale,
                                      glm::vec4 color,
                                      bool wireframe = false) {};
-    virtual void draw_primitive_sphere(glm::vec3 position, glm::vec3 scale,
+    virtual void drawPrimitiveSphere(glm::vec3 position, glm::vec3 scale,
                                        glm::vec4 color,
                                        bool wireframe = false) {};
 

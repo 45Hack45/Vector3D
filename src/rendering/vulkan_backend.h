@@ -33,8 +33,8 @@ class VulkanBackend : public GraphicsBackend {
 
    protected:
     void initPrimitives() override {};
-    void frame_update() override;
-    void present_frame() override {};
+    void frameUpdate() override;
+    void presentFrame() override {};
 
    private:
     vk::Instance m_instance;

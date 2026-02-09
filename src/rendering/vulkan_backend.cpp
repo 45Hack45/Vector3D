@@ -385,7 +385,7 @@ vk::Device v3d::rendering::VulkanBackend::createLogicalDevice(
     }
 }
 
-void VulkanBackend::frame_update() {}
+void VulkanBackend::frameUpdate() {}
 
 }  // namespace rendering
 

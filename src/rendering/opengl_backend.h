@@ -16,16 +16,17 @@ class OpenGlBackend : public GraphicsBackend {
 
    protected:
     void initPrimitives() override;
-    void frame_update() override;
-    void present_frame() override;
-    void pre_draw_gizmos_hook() override;
-    void post_draw_gizmos_hook() override;
+    void frameUpdate() override;
+    void presentFrame() override;
+    void preDrawGizmosHook() override;
+    void postDrawGizmosHook() override;
 
-    // Inmediate primitive draw
-    virtual void draw_primitive_cube(glm::vec3 position, glm::vec3 scale,
-                                     glm::vec4 color, bool wireframe);
-    virtual void draw_primitive_sphere(glm::vec3 position, glm::vec3 scale,
-                                       glm::vec4 color, bool wireframe);
+    // Primitive draw
+    void drawPrimitiveLine(glm::vec3 a, glm::vec3 b, float size, glm::vec4 color) override;
+    void drawPrimitiveCube(glm::vec3 position, glm::vec3 scale, glm::vec4 color,
+                           bool wireframe) override;
+    void drawPrimitiveSphere(glm::vec3 position, glm::vec3 scale,
+                             glm::vec4 color, bool wireframe) override;
 
    private:
     std::vector<MeshOpenGL*> m_meshList;

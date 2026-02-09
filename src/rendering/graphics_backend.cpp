@@ -1,7 +1,7 @@
 #include "graphics_backend.h"
 
 void v3d::rendering::GraphicsBackend::update() {
-    frame_update();
-    draw_gizmos();
+    frameUpdate();
+    drawGizmos();
 }
-void v3d::rendering::GraphicsBackend::present() { present_frame(); }
+void v3d::rendering::GraphicsBackend::present() { presentFrame(); }

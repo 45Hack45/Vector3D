@@ -52,6 +52,20 @@ class Engine {
         m_graphicsBackend->unregisterGizmosTarget(gizmosTarget);
     }
 
+    /// @brief Command to draw a sphere on the next frame.
+    /// @param position 
+    /// @param scale 
+    /// @param color 
+    /// @param wireframe 
+    inline void immediateDrawGizmosSphere(glm::vec3 position,
+                                          glm::vec3 scale = glm::vec3(1.f),
+                                          glm::vec4 color = glm::vec4(1.f),
+                                          bool wireframe = false) {
+        m_graphicsBackend->immediateDrawGizmos(
+            std::move(std::make_unique<rendering::DrawGizmosSphere>(
+                position, scale, color, wireframe)));
+    }
+
     InputManager* getInputManager() { return &m_inputManager; }
 
    protected:
