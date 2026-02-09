@@ -163,21 +163,25 @@ Engine::Engine(uint32_t width, uint32_t height,
                 "Vector3D Headless", rendering::WindowBackendHint::NONE, width,
                 height, mainScale, true);
 
-            m_graphicsBackend = std::make_unique<rendering::NullGraphicsBackend>(m_window.get());
+            m_graphicsBackend =
+                std::make_unique<rendering::NullGraphicsBackend>(
+                    m_window.get());
             break;
         case rendering::GraphicsBackendType::VULKAN_API:
             m_window = std::make_unique<Window>(
                 "Vector3D Vulkan", rendering::WindowBackendHint::VULKAN_API,
                 width, height, mainScale, true);
 
-            m_graphicsBackend = std::make_unique<rendering::VulkanBackend>(m_window.get());
+            m_graphicsBackend =
+                std::make_unique<rendering::VulkanBackend>(m_window.get());
             break;
         case rendering::GraphicsBackendType::OPENGL_API:
             m_window = std::make_unique<Window>(
                 "Vector3D OpenGL", rendering::WindowBackendHint::OPENGL_API,
                 width, height, mainScale, true);
 
-            m_graphicsBackend = std::make_unique<rendering::OpenGlBackend>(m_window.get());
+            m_graphicsBackend =
+                std::make_unique<rendering::OpenGlBackend>(m_window.get());
             break;
         default:
             throw std::runtime_error(
@@ -253,6 +257,7 @@ void Engine::mainLoop() {
         running = !recieved_forced_close_signal && !m_window->shouldClose();
 
         const auto frame_start = std::chrono::steady_clock::now();
+        double last_frame_dt = m_last_frame_dt.count();
 
         // Poll for window events
         m_window->pollEvents();
@@ -261,8 +266,7 @@ void Engine::mainLoop() {
             continue;
         }
 
-        assert(m_last_frame_dt.count() >= 0 &&
-               std::isfinite(m_last_frame_dt.count()));
+        assert(last_frame_dt >= 0 && std::isfinite(last_frame_dt));
 
         if (io.WantCaptureMouse or io.WantCaptureKeyboard) {
             m_inputManager.muteInput(true);
@@ -275,30 +279,29 @@ void Engine::mainLoop() {
         imgui_beginFrame_();
 
         // Update logic
-        m_scene->update(m_last_frame_dt.count());
+        logicFrameUpdatePre(last_frame_dt);
+        m_scene->update(last_frame_dt);
+        logicFrameUpdate(last_frame_dt);
 
         // Update Physics
+        physicsFrameUpdatePre();
         for (int i = 0; i < 20; i++) m_phSystem.stepSimulation();
+        physicsFrameUpdate();
 
         // Render frame
         // TODO: Pass time and dt, to be able to pass them to a shader
+        graphicsFrameUpdatePre();
         m_graphicsBackend->update();
+        graphicsFrameUpdate();
 
         // Render GUI
-        m_editor->renderGui(m_last_frame_dt.count(), &m_scene->m_root.get(),
+        editorGUIFrameUpdatePre();
+        m_editor->renderGui(last_frame_dt, &m_scene->m_root.get(),
                             m_scene.get());
+        editorGUIFrameUpdate();
 
         // Render debbug window
-        ImGui::Begin("Debbug");
-        int targetFPS = m_targetFrameRate;
-        if (ImGui::InputInt("Target FPS", &targetFPS, 1, 10)) {
-            m_targetFrameRate = targetFPS;
-        }
-        ImGui::Spacing();
-        if (ImGui::CollapsingHeader("Physics")) m_phSystem.renderDebbugGUI();
-        ImGui::Spacing();
-
-        ImGui::End();
+        renderEngineDebugGui(last_frame_dt);
 
         // Render Imgui UI
         imgui_RenderFrame();
@@ -333,6 +336,19 @@ void Engine::initDefaultInput() {
 }
 
 void Engine::processInput(GLFWwindow* window) {}
+
+void Engine::renderEngineDebugGui(double delta) {
+    ImGui::Begin("Debbug");
+    int targetFPS = m_targetFrameRate;
+    if (ImGui::InputInt("Target FPS", &targetFPS, 1, 10)) {
+        m_targetFrameRate = targetFPS;
+    }
+    ImGui::Spacing();
+    if (ImGui::CollapsingHeader("Physics")) m_phSystem.renderDebbugGUI();
+    ImGui::Spacing();
+
+    ImGui::End();
+}
 
 void Engine::registerComponents(
     Scene* scene, editor::EditorComponentRegistry* componentRegistry) {

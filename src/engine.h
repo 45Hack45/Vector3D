@@ -100,10 +100,14 @@ class Engine {
     /// main loop starts
     virtual void engineStart() {}
 
-    // TODO: Implement
-    virtual void logicFrameUpdate() {}
+    // TODO: Improve
+    virtual void logicFrameUpdatePre(double delta) {}
+    virtual void logicFrameUpdate(double delta) {}
+    virtual void physicsFrameUpdatePre() {}
     virtual void physicsFrameUpdate() {}
+    virtual void graphicsFrameUpdatePre() {}
     virtual void graphicsFrameUpdate() {}
+    virtual void editorGUIFrameUpdatePre() {}
     virtual void editorGUIFrameUpdate() {}
 
     virtual void cleanupHook() {}
@@ -116,6 +120,8 @@ class Engine {
         AssimpLoaderPropertes properties;
         return std::make_unique<AssimpLoader>(std::move(properties));
     }
+
+    virtual void renderEngineDebugGui(double delta);
 
    private:
     editor::EditorComponentRegistry* m_componentRegistry;
