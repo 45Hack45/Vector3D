@@ -28,7 +28,6 @@ set(Vector3D_core_HEADERS
     ${CMAKE_CURRENT_SOURCE_DIR}/engine.h
     ${CMAKE_CURRENT_SOURCE_DIR}/entity.h
     ${CMAKE_CURRENT_SOURCE_DIR}/object_ptr.hpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/observer_ptr.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/scene.h
     ${CMAKE_CURRENT_SOURCE_DIR}/transform.h
     ${CMAKE_CURRENT_SOURCE_DIR}/window.h
@@ -204,15 +203,15 @@ set(Vector3D_FILES
 message(STATUS "-- Adding Core Engine Library")
 
 set(extra_thirdparty_FILES
-${CMAKE_SOURCE_DIR}/src/thirdparty/imgui/backends/imgui_impl_glfw.h
-${CMAKE_SOURCE_DIR}/src/thirdparty/imgui/backends/imgui_impl_glfw.cpp
-${CMAKE_SOURCE_DIR}/src/thirdparty/imgui/backends/imgui_impl_opengl3.h
-${CMAKE_SOURCE_DIR}/src/thirdparty/imgui/backends/imgui_impl_opengl3.cpp
-${CMAKE_SOURCE_DIR}/src/thirdparty/imgui/misc/cpp/imgui_stdlib.h
-${CMAKE_SOURCE_DIR}/src/thirdparty/imgui/misc/cpp/imgui_stdlib.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/imgui/backends/imgui_impl_glfw.h
+${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/imgui/backends/imgui_impl_glfw.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/imgui/backends/imgui_impl_opengl3.h
+${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/imgui/backends/imgui_impl_opengl3.cpp
+${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/imgui/misc/cpp/imgui_stdlib.h
+${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/imgui/misc/cpp/imgui_stdlib.cpp
 )
 
-add_library(vector_3d STATIC ${vector_3d_FILES} ${extra_thirdparty_FILES})
+add_library(vector_3d STATIC ${Vector3D_FILES} ${extra_thirdparty_FILES})
 target_include_directories(vector_3d PUBLIC
     ${ENGINE_INCLUDE}
 )

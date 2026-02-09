@@ -41,6 +41,8 @@ add_subdirectory(libraries/assimp)
 message(STATUS "++ Eigen")
 set(EiGEN3_INCLUDE_DIR "" CACHE STRING "Eigen include path")
 
+# OpenMP necessary for external projects to link correctly
+find_package(OpenMP REQUIRED)
 
 message(STATUS "++ Chrono")
 # Project Chrono
@@ -56,7 +58,7 @@ if(NOT Chrono_FOUND)
   return()
 endif()
 
-message(STATUS "CHRONO_STATIC = ${CHRONO_STATIC}")
+# message(STATUS "CHRONO_STATIC = ${CHRONO_STATIC}")
 
 # IF(WIN32)
 #   # set stuff for windows
@@ -66,12 +68,12 @@ message(STATUS "CHRONO_STATIC = ${CHRONO_STATIC}")
 #   set(WINMM_LIB_PATH)
 # ENDIF()
 
-SET(ENGINE_INCLUDE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/src ${CMAKE_SOURCE_DIR}/include/OBJ-Loader-master/Source ${CMAKE_SOURCE_DIR}/src/thirdparty/imgui ${Boost_INCLUDE_DIRS} ${Chrono_INCLUDE_DIR} ${EiGEN3_INCLUDE_DIR} ${CHRONO_INCLUDE_DIRS})
-set(vector_3d_LIBS glfw ${GLFW_LIBRARIES} ${OPENGL_LIBRARIES} Vulkan::Vulkan glm::glm plog ${CHRONO_TARGETS} ${WINMM_LIB_PATH} ${CHRONO_LIBRARIES} ${X11_X11_LIB} assimp)
+SET(ENGINE_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/include/OBJ-Loader-master/Source ${CMAKE_CURRENT_SOURCE_DIR}/src/thirdparty/imgui ${Boost_INCLUDE_DIRS} ${Chrono_INCLUDE_DIR} ${EiGEN3_INCLUDE_DIR} ${CHRONO_INCLUDE_DIRS})
+set(vector_3d_LIBS glfw ${GLFW_LIBRARIES} ${OPENGL_LIBRARIES} Vulkan::Vulkan glm::glm plog ${CHRONO_TARGETS} ${WINMM_LIB_PATH} ${CHRONO_LIBRARIES} ${X11_X11_LIB} assimp OpenMP::OpenMP_CXX)
 
-set(RESOURCES_DIR ${CMAKE_SOURCE_DIR}/resources)
+set(RESOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/resources)
 
-message(STATUS "ENGINE_INCLUDE = ${ENGINE_INCLUDE}")
+# message(STATUS "ENGINE_INCLUDE = ${ENGINE_INCLUDE}")
 
 add_subdirectory(src)
 
@@ -79,9 +81,7 @@ add_subdirectory(src)
 if(VECTOR_3D_BUILD_EXECUTABLE)
   message(STATUS "-- Adding Core Engine Executable")
   add_executable(vector_3d_exe WIN32 "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
-  target_include_directories(vector_3d_exe PRIVATE
-    ${ENGINE_INCLUDE}
-  )
+
   target_link_libraries(vector_3d_exe PRIVATE vector_3d)
   if(MSVC)
     set_target_properties(vector_3d_exe PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE")
@@ -90,14 +90,14 @@ if(VECTOR_3D_BUILD_EXECUTABLE)
   # Copy resources
   add_custom_command(TARGET vector_3d_exe POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-      ${CMAKE_SOURCE_DIR}/resources
+      ${CMAKE_CURRENT_SOURCE_DIR}/resources
       $<TARGET_FILE_DIR:vector_3d_exe>/resources
   )
 
   # Copy external DLLs
   add_custom_command(TARGET vector_3d_exe POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-      ${CMAKE_SOURCE_DIR}/external_dll
+      ${CMAKE_CURRENT_SOURCE_DIR}/external_dll
       $<TARGET_FILE_DIR:vector_3d_exe>
   )
 
@@ -111,7 +111,7 @@ add_custom_target(package_zip ALL
     COMMAND ${CMAKE_COMMAND} -E make_directory "${PACKAGE_DIR}"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${PACKAGE_DIR}/resources"
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:vector_3d_exe> "${PACKAGE_DIR}/"
-    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_SOURCE_DIR}/resources" "${PACKAGE_DIR}/resources/"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${CMAKE_CURRENT_SOURCE_DIR}/resources" "${PACKAGE_DIR}/resources/"
     COMMAND ${CMAKE_COMMAND} -E tar "cfv" "${CMAKE_BINARY_DIR}/Vector3D.zip" --format=zip -- "${PACKAGE_DIR}"
     # WORKING_DIRECTORY "${PACKAGE_DIR}"
     COMMENT "Packaging Vector3D into Vector3D.zip"
