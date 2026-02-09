@@ -211,7 +211,12 @@ ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/imgui/misc/cpp/imgui_stdlib.h
 ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/imgui/misc/cpp/imgui_stdlib.cpp
 )
 
-add_library(vector_3d STATIC ${Vector3D_FILES} ${extra_thirdparty_FILES})
+if(VECTOR_3D_SHARED)
+    add_library(vector_3d SHARED ${Vector3D_FILES} ${extra_thirdparty_FILES})
+else()
+    add_library(vector_3d STATIC ${Vector3D_FILES} ${extra_thirdparty_FILES})
+endif()
+
 target_include_directories(vector_3d PUBLIC
     ${ENGINE_INCLUDE}
 )
