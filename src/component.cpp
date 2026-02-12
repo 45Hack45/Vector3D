@@ -17,6 +17,14 @@ ComponentBase::~ComponentBase() {
     if (m_scene != nullptr) m_scene->getEngine()->unregisterGizmosTarget(this);
 }
 
+entity_ptr ComponentBase::getEntityPtr() {
+    return m_scene->getEntity(m_entity);
+}
+
+std::string ComponentBase::getEntityName() {
+    return m_scene->getEntity(m_entity)->getName();
+}
+
 void ComponentBase::_init() {
     if (m_scene != nullptr) m_scene->getEngine()->registerGizmosTarget(this);
 }

@@ -92,6 +92,7 @@ set(Vector3D_input_FILES
 message(STATUS "-- PHYSICS")
 
 set(Vector3D_physics_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/physics/ConstrainLink.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/physics/Vehicle.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/physics/VehicleInteractiveController.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/physics/collider.cpp

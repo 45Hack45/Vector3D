@@ -285,7 +285,7 @@ void Engine::mainLoop() {
 
         // Update Physics
         physicsFrameUpdatePre();
-        for (int i = 0; i < 20; i++) m_phSystem.stepSimulation();
+        for (int i = 0; i < m_phSystem.getStepPerFrame(); i++) m_phSystem.stepSimulation();
         physicsFrameUpdate();
 
         // Render frame

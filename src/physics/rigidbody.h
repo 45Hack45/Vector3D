@@ -35,6 +35,7 @@ class RigidBody : public ComponentBase {
     friend class Physics;
     friend class Vehicle;
     friend class ConstraintParentChild;
+    friend class ConstraintSpringDamper;
 
    public:
     RigidBody() = default;
