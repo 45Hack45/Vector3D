@@ -107,7 +107,7 @@ set(PACKAGE_DIR "${CMAKE_BINARY_DIR}/package")
 message((STATUS "${CMAKE_BINARY_DIR}/resources"))
 
 # Custom target "package_zip"
-add_custom_target(package_zip ALL
+add_custom_target(package_zip 
     COMMAND ${CMAKE_COMMAND} -E rm -rf "${PACKAGE_DIR}"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${PACKAGE_DIR}"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${PACKAGE_DIR}/resources"
