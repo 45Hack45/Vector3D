@@ -141,10 +141,9 @@ void imgui_RenderFrame() {
 }
 
 namespace v3d {
-void Engine::init() {
-    if (m_initialized) {
-        throw std::runtime_error("Engine initialized multiple times");
-    }
+Engine::Engine(uint32_t width, uint32_t height,
+               rendering::GraphicsBackendType graphicsBackendType) {
+    m_engineStartTime = std::chrono::steady_clock::now();
 
     // Initialize signal handler to log unhandled errors and other signals
     initSignalHandler();
@@ -156,32 +155,35 @@ void Engine::init() {
 
     if (!glfwInit()) throw std::runtime_error("Failed initializing GLFW!");
 
+    m_gBackendType = graphicsBackendType;
     float mainScale =
         ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor());
 
     switch (m_gBackendType) {
         case v3d::rendering::GraphicsBackendType::NONE:
-            m_window->init("Vector3D Headless",
-                           rendering::WindowBackendHint::NONE, mainScale);
+            m_window = std::make_unique<Window>(
+                "Vector3D Headless", rendering::WindowBackendHint::NONE, width,
+                height, mainScale, true);
 
-            m_nullGraphicsBackend =
-                new rendering::NullGraphicsBackend(m_window);
-            m_graphicsBackend = m_nullGraphicsBackend;
+            m_graphicsBackend =
+                std::make_unique<rendering::NullGraphicsBackend>(
+                    m_window.get());
             break;
         case rendering::GraphicsBackendType::VULKAN_API:
-            m_window->init("Vector3D Vulkan",
-                           rendering::WindowBackendHint::VULKAN_API, mainScale);
+            m_window = std::make_unique<Window>(
+                "Vector3D Vulkan", rendering::WindowBackendHint::VULKAN_API,
+                width, height, mainScale, true);
 
-            m_vulkanBackend = new rendering::VulkanBackend(m_window);
-            m_graphicsBackend = m_vulkanBackend;
-            // m_vulkanBackend->init();
+            m_graphicsBackend =
+                std::make_unique<rendering::VulkanBackend>(m_window.get());
             break;
         case rendering::GraphicsBackendType::OPENGL_API:
-            m_window->init("Vector3D OpenGL",
-                           rendering::WindowBackendHint::OPENGL_API, mainScale);
+            m_window = std::make_unique<Window>(
+                "Vector3D OpenGL", rendering::WindowBackendHint::OPENGL_API,
+                width, height, mainScale, true);
 
-            m_openGlBackend = new rendering::OpenGlBackend(m_window);
-            m_graphicsBackend = m_openGlBackend;
+            m_graphicsBackend =
+                std::make_unique<rendering::OpenGlBackend>(m_window.get());
             break;
         default:
             throw std::runtime_error(
@@ -189,12 +191,10 @@ void Engine::init() {
             break;
     }
 
-    m_graphicsBackend->init();
-
     initImgui(m_window->getWindow(), mainScale, true);
 
     m_componentRegistry = &editor::EditorComponentRegistry::instance();
-    m_editor = new editor::Editor(this);
+    m_editor = std::make_unique<editor::Editor>(this);
 
     // Init Model loader and manager
     std::unique_ptr<ModelLoader> modelLoader = makeModelLoader();
@@ -203,8 +203,9 @@ void Engine::init() {
     // Instantiate default keyboard device and mappings
     initDefaultInput();
 
-    m_initialized = true;
+    PLOGI << "Engine Initialized" << std::endl;
 
+    PLOGV << "Initializing Scene" << std::endl;
     // Initialize the scene and add entities
     m_scene = Scene::create(this, &m_phSystem);
 
@@ -212,8 +213,30 @@ void Engine::init() {
     // components dynamically (not known at compile-time, for example adding a
     // component through the GUI)
     registerComponents(m_scene.get(), m_componentRegistry);
+    PLOGV << "Scene Initialized" << std::endl;
 
     m_scene->print_entities();
+};
+
+Engine::~Engine() {
+    m_scene.reset();
+
+    // Clear managers resources
+    m_modelManager.reset();
+
+    // Clenup assimp logger
+    Assimp::DefaultLogger::kill();
+
+    m_editor.reset();
+
+    // Imgui cleanup
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
+    m_graphicsBackend.reset();
+    m_window.reset();
+    glfwTerminate();
 }
 
 void Engine::start() {
@@ -221,26 +244,6 @@ void Engine::start() {
     m_scene->m_components.for_each(
         [](ComponentBase& component) { component.start(); });
     engineStart();
-}
-
-void Engine::cleanup() {
-    if (!m_initialized) {
-        return;
-    }
-
-    // Clenup assimp logger
-    Assimp::DefaultLogger::kill();
-
-    // Imgui cleanup
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-
-    m_graphicsBackend->cleanup();
-    m_window->cleanup();
-    glfwTerminate();
-
-    m_initialized = false;
 }
 
 void Engine::mainLoop() {
@@ -256,6 +259,7 @@ void Engine::mainLoop() {
         running = !recieved_forced_close_signal && !m_window->shouldClose();
 
         const auto frame_start = std::chrono::steady_clock::now();
+        double last_frame_dt = m_last_frame_dt.count();
 
         // Poll for window events
         m_window->pollEvents();
@@ -264,8 +268,7 @@ void Engine::mainLoop() {
             continue;
         }
 
-        assert(m_last_frame_dt.count() >= 0 &&
-               std::isfinite(m_last_frame_dt.count()));
+        assert(last_frame_dt >= 0 && std::isfinite(last_frame_dt));
 
         if (io.WantCaptureMouse or io.WantCaptureKeyboard) {
             m_inputManager.muteInput(true);
@@ -278,42 +281,29 @@ void Engine::mainLoop() {
         imgui_beginFrame_();
 
         // Update logic
-        m_scene->update(m_last_frame_dt.count());
+        logicFrameUpdatePre(last_frame_dt);
+        m_scene->update(last_frame_dt);
+        logicFrameUpdate(last_frame_dt);
 
         // Update Physics
-        for (int i = 0; i < 20; i++) m_phSystem.stepSimulation();
+        physicsFrameUpdatePre();
+        for (int i = 0; i < m_phSystem.getStepPerFrame(); i++) m_phSystem.stepSimulation();
+        physicsFrameUpdate();
 
         // Render frame
         // TODO: Pass time and dt, to be able to pass them to a shader
+        graphicsFrameUpdatePre();
         m_graphicsBackend->update();
+        graphicsFrameUpdate();
 
         // Render GUI
-        m_editor->renderGui(m_last_frame_dt.count(), &m_scene->m_root.get(),
+        editorGUIFrameUpdatePre();
+        m_editor->renderGui(last_frame_dt, &m_scene->m_root.get(),
                             m_scene.get());
+        editorGUIFrameUpdate();
 
         // Render debbug window
-        ImGui::Begin("Debbug");
-        int targetFPS = m_targetFrameRate;
-        if (ImGui::InputInt("Target FPS", &targetFPS, 1, 10)) {
-            m_targetFrameRate = targetFPS;
-        }
-        ImGui::Spacing();
-
-        if (ImGui::Button("Test save keyboard bindings")) {
-            m_inputManager.storeDevice(0, "KeyboardConfig.txt");
-        }
-        if (ImGui::Button("Test save scene")) {
-            saveScene("testSceneSave.xml");
-        }
-        if (ImGui::Button("Test load scene")) {
-            loadScene("testSceneSave.xml");
-        }
-
-        ImGui::Spacing();
-        if (ImGui::CollapsingHeader("Physics")) m_phSystem.renderDebbugGUI();
-        ImGui::Spacing();
-
-        ImGui::End();
+        renderEngineDebugGui(last_frame_dt);
 
         // Render Imgui UI
         imgui_RenderFrame();
@@ -343,11 +333,36 @@ void Engine::initDefaultInput() {
     keyboardProfile.bind(input::action::IAct_SteerRight, input::key::IK_L);
     keyboardProfile.bind(input::action::IAct_Clutch, input::key::IK_C);
 
-    m_inputManager.addDevice(
-        std::make_unique<input::KeyboardDevice>(m_window, keyboardProfile));
+    m_inputManager.addDevice(std::make_unique<input::KeyboardDevice>(
+        m_window.get(), keyboardProfile));
 }
 
 void Engine::processInput(GLFWwindow* window) {}
+
+void Engine::renderEngineDebugGui(double delta) {
+    ImGui::Begin("Debbug");
+    int targetFPS = m_targetFrameRate;
+    if (ImGui::InputInt("Target FPS", &targetFPS, 1, 10)) {
+        m_targetFrameRate = targetFPS;
+    }
+    ImGui::Spacing();
+
+    if (ImGui::Button("Test save keyboard bindings")) {
+        m_inputManager.storeDevice(0, "KeyboardConfig.txt");
+    }
+    if (ImGui::Button("Test save scene")) {
+        saveScene("testSceneSave.xml");
+    }
+    if (ImGui::Button("Test load scene")) {
+        loadScene("testSceneSave.xml");
+    }
+
+    ImGui::Spacing();
+    if (ImGui::CollapsingHeader("Physics")) m_phSystem.renderDebbugGUI();
+    ImGui::Spacing();
+
+    ImGui::End();
+}
 
 void Engine::registerComponents(
     Scene* scene, editor::EditorComponentRegistry* componentRegistry) {
@@ -356,8 +371,8 @@ void Engine::registerComponents(
     for (auto info : componentsInfo) {
         scene->m_components.registerType(info->componentType,
                                          info->componentCollectionFactory());
-        }
     }
+}
 
 void Engine::saveScene(std::string filename) {
     std::ofstream ofs(filename);

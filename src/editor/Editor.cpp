@@ -2,6 +2,8 @@
 
 #include "editor/Editor.h"
 
+#include <plog/Log.h>
+
 #include <string>
 
 #include "backends/imgui_impl_glfw.h"
@@ -103,9 +105,38 @@ void Editor::renderGui(float deltaTime, Entity* root, Scene* scene) {
             ImGui::EndMenu();
         }
 
-        if (ImGui::BeginMenu("Entity")) {
-            if (ImGui::Button("Create Entity")) {
-                scene->instantiateEntity("Entity");
+        if (ImGui::BeginMenu("Edit")) {
+            if (ImGui::Button("Delete")) {
+                PLOGW << "Not implemented" << std::endl;
+            }
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Asset")) {
+            if (ImGui::BeginMenu("Create")) {
+                if (ImGui::Button("Material")) {
+                    PLOGW << "Not implemented" << std::endl;
+                }
+                ImGui::Spacing();
+                if (ImGui::Button("Physics Material")) {
+                    PLOGW << "Not implemented" << std::endl;
+                }
+                ImGui::EndMenu();
+            }
+
+            ImGui::Spacing();
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("Scene")) {
+            if (ImGui::BeginMenu("Entity")) {
+                if (ImGui::Button("Create Entity")) {
+                    scene->instantiateEntity("Entity");
+                }
+                if (ImGui::Button("Create Entity From Model")) {
+                    PLOGW << "Not implemented" << std::endl;
+                }
+                ImGui::EndMenu();
             }
             ImGui::EndMenu();
         }

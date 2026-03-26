@@ -23,23 +23,17 @@
 #include "window.h"
 
 namespace v3d {
+#define DEFAULT_GRAPHICS_BACKEND_TYPE rendering::GraphicsBackendType::VULKAN_API
 class Engine {
    public:
-    Engine() : m_window(new Window()) {};
-    Engine(uint32_t width, uint32_t height)
-        : m_window(new Window(width, height)) {};
     Engine(uint32_t width, uint32_t height,
-           rendering::GraphicsBackendType graphicsBackendType)
-        : m_window(new Window(width, height)),
-          m_gBackendType(graphicsBackendType) {};
-    virtual ~Engine() {}
+           rendering::GraphicsBackendType graphicsBackendType =
+               DEFAULT_GRAPHICS_BACKEND_TYPE);
+    virtual ~Engine();
 
     void run() {
-        m_engineStartTime = std::chrono::steady_clock::now();
-        init();
         start();
         mainLoop();
-        cleanup();
     }
 
     inline void registerRenderTarget(rendering::IRenderable* renderTarget) {
@@ -58,22 +52,35 @@ class Engine {
         m_graphicsBackend->unregisterGizmosTarget(gizmosTarget);
     }
 
+    /// @brief Command to draw a sphere on the next frame.
+    /// @param position 
+    /// @param scale 
+    /// @param color 
+    /// @param wireframe 
+    inline void immediateDrawGizmosSphere(glm::vec3 position,
+                                          glm::vec3 scale = glm::vec3(1.f),
+                                          glm::vec4 color = glm::vec4(1.f),
+                                          bool wireframe = false) {
+        m_graphicsBackend->immediateDrawGizmos(
+            std::move(std::make_unique<rendering::DrawGizmosSphere>(
+                position, scale, color, wireframe)));
+    }
+
     InputManager* getInputManager() { return &m_inputManager; }
 
    protected:
     // TODO: change member pointers to smart pointers
-    editor::Editor* m_editor;
+    std::unique_ptr<editor::Editor> m_editor;
     std::unique_ptr<ModelManager> m_modelManager = nullptr;
 
     rendering::GraphicsBackendType m_gBackendType =
-        rendering::GraphicsBackendType::VULKAN_API;
-    rendering::GraphicsBackend* m_graphicsBackend;
-    rendering::VulkanBackend* m_vulkanBackend;
-    rendering::OpenGlBackend* m_openGlBackend;
-    rendering::NullGraphicsBackend* m_nullGraphicsBackend;
-    Window* m_window;
+        DEFAULT_GRAPHICS_BACKEND_TYPE;
+    std::unique_ptr<rendering::GraphicsBackend> m_graphicsBackend;
+    // rendering::VulkanBackend* m_vulkanBackend;
+    // rendering::OpenGlBackend* m_openGlBackend;
+    // rendering::NullGraphicsBackend* m_nullGraphicsBackend;
+    std::unique_ptr<Window> m_window;
 
-    bool m_initialized = false;
     int m_targetFrameRate = 60;
 
     InputManager m_inputManager;
@@ -93,10 +100,14 @@ class Engine {
     /// main loop starts
     virtual void engineStart() {}
 
-    // TODO: Implement
-    virtual void logicFrameUpdate() {}
+    // TODO: Improve
+    virtual void logicFrameUpdatePre(double delta) {}
+    virtual void logicFrameUpdate(double delta) {}
+    virtual void physicsFrameUpdatePre() {}
     virtual void physicsFrameUpdate() {}
+    virtual void graphicsFrameUpdatePre() {}
     virtual void graphicsFrameUpdate() {}
+    virtual void editorGUIFrameUpdatePre() {}
     virtual void editorGUIFrameUpdate() {}
 
     virtual void cleanupHook() {}
@@ -110,13 +121,13 @@ class Engine {
         return std::make_unique<AssimpLoader>(std::move(properties));
     }
 
+    virtual void renderEngineDebugGui(double delta);
+
    private:
     editor::EditorComponentRegistry* m_componentRegistry;
 
-    void init();
     void start();
     void mainLoop();
-    void cleanup();
 
     void processInput(GLFWwindow* window);
     /// @brief Pre-initialize scene component vectors, required to be able to

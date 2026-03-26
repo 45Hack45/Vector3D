@@ -1,148 +1,136 @@
+#!/usr/bin/env python3
+
 import os
+import sys
+import fnmatch
 import argparse
 from pathlib import Path
 from collections import defaultdict
-import fnmatch
+from io import StringIO
 
-source_extensions = {".cpp", ".c"}
-header_extensions = {".h", ".hpp"}
-project_name = "vector_3d"
-AUTO_SECTION_END = "# ## === AUTO-GENERATED SECTION ENDS HERE ==="
+AUTO_GENERATED_END = "# ## === AUTO-GENERATED SECTION ENDS HERE ==="
+DEFAULT_EXTENSIONS = [".cpp", ".c", ".h", ".hpp"]
 
-file_occurrences = defaultdict(list)
-ignore_patterns = []
+PROJECT_NAME = "Vector3D"
 
+def log_error(msg):
+    print(f"[ERROR] {msg}", file=sys.stderr)
 
-def load_ignore_file(ignore_path: Path):
-    if ignore_path.exists():
-        with open(ignore_path, "r") as f:
-            for line in f:
-                pattern = line.strip()
-                if pattern and not pattern.startswith("#"):
-                    ignore_patterns.append(pattern)
+def relative_cmake_path(path: Path):
+    return "${CMAKE_CURRENT_SOURCE_DIR}/" + str(path.as_posix())
 
+def read_ignore_file(path: Path):
+    if not path.exists():
+        return []
+    with open(path, "r", encoding="utf-8") as f:
+        return [line.strip() for line in f if line.strip() and not line.startswith("#")]
 
-def should_ignore(rel_path: Path) -> bool:
-    path_str = rel_path.as_posix()
-    return any(fnmatch.fnmatch(path_str, pattern) for pattern in ignore_patterns)
+def should_ignore(path: Path, patterns):
+    path_str = str(path.as_posix())
+    return any(fnmatch.fnmatch(path_str, pattern) for pattern in patterns)
 
+def collect_files(base_path: Path, ignore_patterns, allowed_exts):
+    groups = defaultdict(lambda: {'sources': [], 'headers': []})
+    for path in base_path.rglob("*"):
+        if not path.is_file():
+            continue
+        rel_path = path.relative_to(base_path)
 
-def gather_files(base_dir: Path):
-    grouped_files = defaultdict(lambda: {"sources": [], "headers": []})
+        if should_ignore(rel_path, ignore_patterns):
+            continue
 
-    for root, _, files in os.walk(base_dir):
-        rel_root = Path(root).relative_to(base_dir)
-        group = rel_root.parts[0] if rel_root.parts else "core"
+        ext = path.suffix.lower()
+        if ext not in allowed_exts:
+            continue
 
-        for file in files:
-            ext = Path(file).suffix
-            if ext not in source_extensions | header_extensions:
-                continue
-
-            full_path = Path(root) / file
-            rel_path = full_path.relative_to(base_dir)
-
-            file_occurrences[file].append(rel_path)
-            cmake_path = f"${{CMAKE_CURRENT_SOURCE_DIR}}/{rel_path.as_posix()}"
-
-            if should_ignore(rel_path):
-                cmake_path = f"# {cmake_path}"
-
-            if ext in source_extensions:
-                grouped_files[group]["sources"].append((rel_path.as_posix(), cmake_path))
-            else:
-                grouped_files[group]["headers"].append((rel_path.as_posix(), cmake_path))
-
-    for group_data in grouped_files.values():
-        group_data["sources"].sort()
-        group_data["headers"].sort()
-
-    return grouped_files
-
-
-def read_existing_manual_tail(output_path: Path) -> str:
-    if not output_path.exists():
-        return ""
-    with open(output_path, "r") as f:
-        content = f.read()
-        if AUTO_SECTION_END in content:
-            return content.split(AUTO_SECTION_END, 1)[1].lstrip()
-    return ""
-
-
-def write_cmakelists(grouped_files, output_path: Path):
-    manual_tail = read_existing_manual_tail(output_path)
-
-    with open(output_path, "w") as f:
-        f.write(f'message(STATUS "-- Generating Core Engine")\n\n')
-        all_group_vars = []
-
-        for group, files in grouped_files.items():
-            sources_var = f"{project_name}_{group}_SOURCES"
-            headers_var = f"{project_name}_{group}_HEADERS"
-            all_var = f"{project_name}_{group}_FILES"
-            all_group_vars.append(all_var)
-
-            f.write(f'message(STATUS "-- {group.capitalize()}")\n\n')
-
-            f.write(f"set({sources_var}\n")
-            for _, src in files["sources"]:
-                f.write(f"    {src}\n")
-            f.write(")\n\n")
-
-            f.write(f"set({headers_var}\n")
-            for _, hdr in files["headers"]:
-                f.write(f"    {hdr}\n")
-            f.write(")\n\n")
-
-            f.write(f"set({all_var}\n")
-            f.write(f"    ${{{sources_var}}}\n")
-            f.write(f"    ${{{headers_var}}}\n")
-            f.write(")\n\n")
-
-        f.write('message(STATUS "-- --")\n\n')
-        f.write(f"set({project_name}_FILES\n")
-        for var in all_group_vars:
-            f.write(f"    ${{{var}}}\n")
-        f.write(")\n\n")
-
-        f.write(f"{AUTO_SECTION_END}\n\n")
-
-        if manual_tail:
-            f.write(manual_tail)
+        if len(rel_path.parts) == 1:
+            group = "core"
         else:
-            # Provide default tail if nothing existed
-            f.write(f'message(STATUS "-- Adding Core Engine Library")\n\n')
-            f.write(f"add_library({project_name} ${{{project_name}_FILES}})\n")
-            f.write("target_include_directories(vector_3d PUBLIC\n")
-            f.write("    ${ENGINE_INCLUDE}\n")
-            f.write(")\n\n")
-            f.write('target_compile_definitions(vector_3d PUBLIC "CHRONO_DATA_DIR=\\"${CHRONO_DATA_DIR}\\"")\n\n')
-            f.write("if(MSVC)\n")
-            f.write('    set_target_properties(vector_3d PROPERTIES MSVC_RUNTIME_LIBRARY "${CHRONO_MSVC_RUNTIME_LIBRARY}")\n')
-            f.write("endif()\n\n")
-            f.write("target_link_libraries(vector_3d PUBLIC ${vector_3d_LIBS})\n")
+            group = rel_path.parts[0]
 
+        if ext in [".cpp", ".c"]:
+            groups[group]['sources'].append(rel_path)
+        elif ext in [".h", ".hpp"]:
+            groups[group]['headers'].append(rel_path)
 
-def main():
+    for group in groups.values():
+        group['sources'].sort()
+        group['headers'].sort()
+
+    return groups
+
+def write_group(f, group_name, sources, headers):
+    f.write(f'message(STATUS "-- {group_name.upper()}")\n\n')
+
+    f.write(f"set({PROJECT_NAME}_{group_name}_SOURCES\n")
+    for src in sources:
+        f.write(f"    {relative_cmake_path(src)}\n")
+    f.write(")\n\n")
+
+    f.write(f"set({PROJECT_NAME}_{group_name}_HEADERS\n")
+    for hdr in headers:
+        f.write(f"    {relative_cmake_path(hdr)}\n")
+    f.write(")\n\n")
+
+    f.write(f"set({PROJECT_NAME}_{group_name}_FILES\n")
+    f.write(f"    ${{{PROJECT_NAME}_{group_name}_SOURCES}}\n")
+    f.write(f"    ${{{PROJECT_NAME}_{group_name}_HEADERS}}\n")
+    f.write(")\n\n")
+
+def parse_args():
     parser = argparse.ArgumentParser(description="Generate a CMakeLists.txt for the Vector 3D engine.")
     parser.add_argument("--dir", type=str, default=".", help="Base directory for source files.")
     parser.add_argument("--output", type=str, default="CMakeLists.txt", help="Output path for CMakeLists.txt")
     parser.add_argument("--ignore-file", type=str, default=".cmakeignore", help="Ignore file with glob patterns.")
-    args = parser.parse_args()
+    return parser.parse_args()
 
-    base_path = Path(args.dir).resolve()
-    output_path = Path(args.output).resolve()
-    ignore_path = base_path / args.ignore_file
+def main():
+    args = parse_args()
+    base_path = Path(args.dir)
+    output_file = Path(args.output)
+    ignore_file = Path(args.ignore_file)
 
-    print(f"📁 Base directory: {base_path}")
-    print(f"📄 Generating CMakeLists at: {output_path}")
-    load_ignore_file(ignore_path)
+    if not base_path.exists() or not base_path.is_dir():
+        log_error(f"Directory '{base_path}' not found or is not a directory.")
+        sys.exit(1)
 
-    grouped_files = gather_files(base_path)
-    write_cmakelists(grouped_files, output_path)
-    print("✅ Generation complete.")
+    ignore_patterns = read_ignore_file(ignore_file)
 
+    manual_part = ""
+    if output_file.exists():
+        with open(output_file, "r", encoding="utf-8") as f:
+            content = f.read()
+        if AUTO_GENERATED_END in content:
+            manual_part = content.split(AUTO_GENERATED_END, 1)[1]
+        else:
+            manual_part = ""
+
+    cmake_output = StringIO()
+    cmake_output.write('message(STATUS "-- Generating Core Engine")\n\n')
+
+    groups = collect_files(base_path, ignore_patterns, DEFAULT_EXTENSIONS)
+    all_files = []
+
+    print("[INFO] File grouping summary:")
+    for group_name in sorted(groups.keys()):
+        g = groups[group_name]
+        write_group(cmake_output, group_name, g['sources'], g['headers'])
+        print(f"[SUMMARY] Group '{group_name}': {len(g['sources'])} source(s), {len(g['headers'])} header(s)")
+        all_files.append(f"${{{PROJECT_NAME}_{group_name}_FILES}}")
+
+    cmake_output.write('message(STATUS "-- --")\n\n')
+    cmake_output.write(f"set({PROJECT_NAME}_FILES\n")
+    for line in all_files:
+        cmake_output.write(f"    {line}\n")
+    cmake_output.write(")\n\n")
+
+    cmake_output.write(f"{AUTO_GENERATED_END}")
+    final_output = cmake_output.getvalue() + manual_part
+
+    with open(output_file, "w", encoding="utf-8") as f:
+        f.write(final_output)
+
+    print(f"[INFO] Generated {output_file.resolve()} successfully.")
 
 if __name__ == "__main__":
     main()

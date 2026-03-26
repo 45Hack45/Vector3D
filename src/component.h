@@ -33,6 +33,9 @@ class ComponentBase : public rendering::IGizmosRenderable,
     static auto dependencies() { return std::tuple<>(); }
 
     entityID_t getEntity() { return m_entity; }
+    entity_ptr getEntityPtr();
+
+    std::string getEntityName();
 
     virtual void drawEditorGUI_Properties() {
         // log_error("ERROR::COMPONENT::BASE_CLASS_VIRTUAL_METHOD_CALLED:

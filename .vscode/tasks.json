@@ -18,7 +18,7 @@
             "type": "shell",
             "command": "python3",
             "args": [
-                "scripts/generate_cmakelistsV2.py",
+                "scripts/generate_cmakelists.py",
                 "--dir",
                 "./src",
                 "--output",

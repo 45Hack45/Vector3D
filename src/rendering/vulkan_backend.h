@@ -26,25 +26,15 @@ struct VulkanDevice {
 
 class VulkanBackend : public GraphicsBackend {
    public:
-    VulkanBackend(Window* window) : GraphicsBackend(window) {}
-
-    void init() {
-        if (m_initialized) {
-            return;
-        }
-        initVulkan();
-
-        m_initialized = true;
-    }
-
-    void cleanup() { cleanup_vulkan(); }
+    VulkanBackend(Window* window);
+    ~VulkanBackend();
 
     Mesh* createMesh(std::string filePath) override;
 
    protected:
     void initPrimitives() override {};
-    void frame_update() override;
-    void present_frame() override {};
+    void frameUpdate() override;
+    void presentFrame() override {};
 
    private:
     vk::Instance m_instance;
@@ -57,7 +47,6 @@ class VulkanBackend : public GraphicsBackend {
     vk::DebugUtilsMessengerCreateInfoEXT m_debug_utils_create_info;
 #endif
 
-    void initVulkan();
     vk::Instance createInstance(
         const std::optional<vk::DebugUtilsMessengerCreateInfoEXT>&
             debug_utils_create_info = std::nullopt);
@@ -70,8 +59,6 @@ class VulkanBackend : public GraphicsBackend {
         v3d::rendering::VulkanDevice& vulkanDevice,
         const std::vector<const char*>& device_extensions,
         const vk::PhysicalDeviceFeatures& device_features);
-
-    void cleanup_vulkan();
 
 #ifdef _DEBUG
     vk::DebugUtilsMessengerCreateInfoEXT createDebugMessenger();

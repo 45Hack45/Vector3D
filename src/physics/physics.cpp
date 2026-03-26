@@ -15,6 +15,7 @@
 #include "chrono_vehicle/terrain/RigidTerrain.h"
 #include "chrono_vehicle/utils/ChUtilsJSON.h"
 #include "chrono_vehicle/wheeled_vehicle/vehicle/WheeledVehicle.h"
+#include "physics.h"
 // ----------------------------------------------------------------------
 
 namespace v3d {
@@ -65,9 +66,16 @@ void Physics::addBody(RigidBody& body) {
     // m_system.ShowHierarchy(std::cout);
 }
 
+void Physics::addBody(std::shared_ptr<chrono::ChBody> body) {
+    m_system.AddBody(body);
+}
+
 void Physics::removeBody(RigidBody& body) {
     m_system.RemoveBody(body.m_body);
     // m_system.ShowHierarchy(std::cout);
+}
+void Physics::removeBody(std::shared_ptr<chrono::ChBody> body) {
+    m_system.RemoveBody(body);
 }
 
 void Physics::addLink(ConstrainLink& link) {
@@ -110,6 +118,8 @@ VehicleHandle Physics::createVehicle(std::string vehicleModelPath) {
     return VehicleHandle(m_vehicleInputs, m_vehicleInputs.size() -
                                               1);  // Provide pointer to Vehicle
 }
+
+void Physics::showHierarchy() { m_system.ShowHierarchy(std::cout); }
 
 void Physics::stepSimulation() {
     double simulationStepSize = m_step_size;
@@ -169,9 +179,7 @@ void Physics::printPosition() {
     }
 }
 void Physics::renderDebbugGUI() {
-    double step_size = m_step_size;
-    if (ImGui::InputDouble("Sim Step Size", &step_size, 0, 0, "%.6f")) {
-        m_step_size = step_size;
-    }
+    ImGui::InputDouble("Sim Step Size", &m_step_size, 0, 0, "%.6f");
+    ImGui::InputInt("Sim Steps per Frame ", &m_stepPerFrame, 1, 5);
 };
 }  // namespace v3d

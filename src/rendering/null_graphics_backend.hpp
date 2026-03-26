@@ -11,10 +11,6 @@ class NullGraphicsBackend : public GraphicsBackend {
    public:
     NullGraphicsBackend(Window* window) : GraphicsBackend(window) {}
 
-    void init() { m_initialized = true; };
-
-    void cleanup() { m_initialized = false; };
-
     Mesh* createMesh(std::string filePath) override {
         // TODO: Implement MeshNull, load the data but do nothing
         return nullptr;
@@ -22,8 +18,8 @@ class NullGraphicsBackend : public GraphicsBackend {
 
    protected:
     void initPrimitives() override {};
-    void frame_update() override {};
-    void present_frame() override {};
+    void frameUpdate() override {};
+    void presentFrame() override {};
 
    private:
 };

@@ -91,6 +91,7 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 
 bool bunny_loaded = false;
 
+// TODO: Integrate with camera
 glm::mat4 model = glm::rotate(glm::mat4(1.0f), glm::radians(-55.0f),
                               glm::vec3(1.0f, 0.0f, 0.0f));
 glm::mat4 view;
@@ -99,10 +100,9 @@ glm::mat4 projection;
 Shader* shader;
 Shader* shaderGrid;
 
-void v3d::rendering::OpenGlBackend::init() {
-    if (m_initialized) {
-        return;
-    }
+namespace v3d {
+namespace rendering {
+OpenGlBackend::OpenGlBackend(Window* window) : GraphicsBackend(window) {
     PLOGI << "Initializing OpenGL" << std::endl;
 
     PLOGD << "Initializing GLAD" << std::endl;
@@ -131,13 +131,10 @@ void v3d::rendering::OpenGlBackend::init() {
     glCullFace(GL_BACK);
 
     PLOGI << "OpenGL initialized" << std::endl;
-    m_initialized = true;
 
     initPrimitives();
 }
 
-namespace v3d {
-namespace rendering {
 GLuint createGridVAO(int halfSize, float spacing, GLsizei& vertexCount) {
     std::vector<float> vertices;
 
@@ -204,7 +201,7 @@ void drawGrid() {
 
 }  // namespace v3d
 
-void v3d::rendering::OpenGlBackend::frame_update() {
+void v3d::rendering::OpenGlBackend::frameUpdate() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     float currentFrame = glfwGetTime();
@@ -237,20 +234,26 @@ void v3d::rendering::OpenGlBackend::frame_update() {
     }
 }
 
-void v3d::rendering::OpenGlBackend::present_frame() {
+void v3d::rendering::OpenGlBackend::presentFrame() {
     glfwSwapBuffers(m_window->getWindow());
 }
-void v3d::rendering::OpenGlBackend::pre_draw_gizmos_hook() {
+void v3d::rendering::OpenGlBackend::preDrawGizmosHook() {
     glDisable(GL_DEPTH_TEST);
 }
-void v3d::rendering::OpenGlBackend::post_draw_gizmos_hook() {
+void v3d::rendering::OpenGlBackend::postDrawGizmosHook() {
     glEnable(GL_DEPTH_TEST);
 }
 
-void v3d::rendering::OpenGlBackend::draw_primitive_cube(glm::vec3 position,
-                                                        glm::vec3 scale,
-                                                        glm::vec4 color,
-                                                        bool wireframe) {
+void v3d::rendering::OpenGlBackend::drawPrimitiveLine(glm::vec3 a, glm::vec3 b,
+                                                      float size,
+                                                      glm::vec4 color) {
+    return;
+}
+
+void v3d::rendering::OpenGlBackend::drawPrimitiveCube(glm::vec3 position,
+                                                      glm::vec3 scale,
+                                                      glm::vec4 color,
+                                                      bool wireframe) {
     view = cam.GetViewMatrix();
     projection = glm::perspective(
         glm::radians(cam.Zoom),
@@ -273,10 +276,10 @@ void v3d::rendering::OpenGlBackend::draw_primitive_cube(glm::vec3 position,
     if (wireframe) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
-void v3d::rendering::OpenGlBackend::draw_primitive_sphere(glm::vec3 position,
-                                                          glm::vec3 scale,
-                                                          glm::vec4 color,
-                                                          bool wireframe) {
+void v3d::rendering::OpenGlBackend::drawPrimitiveSphere(glm::vec3 position,
+                                                        glm::vec3 scale,
+                                                        glm::vec4 color,
+                                                        bool wireframe) {
     view = cam.GetViewMatrix();
     projection = glm::perspective(
         glm::radians(cam.Zoom),
@@ -298,8 +301,6 @@ void v3d::rendering::OpenGlBackend::draw_primitive_sphere(glm::vec3 position,
     m_primitives.m_sphere->draw();
     if (wireframe) glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
-
-void v3d::rendering::OpenGlBackend::cleanup() {}
 
 v3d::Mesh* v3d::rendering::OpenGlBackend::createMesh(std::string filePath) {
     // Initialize Loader
