@@ -2,10 +2,7 @@
 
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
-<<<<<<< HEAD
-=======
 #include <boost/serialization/version.hpp>
->>>>>>> 329ddcc (WIP: Serialization)
 #include <cassert>
 #include <iostream>
 #include <memory>
@@ -123,11 +120,7 @@ class Scene {
     componentID_t insertEntityComponent(
         entity_ptr entity, std::unique_ptr<ComponentBase> component) {
         return insertEntityComponent(entity, std::move(component),
-<<<<<<< HEAD
                                      boost::uuids::random_generator()());
-=======
-                              boost::uuids::random_generator()());
->>>>>>> 329ddcc (WIP: Serialization)
     }
 
     template <typename T, typename... Args>
