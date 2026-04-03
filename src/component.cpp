@@ -3,7 +3,7 @@
 
 #include <iostream>
 
-#include "editor/ComponentRegistry.h"
+#include "ComponentRegistry.h"
 #include "engine.h"
 #include "scene.h"
 

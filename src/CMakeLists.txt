@@ -3,6 +3,7 @@ message(STATUS "-- Generating Core Engine")
 message(STATUS "-- CORE")
 
 set(Vector3D_core_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/ComponentRegistry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Mesh.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ModelLoader.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/asset.cpp
@@ -17,6 +18,7 @@ set(Vector3D_core_SOURCES
 )
 
 set(Vector3D_core_HEADERS
+    ${CMAKE_CURRENT_SOURCE_DIR}/ComponentRegistry.h
     ${CMAKE_CURRENT_SOURCE_DIR}/DefinitionCore.hpp
     ${CMAKE_CURRENT_SOURCE_DIR}/Mesh.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Model.h
@@ -57,12 +59,10 @@ set(Vector3D_demos_FILES
 message(STATUS "-- EDITOR")
 
 set(Vector3D_editor_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/editor/ComponentRegistry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/editor/Editor.cpp
 )
 
 set(Vector3D_editor_HEADERS
-    ${CMAKE_CURRENT_SOURCE_DIR}/editor/ComponentRegistry.h
     ${CMAKE_CURRENT_SOURCE_DIR}/editor/Editor.h
 )
 

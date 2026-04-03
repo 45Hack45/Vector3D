@@ -1,7 +1,7 @@
 
 #include "physics/rigidbody.h"
 
-#include "editor/ComponentRegistry.h"
+#include "ComponentRegistry.h"
 #include "entity.h"
 #include "physics/collider.h"
 #include "physics/physics.h"

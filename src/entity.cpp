@@ -4,7 +4,7 @@
 #include <plog/Log.h>
 
 #include "component.h"
-#include "editor/ComponentRegistry.h"
+#include "ComponentRegistry.h"
 #include "editor/Editor.h"
 #include "misc/cpp/imgui_stdlib.h"
 #include "scene.h"
@@ -35,7 +35,7 @@ void Entity::drawEditorGUI_Properties() {
                          ImGuiPopupFlags_NoOpenOverExistingPopup);
     }
     if (ImGui::BeginPopup(editor::EditorPopup_PropertiesAddComponent.data())) {
-        auto componentRegistry = editor::EditorComponentRegistry::instance();
+        auto componentRegistry = ComponentRegistry::instance();
 
         std::vector<std::string> componentsList =
             componentRegistry.getRegisteredNames();

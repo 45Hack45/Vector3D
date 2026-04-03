@@ -191,7 +191,7 @@ Engine::Engine(uint32_t width, uint32_t height,
 
     initImgui(m_window->getWindow(), mainScale, true);
 
-    m_componentRegistry = &editor::EditorComponentRegistry::instance();
+    m_componentRegistry = &ComponentRegistry::instance();
     m_editor = std::make_unique<editor::Editor>(this);
 
     // Init Model loader and manager
@@ -351,8 +351,8 @@ void Engine::renderEngineDebugGui(double delta) {
 }
 
 void Engine::registerComponents(
-    Scene* scene, editor::EditorComponentRegistry* componentRegistry) {
-    std::vector<const editor::ComponentEditorRegistrationInfo*> componentsInfo =
+    Scene* scene, ComponentRegistry* componentRegistry) {
+    std::vector<const ComponentRegistrationInfo*> componentsInfo =
         componentRegistry->getAllInfo();
     for (auto info : componentsInfo) {
         scene->m_components.registerType(info->componentType,
