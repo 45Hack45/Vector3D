@@ -3,7 +3,7 @@
 #include <engine.h>
 
 #include "demos/demo_common.h"
-#include "editor/ComponentRegistry.h"
+#include "ComponentRegistry.h"
 #include "physics/Vehicle.h"
 #include "physics/VehicleInteractiveController.h"
 #include "physics/rigidbody.h"

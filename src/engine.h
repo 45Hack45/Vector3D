@@ -8,7 +8,7 @@
 #include <stdexcept>
 
 #include "ModelManager.hpp"
-#include "editor/ComponentRegistry.h"
+#include "ComponentRegistry.h"
 #include "editor/Editor.h"
 #include "input/InputDevice.hpp"
 #include "input/InputKeys.hpp"
@@ -124,7 +124,7 @@ class Engine {
     virtual void renderEngineDebugGui(double delta);
 
    private:
-    editor::EditorComponentRegistry* m_componentRegistry;
+    ComponentRegistry* m_componentRegistry;
 
     void start();
     void mainLoop();
@@ -135,7 +135,7 @@ class Engine {
     /// @param scene
     /// @param componentRegistry
     void registerComponents(Scene* scene,
-                            editor::EditorComponentRegistry* componentRegistry);
+                            editor::ComponentRegistry* componentRegistry);
 
     void saveScene(std::string filename);
     void loadScene(std::string filename);

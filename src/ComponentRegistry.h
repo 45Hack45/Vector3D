@@ -14,9 +14,8 @@
 #include "utils/keyed_stable_collection.hpp"
 
 namespace v3d {
-namespace editor {
 
-struct ComponentEditorRegistrationInfo {
+struct ComponentRegistrationInfo {
     std::string name;  // "Transform"
     std::type_index componentType = std::type_index(typeid(nullptr));
     /// @brief Factory returns a unique_ptr to a freshly constructed component
@@ -29,22 +28,22 @@ struct ComponentEditorRegistrationInfo {
         componentCollectionFactory;
 };
 
-class EditorComponentRegistry {
+class ComponentRegistry {
    private:
-    std::unordered_map<std::type_index, ComponentEditorRegistrationInfo>
+    std::unordered_map<std::type_index, ComponentRegistrationInfo>
         m_componentRegistry;
 
    public:
-    EditorComponentRegistry() = default;
-    ~EditorComponentRegistry() = default;
+    ComponentRegistry() = default;
+    ~ComponentRegistry() = default;
 
-    static EditorComponentRegistry& instance() {
-        static EditorComponentRegistry instance;
+    static ComponentRegistry& instance() {
+        static ComponentRegistry instance;
         return instance;
     }
 
     /// @brief Register a component type (called once per type)
-    bool registerComponent(ComponentEditorRegistrationInfo& info);
+    bool registerComponent(ComponentRegistrationInfo& info);
 
     /// @brief Returns list of registered names (useful for UI)
     std::vector<std::string> getRegisteredNames() const;
@@ -52,17 +51,15 @@ class EditorComponentRegistry {
     /// @brief Get component info by name
     /// @param name Component name
     /// @return const pointer if found or nullptr
-    const ComponentEditorRegistrationInfo* getInfo(
-        const std::string& name) const;
+    const ComponentRegistrationInfo* getInfo(const std::string& name) const;
     /// @brief Get component info by type
     /// @param typeIndex Component type
     /// @return const pointer if found or nullptr
-    const ComponentEditorRegistrationInfo* getInfo(
-        std::type_index typeIndex) const;
+    const ComponentRegistrationInfo* getInfo(std::type_index typeIndex) const;
 
     /// @brief Get component info of all registered components
     /// @return Vector of all registered components info
-    std::vector<const ComponentEditorRegistrationInfo*> getAllInfo() const;
+    std::vector<const ComponentRegistrationInfo*> getAllInfo() const;
 };
 
 template <typename, typename = void>
@@ -72,15 +69,15 @@ template <typename T>
 struct has_getName<T, std::void_t<decltype(T::getName())>> : std::true_type {};
 
 template <typename C>
-struct ComponentEditorRegistrar {
+struct ComponentRegistrar {
     std::string name = "";
-    ComponentEditorRegistrar() {
+    ComponentRegistrar() {
         static_assert(
             has_getName<C>::value,
             "Derived class must define: static std::string getName()");
 
         name = C::getName();
-        ComponentEditorRegistrationInfo info{
+        ComponentRegistrationInfo info{
             name, std::type_index(typeid(C)),
             []() -> std::unique_ptr<ComponentBase> {
                 return std::make_unique<C>();
@@ -92,13 +89,12 @@ struct ComponentEditorRegistrar {
         // Test factories
         info.factory();
         info.componentCollectionFactory();
-        EditorComponentRegistry::instance().registerComponent(info);
+        ComponentRegistry::instance().registerComponent(info);
     }
-    ~ComponentEditorRegistrar() = default;
+    ~ComponentRegistrar() = default;
 };
-}  // namespace editor
 
 }  // namespace v3d
 
 #define REGISTER_COMPONENT(Type) \
-    static v3d::editor::ComponentEditorRegistrar<Type> registrar_##Type;
+    static v3d::ComponentRegistrar<Type> registrar_##Type;
