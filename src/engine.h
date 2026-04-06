@@ -135,7 +135,7 @@ class Engine {
     /// @param scene
     /// @param componentRegistry
     void registerComponents(Scene* scene,
-                            editor::ComponentRegistry* componentRegistry);
+                            ComponentRegistry* componentRegistry);
 
     void saveScene(std::string filename);
     void loadScene(std::string filename);
