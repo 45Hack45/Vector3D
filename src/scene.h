@@ -216,14 +216,12 @@ class Scene {
             [delta](ComponentBase& component) { component.update(delta); });
     }
 
-    void print_entities() {
-        for (auto [id, entity] : m_entities) {
-            if (entity.m_parent) {
-                std::cout << "Entity: " << entity.m_name
-                          << " Parent: " << entity.m_parent->m_name << "\n";
-            } else {
-                std::cout << "Entity: " << entity.m_name << "\n";
-            }
+    void printEntities() {
+        std::cout << "--- Entities (" << m_entities.size() << ") ---\n";
+        if (m_root) {
+            printEntityHierarchy(m_root, "", true);
+        } else {
+            std::cout << "(no root)\n";
         }
     }
 
@@ -231,48 +229,52 @@ class Scene {
     Physics* getPhysics() { return m_phSystem; }
 
    private:
+    void printEntityHierarchy(entity_ptr entity, const std::string& prefix, bool isLast) {
+        std::cout << prefix << (isLast ? "`-- " : "|-- ") << entity->m_name << "\n";
+        const auto& childs = entity->getChilds();
+        for (size_t i = 0; i < childs.size(); ++i) {
+            printEntityHierarchy(childs[i], prefix + (isLast ? "    " : "|   "), i == childs.size() - 1);
+        }
+    }
+
     Engine* m_engine;
     Physics* m_phSystem;
     entity_ptr m_root;
     EntityMap m_entities;
     ComponentMap m_components;
 
-    template<class Archive>
-    void serialize(Archive & ar, const unsigned int version)
-    {
-        int degrees = 32, minutes = 64, seconds = 128, v = version;
-        ar & BOOST_SERIALIZATION_NVP(degrees);
-        ar & BOOST_SERIALIZATION_NVP(minutes);
-        ar & BOOST_SERIALIZATION_NVP(seconds);
-        ar & BOOST_SERIALIZATION_NVP(v);
+    template <class Archive>
+    void save(Archive &ar, unsigned int /*version*/) const {
+        // Root Entity
+        boost::uuids::uuid rootIdx = m_root.index();
+        ar & BOOST_SERIALIZATION_NVP(rootIdx);
+        // Entities
+        ar & BOOST_SERIALIZATION_NVP(m_entities);
     }
 
-    // template <class Archive>
-    // void serialize(Archive& ar, const unsigned int version) {
-    //     // ar & m_components;
-    //     // ar & m_entities;
-    //     // ar & m_root;
-    //     std::cout << "Serializing file, version:  " << version << "\n" ;
-    //     int pollo = 1024;
-    //     ar & pollo;
-    // }
+    template <class Archive>
+    void load(Archive &ar, unsigned int /*version*/) {
+        // Root Entity
+        boost::uuids::uuid rootIdx;
+        ar & BOOST_SERIALIZATION_NVP(rootIdx);
 
-    // template <class Archive>
-    // void save(Archive& ar, const unsigned int version) const {
-    //     ar << m_entities;
-    //     ar << m_root;
-    // }
+        // Entities
+        ar & BOOST_SERIALIZATION_NVP(m_entities);
+        m_root.set(&m_entities, rootIdx);
 
-    // template <class Archive>
-    // void load(Archive& ar, const unsigned int version) {
-    //     ar >> m_entities;
-    //     ar >> m_root;
-    // }
-
-    // template <class Archive>
-    // void serialize(Archive& ar, const unsigned int file_version) {
-    //     boost::serialization::split_member(ar, *this, file_version);
-    // }
+        // Restore m_scene and fix up m_parent pointers; rebuild m_childs
+        for (auto& [id, entity] : m_entities) {
+            entity.m_scene = this;
+            auto parentIdx = entity.m_parent.index();
+            if (parentIdx != boost::uuids::nil_uuid()) {
+                entity.m_parent.set(&m_entities, parentIdx);
+                m_entities[parentIdx].m_childs.push_back(entity_ptr(m_entities, id));
+            } else {
+                entity.m_parent.reset();
+            }
+        }
+    }
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
 
     void init();
 

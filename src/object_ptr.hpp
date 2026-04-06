@@ -6,7 +6,7 @@
 #include <cstddef>
 #include <stdexcept>
 #include <vector>
-#include <boost/serialization/serialization.hpp>
+#include "serialization.hpp"
 
 namespace v3d {
 class Entity;
@@ -17,7 +17,7 @@ class object_ptr {
     friend class boost::serialization::access;
 
    public:
-    object_ptr() : m_vec(nullptr) {}
+    object_ptr() : m_vec(nullptr), m_index(key{}) {}
     object_ptr(Container& vec, key index) : m_vec(&vec), m_index(index) {
         // assert(index < static_cast<key>(m_vec->size()) && "object_ptr: index
         // out of bounds at construction");
@@ -136,8 +136,9 @@ class object_ptr {
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int version) {
-        ar & m_index;
-        ar & m_vec;
+        ar & BOOST_SERIALIZATION_NVP(m_index);
+        // m_vec is a raw pointer to the owning container, never serialize it.
+        // After load, the owner must call set() to restore it.
     }
 };
 

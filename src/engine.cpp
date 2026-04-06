@@ -7,6 +7,8 @@
 
 #include <atomic>
 #include <boost/stacktrace.hpp>
+#include <boost/archive/xml_iarchive.hpp>
+#include <boost/archive/xml_oarchive.hpp>
 #include <cassert>
 #include <csignal>
 #include <fstream>
@@ -215,7 +217,7 @@ Engine::Engine(uint32_t width, uint32_t height,
     registerComponents(m_scene.get(), m_componentRegistry);
     PLOGV << "Scene Initialized" << std::endl;
 
-    m_scene->print_entities();
+    m_scene->printEntities();
 };
 
 Engine::~Engine() {
@@ -348,13 +350,21 @@ void Engine::renderEngineDebugGui(double delta) {
     ImGui::Spacing();
 
     if (ImGui::Button("Test save keyboard bindings")) {
-        m_inputManager.storeDevice(0, "KeyboardConfig.txt");
+        m_inputManager.storeDevice(0, "testSerialization/KeyboardConfig.txt");
     }
     if (ImGui::Button("Test save scene")) {
-        saveScene("testSceneSave.xml");
+        saveScene("testSerialization/testSceneSave.xml");
     }
     if (ImGui::Button("Test load scene")) {
-        loadScene("testSceneSave.xml");
+        loadScene("testSerialization/testSceneSave.xml");
+    }
+
+    ImGui::Spacing();
+    if (ImGui::Button("Test save scene XML")) {
+        saveScene("testSerialization/testSceneSave.xml", true);
+    }
+    if (ImGui::Button("Test load scene XML")) {
+        loadScene("testSerialization/testSceneSave.xml", true);
     }
 
     ImGui::Spacing();
@@ -374,18 +384,47 @@ void Engine::registerComponents(
     }
 }
 
-void Engine::saveScene(std::string filename) {
+void Engine::saveScene(std::string filename, bool xml) {
     std::ofstream ofs(filename);
-    boost::archive::text_oarchive oa(ofs);
-    oa << boost::serialization::make_nvp("scene", m_scene);
+    assert(ofs.good());
+ 
+    if (xml){
+
+        boost::archive::xml_oarchive oa(ofs);
+        oa << boost::serialization::make_nvp("scene", m_scene);
+    } else{
+        boost::archive::text_oarchive oa(ofs);
+        oa << boost::serialization::make_nvp("scene", m_scene);
+    }
 }
 
-void Engine::loadScene(std::string filename) {
+void Engine::loadScene(std::string filename, bool xml) {
+
     std::ifstream ifs(filename);
-    boost::archive::text_iarchive ia(ifs);
-    Scene* scene;
-    ia >> boost::serialization::make_nvp("scene", m_scene);
-    scene->init();
+    assert(ifs.good());
+    assert(ifs.is_open());
+    if (!ifs.is_open())
+        std::cout << "failed to open " << filename << '\n';
+
+    std::shared_ptr<Scene> scene;
+
+    if (xml) {
+        boost::archive::xml_iarchive ia(ifs);
+        ia >> boost::serialization::make_nvp("scene", scene);
+    } else {
+        boost::archive::text_iarchive ia(ifs);
+        ia >> boost::serialization::make_nvp("scene", scene);
+    }
+
+    if (scene) {
+        scene->m_engine = this;
+        scene->m_phSystem = &m_phSystem;
+        scene->printEntities();
+        m_scene = scene;
+    } else {
+        // TODO: Improve error
+        throw std::runtime_error("Failed to load scene");
+    }
 }
 
 }  // namespace v3d

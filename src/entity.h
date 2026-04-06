@@ -114,11 +114,11 @@ class Entity : public IEditorGUISelectable {
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int version) {
-        ar & m_id;
-        ar & m_name;
-        ar & m_parent;
-        ar & m_childs;
-        ar & m_components;
+        ar & BOOST_SERIALIZATION_NVP(m_id);
+        ar & BOOST_SERIALIZATION_NVP(m_name);
+        ar & BOOST_SERIALIZATION_NVP(m_parent);
+        // m_childs is reconstructed in Scene::load from m_parent references
+        // m_scene is restored in Scene::load
     }
 };
 

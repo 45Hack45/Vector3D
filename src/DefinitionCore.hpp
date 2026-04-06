@@ -5,6 +5,7 @@
 
 #include "imgui.h"
 #include "object_ptr.hpp"
+#include "serialization.hpp"
 
 namespace v3d {
 
