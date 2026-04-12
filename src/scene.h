@@ -68,6 +68,7 @@ class Scene {
 
         // Assign entity to component and vice versa
         auto component = m_components.get(uuid);
+        component->m_id = uuid;
         component->m_scene = this;
         component->m_entity = entity.index();
         entity->m_components.push_back(uuid);
