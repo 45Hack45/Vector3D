@@ -12,6 +12,7 @@ class Physics;
 class Vehicle : public ComponentBase {
     friend Engine;
     friend Physics;
+    friend class boost::serialization::access;
     // friend VehicleInteractiveController;
    private:
     std::string m_vehicleModelPath;
@@ -26,6 +27,50 @@ class Vehicle : public ComponentBase {
     chrono::ChQuaterniond m_initRot{1, 0, 0, 0};
 
     void loadVehicleModelJSON();
+
+    template <class Archive>
+    void save(Archive& ar, unsigned int /*version*/) const {
+        ar& boost::serialization::make_nvp("ComponentBase",
+                                           boost::serialization::base_object<ComponentBase>(*this));
+        ar& BOOST_SERIALIZATION_NVP(m_vehicleModelPath);
+        ar& BOOST_SERIALIZATION_NVP(m_parkingBrake);
+        double initPosX = m_initPos.x(), initPosY = m_initPos.y(),
+               initPosZ = m_initPos.z();
+        ar& BOOST_SERIALIZATION_NVP(initPosX);
+        ar& BOOST_SERIALIZATION_NVP(initPosY);
+        ar& BOOST_SERIALIZATION_NVP(initPosZ);
+        double initRotE0 = m_initRot.e0(), initRotE1 = m_initRot.e1(),
+               initRotE2 = m_initRot.e2(), initRotE3 = m_initRot.e3();
+        ar& BOOST_SERIALIZATION_NVP(initRotE0);
+        ar& BOOST_SERIALIZATION_NVP(initRotE1);
+        ar& BOOST_SERIALIZATION_NVP(initRotE2);
+        ar& BOOST_SERIALIZATION_NVP(initRotE3);
+        // m_vehicleHandle, m_rigidBody, m_isLoaded are runtime state rebuilt
+        // by start() using the restored m_vehicleModelPath and init pose.
+    }
+
+    template <class Archive>
+    void load(Archive& ar, unsigned int /*version*/) {
+        ar& boost::serialization::make_nvp("ComponentBase",
+                                           boost::serialization::base_object<ComponentBase>(*this));
+        ar& BOOST_SERIALIZATION_NVP(m_vehicleModelPath);
+        ar& BOOST_SERIALIZATION_NVP(m_parkingBrake);
+        double initPosX, initPosY, initPosZ;
+        ar& BOOST_SERIALIZATION_NVP(initPosX);
+        ar& BOOST_SERIALIZATION_NVP(initPosY);
+        ar& BOOST_SERIALIZATION_NVP(initPosZ);
+        m_initPos = chrono::ChVector3d(initPosX, initPosY, initPosZ);
+        double initRotE0, initRotE1, initRotE2, initRotE3;
+        ar& BOOST_SERIALIZATION_NVP(initRotE0);
+        ar& BOOST_SERIALIZATION_NVP(initRotE1);
+        ar& BOOST_SERIALIZATION_NVP(initRotE2);
+        ar& BOOST_SERIALIZATION_NVP(initRotE3);
+        m_initRot = chrono::ChQuaterniond(initRotE0, initRotE1,
+                                          initRotE2, initRotE3);
+        m_vehicleModelPathDirty = true;
+        m_isLoaded = false;
+    }
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
 
     // chrono::vehicle::WheeledVehicle* getVehicleRaw() { return
     // m_vehicle->vehicle; }; chrono::vehicle::DriverInputs*
@@ -45,6 +90,7 @@ class Vehicle : public ComponentBase {
     Vehicle& operator=(Vehicle&&) = default;
 
     std::string getComponentName() override { return "Vehicle"; };
+    static std::string getName() { return "Vehicle"; };
 
     void init() override;
     void start() override;

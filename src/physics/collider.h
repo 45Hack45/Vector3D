@@ -17,6 +17,7 @@ class RigidBody;
 class ColliderBase : public ComponentBase {
     // friend class Physics;
     friend class RigidBody;
+    friend class boost::serialization::access;
 
    public:
     // ColliderBase();
@@ -41,27 +42,45 @@ class ColliderBase : public ComponentBase {
     virtual std::shared_ptr<chrono::ChCollisionShape> getRawShape() = 0;
 
     virtual void initColliderProperties() = 0;
+
+    template <class Archive>
+    void save(Archive& ar, unsigned int /*version*/) const {
+        ar& boost::serialization::make_nvp("ComponentBase",
+                                           boost::serialization::base_object<ComponentBase>(*this));
+        // m_rigidBody and m_collisionMaterial are restored in init()
+    }
+
+    template <class Archive>
+    void load(Archive& ar, unsigned int /*version*/) {
+        ar& boost::serialization::make_nvp("ComponentBase",
+                                           boost::serialization::base_object<ComponentBase>(*this));
+    }
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
 };
 
 class ColliderBox : public ColliderBase {
+    friend class boost::serialization::access;
+
    public:
     std::string getComponentName() override { return "Box Collider"; };
+    static std::string getName() { return "ColliderBox"; };
 
     void setSize(float x, float y, float z) {
+        m_sizeX = x; m_sizeY = y; m_sizeZ = z;
         m_collisionShape.reset();
         m_collisionShape =
             chrono_types::make_shared<chrono::ChCollisionShapeBox>(
                 m_collisionMaterial, x, y, z);
     }
     void setSize(glm::vec3& lengths) {
-        m_collisionShape.reset();
-        m_collisionShape =
-            chrono_types::make_shared<chrono::ChCollisionShapeBox>(
-                m_collisionMaterial, lengths.x, lengths.y, lengths.z);
+        setSize(lengths.x, lengths.y, lengths.z);
     }
 
    protected:
     std::shared_ptr<chrono::ChCollisionShapeBox> m_collisionShape;
+
+    // Box half-extents; defaults match initColliderProperties() original values.
+    float m_sizeX = 0.1f, m_sizeY = 0.2f, m_sizeZ = 0.3f;
 
     std::shared_ptr<chrono::ChCollisionShape> getRawShape() override {
         return m_collisionShape;
@@ -70,10 +89,31 @@ class ColliderBox : public ColliderBase {
     void initColliderProperties() override {
         m_collisionShape =
             chrono_types::make_shared<chrono::ChCollisionShapeBox>(
-                m_collisionMaterial, 0.1, 0.2, 0.3);
+                m_collisionMaterial, m_sizeX, m_sizeY, m_sizeZ);
     };
 
     void onDrawGizmos(rendering::GizmosManager* gizmos);
+
+   private:
+    template <class Archive>
+    void save(Archive& ar, unsigned int /*version*/) const {
+        ar& boost::serialization::make_nvp("ColliderBase",
+                                           boost::serialization::base_object<ColliderBase>(*this));
+        ar& BOOST_SERIALIZATION_NVP(m_sizeX);
+        ar& BOOST_SERIALIZATION_NVP(m_sizeY);
+        ar& BOOST_SERIALIZATION_NVP(m_sizeZ);
+    }
+
+    template <class Archive>
+    void load(Archive& ar, unsigned int /*version*/) {
+        ar& boost::serialization::make_nvp("ColliderBase",
+                                           boost::serialization::base_object<ColliderBase>(*this));
+        ar& BOOST_SERIALIZATION_NVP(m_sizeX);
+        ar& BOOST_SERIALIZATION_NVP(m_sizeY);
+        ar& BOOST_SERIALIZATION_NVP(m_sizeZ);
+        // initColliderProperties() in init() will use the restored m_sizeX/Y/Z.
+    }
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
 };
 
 // typedef ColliderBase<chrono::ChCollisionShape> Collider;

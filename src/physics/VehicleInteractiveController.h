@@ -5,6 +5,7 @@
 
 namespace v3d {
 class VehicleInteractiveController : public ComponentBase {
+    friend class boost::serialization::access;
    private:
     Vehicle *m_vehicle;
 
@@ -34,11 +35,22 @@ class VehicleInteractiveController : public ComponentBase {
     std::string getComponentName() override {
         return "VehicleInteractiveController";
     };
+    static std::string getName() { return "VehicleInteractiveController"; };
 
     void drawEditorGUI_Properties() override;
 
     void init() override;
     void start() override;
     void update(double deltaTime) override;
+
+   private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int /*version*/) {
+        ar& boost::serialization::make_nvp(
+            "ComponentBase",
+            boost::serialization::base_object<ComponentBase>(*this));
+        // All float control inputs are transient; they reset each update() from
+        // the InputManager and are not persisted.
+    }
 };
 }  // namespace v3d

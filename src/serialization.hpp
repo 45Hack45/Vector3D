@@ -4,6 +4,7 @@
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/xml_iarchive.hpp>
 #include <boost/archive/xml_oarchive.hpp>
+#include <boost/serialization/array.hpp>
 #include <boost/serialization/deque.hpp>
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/serialization.hpp>

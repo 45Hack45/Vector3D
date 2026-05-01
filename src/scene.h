@@ -10,6 +10,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "ComponentRegistry.h"
 #include "DefinitionCore.hpp"
 #include "component.h"
 #include "entity.h"
@@ -271,12 +272,27 @@ class Scene {
             }
         }
 
+        // Pre-register all known component types so KeyedStableCollection can
+        // find their typed storage containers during deserialization.
+        for (auto* info : ComponentRegistry::instance().getAllInfo()) {
+            m_components.registerType(info->componentType, info->componentCollectionFactory(),
+                                      info->name);
+        }
+
         // Components
         ar& BOOST_SERIALIZATION_NVP(m_components);
+        // Note: component m_scene pointers and init/start are deferred to
+        // onLoad(), which Engine calls after setting m_engine and m_phSystem.
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
     void init();
+
+    // Deserialization helper.
+    // Restores component m_scene pointers, calls init()/start() in
+    // dependency-safe order, and re-wires entity cached pointers and
+    // transform parent relationships.
+    void onLoad();
 
     entity_ptr createEntity() {
         entityID_t uuid = boost::uuids::random_generator()();

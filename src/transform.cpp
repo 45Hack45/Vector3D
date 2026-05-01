@@ -1,12 +1,14 @@
 
 #include "transform.h"
 
+#include "ComponentRegistry.h"
 #include "physics/rigidbody.h"
 #include "scene.h"
 
 Serializable(v3d::Transform, "v3d::Transform");
 
 namespace v3d {
+REGISTER_COMPONENT(Transform);
 
 // auto Transform::dependencies() {
 //     return std::tuple<RigidBody>{};

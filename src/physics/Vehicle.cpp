@@ -4,6 +4,9 @@
 #include <plog/Log.h>
 
 #include "Vehicle.h"
+#include "ComponentRegistry.h"
+
+Serializable(v3d::Vehicle, "v3d::Vehicle");
 #include "chrono_vehicle/ChVehicleModelData.h"
 #include "chrono_vehicle/utils/ChUtilsJSON.h"
 #include "chrono_vehicle/wheeled_vehicle/vehicle/WheeledTrailer.h"
@@ -15,6 +18,7 @@
 #include "scene.h"
 
 namespace v3d {
+REGISTER_COMPONENT(Vehicle);
 
 void Vehicle::init() {
     m_vehicleModelPathDirty = true;

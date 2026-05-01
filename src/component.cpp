@@ -7,11 +7,17 @@
 #include "engine.h"
 #include "scene.h"
 
+Serializable(v3d::TestComponent, "v3d::TestComponent");
+Serializable(v3d::AbsoluteASCIIComponent, "v3d::AbsoluteASCIIComponent");
+Serializable(v3d::CinemaASCIIComponent, "v3d::CinemaASCIIComponent");
+Serializable(v3d::TestDataComponent, "v3d::TestDataComponent");
+
 namespace v3d {
 
 REGISTER_COMPONENT(AbsoluteASCIIComponent);
 REGISTER_COMPONENT(CinemaASCIIComponent);
 REGISTER_COMPONENT(TestComponent);
+REGISTER_COMPONENT(TestDataComponent);
 
 ComponentBase::~ComponentBase() {
     if (m_scene != nullptr) m_scene->getEngine()->unregisterGizmosTarget(this);

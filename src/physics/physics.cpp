@@ -66,17 +66,13 @@ void Physics::addBody(RigidBody& body) {
     // m_system.ShowHierarchy(std::cout);
 }
 
-void Physics::addBody(std::shared_ptr<chrono::ChBody> body) {
-    m_system.AddBody(body);
-}
+void Physics::addBody(std::shared_ptr<chrono::ChBody> body) { m_system.AddBody(body); }
 
 void Physics::removeBody(RigidBody& body) {
     m_system.RemoveBody(body.m_body);
     // m_system.ShowHierarchy(std::cout);
 }
-void Physics::removeBody(std::shared_ptr<chrono::ChBody> body) {
-    m_system.RemoveBody(body);
-}
+void Physics::removeBody(std::shared_ptr<chrono::ChBody> body) { m_system.RemoveBody(body); }
 
 void Physics::addLink(ConstrainLink& link) {
     m_system.AddLink(link.m_link);
@@ -84,9 +80,7 @@ void Physics::addLink(ConstrainLink& link) {
     // m_system.ShowHierarchy(std::cout);
 }
 
-void Physics::removeLink(ConstrainLink& link) {
-    m_system.RemoveLink(link.m_link);
-}
+void Physics::removeLink(ConstrainLink& link) { m_system.RemoveLink(link.m_link); }
 
 // chrono::vehicle::WheeledVehicle* Physics::createVehicle(std::string
 // vehicleModelPath){
@@ -103,20 +97,23 @@ void Physics::removeLink(ConstrainLink& link) {
 
 VehicleHandle Physics::createVehicle(std::string vehicleModelPath) {
     // Create vehicle
-    auto& vehicle =
-        m_vehicles.emplace_back(&m_system, vehicleModelPath, true, true);
+    auto& vehicle = m_vehicles.emplace_back(&m_system, vehicleModelPath, true, true);
 
     // Link vehicle to driver inputs
     // double steering
     // double throttle
     // double braking
     // double clutch
-    m_vehicleInputs.push_back(
-        {VehicleRaw_ptr(m_vehicles, m_vehicles.size() - 1),
-         chrono::vehicle::DriverInputs({0, 0, 0, 0})});
+    m_vehicleInputs.push_back({VehicleRaw_ptr(m_vehicles, m_vehicles.size() - 1),
+                               chrono::vehicle::DriverInputs({0, 0, 0, 0})});
 
-    return VehicleHandle(m_vehicleInputs, m_vehicleInputs.size() -
-                                              1);  // Provide pointer to Vehicle
+    return VehicleHandle(m_vehicleInputs,
+                         m_vehicleInputs.size() - 1);  // Provide pointer to Vehicle
+}
+
+void Physics::clearVehicles() {
+    m_vehicleInputs.clear();
+    m_vehicles.clear();
 }
 
 void Physics::showHierarchy() { m_system.ShowHierarchy(std::cout); }

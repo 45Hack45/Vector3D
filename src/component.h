@@ -87,6 +87,7 @@ class DataComponent : public ComponentBase {
 };
 
 class TestComponent : public ComponentBase {
+    friend class boost::serialization::access;
    public:
     TestComponent() = default;
     TestComponent(int value) : testVariable(value) {};
@@ -99,10 +100,18 @@ class TestComponent : public ComponentBase {
     static std::string getName() { return "TestComponent"; };
 
    private:
-    int testVariable;
+    int testVariable = 0;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int /*version*/) {
+        ar& boost::serialization::make_nvp("ComponentBase",
+                                           boost::serialization::base_object<ComponentBase>(*this));
+        ar& BOOST_SERIALIZATION_NVP(testVariable);
+    }
 };
 
 class AbsoluteASCIIComponent : public ComponentBase {
+    friend class boost::serialization::access;
    public:
     AbsoluteASCIIComponent() = default;
     AbsoluteASCIIComponent(int value) : testVariable(value) {};
@@ -115,10 +124,18 @@ class AbsoluteASCIIComponent : public ComponentBase {
     static std::string getName() { return "AbsoluteASCIIComponent"; };
 
    private:
-    int testVariable;
+    int testVariable = 0;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int /*version*/) {
+        ar& boost::serialization::make_nvp("ComponentBase",
+                                           boost::serialization::base_object<ComponentBase>(*this));
+        ar& BOOST_SERIALIZATION_NVP(testVariable);
+    }
 };
 
 class CinemaASCIIComponent : public ComponentBase {
+    friend class boost::serialization::access;
    public:
     CinemaASCIIComponent() = default;
     CinemaASCIIComponent(int value) : testVariable(value) {};
@@ -132,18 +149,36 @@ class CinemaASCIIComponent : public ComponentBase {
     static std::string getName() { return "CinemaASCIIComponent"; };
 
    private:
-    int testVariable;
+    int testVariable = 0;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int /*version*/) {
+        ar& boost::serialization::make_nvp("ComponentBase",
+                                           boost::serialization::base_object<ComponentBase>(*this));
+        ar& BOOST_SERIALIZATION_NVP(testVariable);
+    }
 };
 
 class TestDataComponent : public DataComponent {
+    friend class boost::serialization::access;
    public:
     TestDataComponent() = default;
     void start() override {};
     void update(double deltaTime) override {};
 
     std::string getComponentName() override { return "TestDataComponent"; };
+    static std::string getName() { return "TestDataComponent"; };
 
-    int testDataComponentField;
+    int testDataComponentField = 0;
+
+   private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int /*version*/) {
+        ar& boost::serialization::make_nvp("ComponentBase",
+                                           boost::serialization::base_object<ComponentBase>(*this));
+        ar& BOOST_SERIALIZATION_NVP(testDataComponentField);
+    }
 };
 
 }  // namespace v3d
+

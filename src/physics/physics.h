@@ -19,10 +19,9 @@ class Physics {
     Physics();
     ~Physics() {};
 
-    void addBody(
-        RigidBody& body);  // TOOD: Refactor addBody to createBody, instead of
-                           // registering the body create it directly from
-                           // Physics because it owns the resource
+    void addBody(RigidBody& body);  // TOOD: Refactor addBody to createBody, instead of
+                                    // registering the body create it directly from
+                                    // Physics because it owns the resource
 
     /// @brief Add a rigidbody to the physics system
     /// @param body RigidBody
@@ -37,8 +36,10 @@ class Physics {
 
     VehicleHandle createVehicle(std::string vehicleModelPath);
 
-    std::shared_ptr<chrono::ChContactMaterialSMC>
-    getDefaultCollisionMaterial() {
+    /// @brief Clear all vehicle state.
+    void clearVehicles();
+
+    std::shared_ptr<chrono::ChContactMaterialSMC> getDefaultCollisionMaterial() {
         return m_defaultCollMat;
     }
 

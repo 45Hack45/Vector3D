@@ -9,6 +9,8 @@
 #include "rigidbody.h"
 #include "scene.h"
 
+Serializable(v3d::RigidBody, "v3d::RigidBody");
+
 namespace v3d {
 REGISTER_COMPONENT(RigidBody);
 
@@ -22,18 +24,34 @@ RigidBody::~RigidBody() {
 void RigidBody::init() {
     // Initialize chrono rigidbody and add to the system
     // TODO: Relate to the parent
-    // TODO: Make all entities have entities have rigidbody but with physics
-    // disabled, to disable physics set the body to fixed:
-    // m_body->SetFixed(true)
+    // TODO: Make all entities have rigidbody but with physics disabled;
+    // to disable physics set the body to fixed: m_body->SetFixed(true)
     m_body = chrono_types::make_shared<chrono::ChBody>();
 
-    // Initialize
-    m_body->SetMass(10);
-    m_body->SetInertiaXX(chrono::ChVector3d(4, 4, 4));
-    m_body->SetPos(chrono::ChVector3d(0, .1, 0));
-    m_body->SetPosDt(chrono::ChVector3d(0, 0, 0));
-    // Init acceleration to earth gravity
-    // m_body->SetPosDt2(chrono::ChVector3d(0, 0.91, 0));
+    if (m_savedBodyState.valid) {
+        // Restore persisted body state from the last save.
+        m_body->SetPos(chrono::ChVector3d(m_savedBodyState.posX,
+                                          m_savedBodyState.posY,
+                                          m_savedBodyState.posZ));
+        m_body->SetRot(chrono::ChQuaterniond(m_savedBodyState.rotE0,
+                                              m_savedBodyState.rotE1,
+                                              m_savedBodyState.rotE2,
+                                              m_savedBodyState.rotE3));
+        m_body->SetPosDt(chrono::ChVector3d(m_savedBodyState.linVelX,
+                                             m_savedBodyState.linVelY,
+                                             m_savedBodyState.linVelZ));
+        m_body->SetMass(m_savedBodyState.mass);
+        m_body->SetInertiaXX(chrono::ChVector3d(m_savedBodyState.inertiaX,
+                                                 m_savedBodyState.inertiaY,
+                                                 m_savedBodyState.inertiaZ));
+        m_body->SetFixed(m_savedBodyState.fixed);
+    } else {
+        // Default state for newly created bodies.
+        m_body->SetMass(10);
+        m_body->SetInertiaXX(chrono::ChVector3d(4, 4, 4));
+        m_body->SetPos(chrono::ChVector3d(0, .1, 0));
+        m_body->SetPosDt(chrono::ChVector3d(0, 0, 0));
+    }
 
     m_scene->getPhysics()->addBody(*this);
 };

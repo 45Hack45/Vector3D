@@ -3,6 +3,10 @@
 
 #include <glm/gtc/quaternion.hpp>
 
+#include "ComponentRegistry.h"
+
+Serializable(v3d::MeshRenderer, "v3d::MeshRenderer");
+
 #include "Mesh.h"
 #include "engine.h"
 #include "rendering/shader.h"
@@ -11,6 +15,8 @@
 #include "utils/exception.hpp"
 
 namespace v3d {
+REGISTER_COMPONENT(MeshRenderer);
+
 MeshRenderer::MeshRenderer() {}
 MeshRenderer::~MeshRenderer() { resetMesh(); }
 

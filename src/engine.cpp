@@ -405,6 +405,15 @@ void Engine::loadScene(std::string filename, bool xml) {
     if (scene) {
         scene->m_engine = this;
         scene->m_phSystem = &m_phSystem;
+
+        // Destroy the current scene before initialising the new one
+        m_scene.reset();
+
+        // Clear accumulated vehicle state that Physics owns across loads.
+        m_phSystem.clearVehicles();
+
+        // Now safe to add new bodies and vehicles.
+        scene->onLoad();
         scene->printEntities();
         m_scene = scene;
     } else {
