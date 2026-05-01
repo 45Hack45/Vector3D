@@ -1,9 +1,18 @@
 #pragma once
 
+#include <boost/archive/polymorphic_oarchive.hpp>
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/archive/text_oarchive.hpp>
+#include <boost/archive/xml_iarchive.hpp>
+#include <boost/archive/xml_oarchive.hpp>
+#include <boost/core/demangle.hpp>
+#include <boost/serialization/deque.hpp>
+#include <boost/serialization/serialization.hpp>
 #include <boost/unordered/unordered_flat_map.hpp>
 #include <cassert>
 #include <deque>
 #include <functional>
+#include <iostream>
 #include <memory>
 #include <typeindex>
 #include <unordered_map>
@@ -18,6 +27,8 @@ namespace utils {
 /// @tparam Base Polymorfic Base class
 template <typename Key, typename Base>
 class KeyedStableCollection {
+    friend class boost::serialization::access;
+
    public:
     // A handle representing a reference to a stored object, including its type,
     // index in the storage container, and generation for versioning.
@@ -33,8 +44,7 @@ class KeyedStableCollection {
 
         // Equality operator to compare handles
         bool operator==(const Handle& other) const {
-            return type == other.type && index == other.index &&
-                   generation == other.generation;
+            return type == other.type && index == other.index && generation == other.generation;
         }
     };
 
@@ -44,8 +54,7 @@ class KeyedStableCollection {
     // key. Fails if the key already exists.
     template <typename Derived, typename... Args>
     bool insert(const Key& key, Args&&... args) {
-        static_assert(std::is_base_of<Base, Derived>::value,
-                      "Must inherit from Base");
+        static_assert(std::is_base_of<Base, Derived>::value, "Must inherit from Base");
 
         if (m_keyToHandle.contains(key)) return false;
 
@@ -103,8 +112,7 @@ class KeyedStableCollection {
         if (h.type != typeid(Derived)) return nullptr;
 
         auto& storage = getStorage<Derived>();
-        if (h.index >= storage.entries.size() ||
-            h.generation != storage.generations[h.index])
+        if (h.index >= storage.entries.size() || h.generation != storage.generations[h.index])
             return nullptr;
 
         return &storage.entries[h.index];
@@ -129,8 +137,7 @@ class KeyedStableCollection {
 
         auto& genVec = storageIt->second->generations;
 
-        if (handle.index >= genVec.size() ||
-            genVec[handle.index] != handle.generation)
+        if (handle.index >= genVec.size() || genVec[handle.index] != handle.generation)
             return false;
 
         storageIt->second->erase(handle.index);
@@ -167,25 +174,28 @@ class KeyedStableCollection {
         virtual void push_back(std::unique_ptr<Base> derived) = 0;
         virtual void compact() = 0;
         virtual void for_each(std::function<void(Base&)>&& func) = 0;
+
+        virtual void saveEntries(boost::archive::text_oarchive& ar) = 0;
+        virtual void saveEntries(boost::archive::xml_oarchive& ar) = 0;
+        virtual void loadEntries(boost::archive::text_iarchive& ar) = 0;
+        virtual void loadEntries(boost::archive::xml_iarchive& ar) = 0;
     };
 
     // Template implementation of TypedVectorBase for a specific derived type.
     template <typename Derived>
     struct TypedVector : TypedVectorBase {
         TypedVector() {
-            static_assert(std::is_copy_constructible_v<Derived> ||
-                              std::is_move_constructible_v<Derived>,
-                          "Derived must be copy or move constructible");
+            static_assert(
+                std::is_copy_constructible_v<Derived> || std::is_move_constructible_v<Derived>,
+                "Derived must be copy or move constructible");
 
-            static_assert(std::is_copy_assignable_v<Derived> ||
-                              std::is_move_assignable_v<Derived>,
+            static_assert(std::is_copy_assignable_v<Derived> || std::is_move_assignable_v<Derived>,
                           "Derived must be copy or move assignable");
         }
         std::deque<Derived> entries;
 
         Base* get(std::size_t idx) override {
-            if (idx >= entries.size() ||
-                this->generations[idx] == static_cast<std::size_t>(-1))
+            if (idx >= entries.size() || this->generations[idx] == static_cast<std::size_t>(-1))
                 return nullptr;
             return &entries[idx];
         }
@@ -228,6 +238,19 @@ class KeyedStableCollection {
                 }
             }
         }
+
+        void saveEntries(boost::archive::text_oarchive& ar) override {
+            ar& BOOST_SERIALIZATION_NVP(entries);
+        }
+        void saveEntries(boost::archive::xml_oarchive& ar) override {
+            ar& BOOST_SERIALIZATION_NVP(entries);
+        }
+        void loadEntries(boost::archive::text_iarchive& ar) override {
+            ar& BOOST_SERIALIZATION_NVP(entries);
+        }
+        void loadEntries(boost::archive::xml_iarchive& ar) override {
+            ar& BOOST_SERIALIZATION_NVP(entries);
+        }
     };
 
     /// @brief Register type, initialize the internal container for the Derived
@@ -246,21 +269,49 @@ class KeyedStableCollection {
 
         auto ptr = std::make_unique<TypedVector<Derived>>();
         m_derivedStorage[typeIndex] = std::move(ptr);
+
+        // Store type <-> tag mapping, using demangled class name as tag
+        registerTypeTag<Derived>();
     }
 
     /// @brief Register type, use provided container for typeIndex. Required for
-    /// inserting when the Derived type is not known at compile time, call
+    /// inserting when the Derived type is not known at compile time and serialization, call
     /// before first insertion.
-    /// @param typeIndex The Derived type (std::type_index) of typeVector    
+    /// @param typeIndex The Derived type (std::type_index) of typeVector
     /// @param typeVector Container for Derived type
-    void registerType(
-        std::type_index typeIndex,
-        std::unique_ptr<TypedVectorBase>
-            typeVector) {
+    /// @param tag Stable human-readable identifier
+    void registerType(std::type_index typeIndex, std::unique_ptr<TypedVectorBase> typeVector,
+                      std::string tag) {
         m_derivedStorage[typeIndex] = std::move(typeVector);
+
+        // Store type <-> tag mapping
+        registerTypeTag(typeIndex, tag);
     }
 
    private:
+    struct SerializationArchiveFail {
+        std::string what = "";
+    };
+
+    /// @brief Register type <--> tag mapping
+    /// @tparam Derived
+    template <typename Derived>
+    void registerTypeTag() {
+        auto typeIndex = std::type_index(typeid(Derived));
+        // try to demangle class name
+        std::string tag = boost::core::demangle(typeIndex.name());
+        m_tagToType.insert_or_assign(tag, typeIndex);
+        m_typeToTag.insert_or_assign(typeIndex, tag);
+    }
+
+    /// @brief Register type <--> tag mapping
+    /// @param typeIndex The Derived type (std::type_index) of typeVector
+    /// @param tag Stable human-readable identifier
+    void registerTypeTag(std::type_index typeIndex, std::string tag) {
+        m_tagToType.insert_or_assign(tag, typeIndex);
+        m_typeToTag.insert_or_assign(typeIndex, tag);
+    }
+
     // Get (or create if not present) the TypedVector for a specific Derived
     // type.
     template <typename Derived>
@@ -271,10 +322,13 @@ class KeyedStableCollection {
             auto ptr = std::make_unique<TypedVector<Derived>>();
             auto& ref = *ptr;
             m_derivedStorage[type] = std::move(ptr);
+
+            // Store type <-> tag mapping, using demangled class name as tag
+            registerTypeTag<Derived>();
+
             return ref;
         }
-        return *static_cast<TypedVector<Derived>*>(
-            m_derivedStorage[type].get());
+        return *static_cast<TypedVector<Derived>*>(m_derivedStorage[type].get());
     }
 
     TypedVectorBase* getStorage(std::type_index type) {
@@ -291,8 +345,7 @@ class KeyedStableCollection {
         if (it == m_derivedStorage.end()) return nullptr;
 
         auto& storage = *it->second;
-        if (h.index >= storage.generations.size() ||
-            h.generation != storage.generations[h.index])
+        if (h.index >= storage.generations.size() || h.generation != storage.generations[h.index])
             return nullptr;
 
         return storage.get(h.index);
@@ -307,8 +360,7 @@ class KeyedStableCollection {
 
             auto& genVec = storageIt->second->generations;
 
-            if (handle.index < genVec.size() &&
-                genVec[handle.index] == handle.generation) {
+            if (handle.index < genVec.size() && genVec[handle.index] == handle.generation) {
                 continue;
             }
 
@@ -321,12 +373,115 @@ class KeyedStableCollection {
         }
     }
 
+    template <class Archive>
+    void save(Archive& ar, unsigned int /*version*/) const {
+        // Save elements — count must match what is actually written below
+        size_t numStorages = m_derivedStorage.size();
+        ar& BOOST_SERIALIZATION_NVP(numStorages);
+        for (auto& [typeIndex, storage] : m_derivedStorage) {
+            auto tagIt = m_typeToTag.find(typeIndex);
+            std::string storageTypeTag = (tagIt != m_typeToTag.end())
+                                             ? tagIt->second
+                                             : std::string(SERIALIZATION_MISSING_TYPE_TAG);
+
+            ar& BOOST_SERIALIZATION_NVP(storageTypeTag);
+            ar& boost::serialization::make_nvp("generations", storage->generations);
+            storage->saveEntries(ar);
+        }
+
+        // Save handles, key mapping to element
+        size_t numHandles = m_keyToHandle.size();
+        ar& BOOST_SERIALIZATION_NVP(numHandles);
+        for (auto& [key, handle] : m_keyToHandle) {
+            // Note the tag saved tag must match the expected by the loader
+            auto tagIt = m_typeToTag.find(handle.type);
+
+            std::string handleTypeTag = std::string(SERIALIZATION_MISSING_TYPE_TAG);
+            std::size_t index = std::size_t();
+            std::size_t generation = std::size_t();
+
+            if (tagIt != m_typeToTag.end()) {
+                handleTypeTag = m_typeToTag.at(handle.type);
+                index = handle.index;
+                generation = handle.generation;
+            }
+            ar& BOOST_SERIALIZATION_NVP(key);
+            ar& BOOST_SERIALIZATION_NVP(handleTypeTag);
+            ar& BOOST_SERIALIZATION_NVP(index);
+            ar& BOOST_SERIALIZATION_NVP(generation);
+        }
+    }
+
+    template <class Archive>
+    void load(Archive& ar, unsigned int /*version*/) {
+        // Load elements
+        std::cout << "1";
+        size_t numStorages;
+        ar& BOOST_SERIALIZATION_NVP(numStorages);
+        for (size_t i = 0; i < numStorages; i++) {
+            std::string storageTypeTag;
+            std::vector<std::size_t> generations;
+            ar& BOOST_SERIALIZATION_NVP(storageTypeTag);
+            ar& BOOST_SERIALIZATION_NVP(generations);
+
+            std::cout << "A";
+            if (storageTypeTag != SERIALIZATION_MISSING_TYPE_TAG) {
+                std::cout << "B";
+                auto typeIt = m_tagToType.find(storageTypeTag);
+                if (typeIt != m_tagToType.end()) {
+                    std::cout << "C";
+                    auto storageIt = m_derivedStorage.find(typeIt->second);
+                    if (storageIt != m_derivedStorage.end()) {
+                        std::cout << "D";
+                        storageIt->second->generations = std::move(generations);
+                        storageIt->second->loadEntries(ar);
+                    }
+                }
+            }
+        }
+
+        // Load key mapping to element, m_keyToHandle
+        m_keyToHandle.clear();
+
+        size_t numHandles;
+        ar& BOOST_SERIALIZATION_NVP(numHandles);
+
+        for (int i = 0; i < numHandles; i++) {
+            Key key;
+            std::string handleTypeTag;
+            std::size_t index;
+            std::size_t generation;
+
+            ar& BOOST_SERIALIZATION_NVP(key);
+            ar& BOOST_SERIALIZATION_NVP(handleTypeTag);
+            ar& BOOST_SERIALIZATION_NVP(index);
+            ar& BOOST_SERIALIZATION_NVP(generation);
+
+            if (handleTypeTag != SERIALIZATION_MISSING_TYPE_TAG) {
+                // Load handle
+                auto typeIt = m_tagToType.find(handleTypeTag);
+                if (typeIt != m_tagToType.end()) {
+                    Handle handle{typeIt->second, index, generation};
+                    m_keyToHandle[key] = handle;
+                }
+            }
+        }
+    }
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
+
     // Maps a key to a handle referencing the actual object.
     boost::unordered_flat_map<Key, Handle> m_keyToHandle;
 
     // Maps type_info to typed storage containers.
-    std::unordered_map<std::type_index, std::unique_ptr<TypedVectorBase>>
-        m_derivedStorage;
+    std::unordered_map<std::type_index, std::unique_ptr<TypedVectorBase>> m_derivedStorage;
+
+    // Maps stable human-readable identifier to type_index. Inverse of m_typeToTag
+    std::unordered_map<std::string, std::type_index> m_tagToType;
+    // Maps type_index to stable human-readable. Inverse of m_tagToType
+    std::unordered_map<std::type_index, std::string> m_typeToTag;
+
+    static constexpr std::string_view SERIALIZATION_MISSING_TYPE_TAG =
+        "{{KEYED_STABLE_COLLECTION-MISSING_TYPE_TAG}}";
 };
 
 }  // namespace utils

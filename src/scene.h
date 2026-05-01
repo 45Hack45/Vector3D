@@ -1,8 +1,8 @@
 #pragma once
 
+#include <boost/serialization/version.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
-#include <boost/serialization/version.hpp>
 #include <cassert>
 #include <iostream>
 #include <memory>
@@ -53,15 +53,11 @@ class Scene {
     }
 
     entity_ptr instantiateEntity(std::string name, entity_ptr parent);
-    entity_ptr instantiateEntity(std::string name) {
-        return this->instantiateEntity(name, m_root);
-    }
+    entity_ptr instantiateEntity(std::string name) { return this->instantiateEntity(name, m_root); }
 
     template <typename T, typename... Args>
-    componentID_t instantiateEntityComponent(entity_ptr entity,
-                                             Args&&... args) {
-        static_assert(std::is_base_of_v<ComponentBase, T>,
-                      "T must inherit from ComponentBase");
+    componentID_t instantiateEntityComponent(entity_ptr entity, Args&&... args) {
+        static_assert(std::is_base_of_v<ComponentBase, T>, "T must inherit from ComponentBase");
 
         // Instantiate all unmet dependencies first
         instantiateComponentDependancies<T>(entity);
@@ -87,9 +83,8 @@ class Scene {
         return uuid;
     }
 
-    componentID_t insertEntityComponent(
-        entity_ptr entity, std::unique_ptr<ComponentBase> component,
-        componentID_t uuid) {
+    componentID_t insertEntityComponent(entity_ptr entity, std::unique_ptr<ComponentBase> component,
+                                        componentID_t uuid) {
         // TODO: Instantiate dependancies
         // // Instantiate all unmet dependencies first
         // instantiateComponentDependancies<T>(entity);
@@ -118,16 +113,15 @@ class Scene {
         return uuid;
     }
 
-    componentID_t insertEntityComponent(
-        entity_ptr entity, std::unique_ptr<ComponentBase> component) {
+    componentID_t insertEntityComponent(entity_ptr entity,
+                                        std::unique_ptr<ComponentBase> component) {
         return insertEntityComponent(entity, std::move(component),
                                      boost::uuids::random_generator()());
     }
 
     template <typename T, typename... Args>
     T* createEntityComponentOfType(entity_ptr entity, Args&&... args) {
-        auto component_id =
-            instantiateEntityComponent<T>(entity, std::forward<Args>(args)...);
+        auto component_id = instantiateEntityComponent<T>(entity, std::forward<Args>(args)...);
         return getComponent<T>(component_id);
     }
 
@@ -188,8 +182,7 @@ class Scene {
         std::vector<ComponentBase*> componentList;
         for (auto const component : entity->m_components) {
             auto component_ptr = m_components.get(component);
-            if (component_ptr != nullptr)
-                componentList.push_back(component_ptr);
+            if (component_ptr != nullptr) componentList.push_back(component_ptr);
         }
         return componentList;
     }
@@ -213,8 +206,7 @@ class Scene {
     }
 
     void update(double delta) {
-        m_components.for_each(
-            [delta](ComponentBase& component) { component.update(delta); });
+        m_components.for_each([delta](ComponentBase& component) { component.update(delta); });
     }
 
     void printEntities() {
@@ -234,7 +226,8 @@ class Scene {
         std::cout << prefix << (isLast ? "`-- " : "|-- ") << entity->m_name << "\n";
         const auto& childs = entity->getChilds();
         for (size_t i = 0; i < childs.size(); ++i) {
-            printEntityHierarchy(childs[i], prefix + (isLast ? "    " : "|   "), i == childs.size() - 1);
+            printEntityHierarchy(childs[i], prefix + (isLast ? "    " : "|   "),
+                                 i == childs.size() - 1);
         }
     }
 
@@ -245,22 +238,25 @@ class Scene {
     ComponentMap m_components;
 
     template <class Archive>
-    void save(Archive &ar, unsigned int /*version*/) const {
+    void save(Archive& ar, unsigned int /*version*/) const {
         // Root Entity
         boost::uuids::uuid rootIdx = m_root.index();
-        ar & BOOST_SERIALIZATION_NVP(rootIdx);
+        ar& BOOST_SERIALIZATION_NVP(rootIdx);
         // Entities
-        ar & BOOST_SERIALIZATION_NVP(m_entities);
+        ar& BOOST_SERIALIZATION_NVP(m_entities);
+
+        // Components
+        ar& BOOST_SERIALIZATION_NVP(m_components);
     }
 
     template <class Archive>
-    void load(Archive &ar, unsigned int /*version*/) {
+    void load(Archive& ar, unsigned int /*version*/) {
         // Root Entity
         boost::uuids::uuid rootIdx;
-        ar & BOOST_SERIALIZATION_NVP(rootIdx);
+        ar& BOOST_SERIALIZATION_NVP(rootIdx);
 
         // Entities
-        ar & BOOST_SERIALIZATION_NVP(m_entities);
+        ar& BOOST_SERIALIZATION_NVP(m_entities);
         m_root.set(&m_entities, rootIdx);
 
         // Restore m_scene and fix up m_parent pointers; rebuild m_childs
@@ -274,6 +270,9 @@ class Scene {
                 entity.m_parent.reset();
             }
         }
+
+        // Components
+        ar& BOOST_SERIALIZATION_NVP(m_components);
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
@@ -281,8 +280,7 @@ class Scene {
 
     entity_ptr createEntity() {
         entityID_t uuid = boost::uuids::random_generator()();
-        auto [entity_it, inserted] =
-            m_entities.emplace(uuid, Entity(this, uuid));
+        auto [entity_it, inserted] = m_entities.emplace(uuid, Entity(this, uuid));
         return entity_ptr(m_entities, uuid);
     };
     entity_ptr createEntity(entity_ptr parent) {
@@ -302,8 +300,7 @@ class Scene {
             if (this->hasComponent<Dep>(entity)) return;
 
             // Create component and its recursive dependancies
-            this->instantiateEntityComponent<Dep>(
-                entity);  // Each gets its own UUID
+            this->instantiateEntityComponent<Dep>(entity);  // Each gets its own UUID
         });
     }
 };

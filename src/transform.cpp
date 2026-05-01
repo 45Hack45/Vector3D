@@ -4,6 +4,8 @@
 #include "physics/rigidbody.h"
 #include "scene.h"
 
+Serializable(v3d::Transform, "v3d::Transform");
+
 namespace v3d {
 
 // auto Transform::dependencies() {
@@ -53,8 +55,7 @@ void Transform::drawEditorGUI_Properties() {
     glm::vec3 og_position = getPos();
     float position[3] = {og_position.x, og_position.y, og_position.z};
     if (ImGui::InputFloat3("Position", position, "%.3f")) {
-        m_rigidBody->setPos(
-            chrono::ChVector3(position[0], position[1], position[2]));
+        m_rigidBody->setPos(chrono::ChVector3(position[0], position[1], position[2]));
     }
 }
 

@@ -9,6 +9,7 @@ class RigidBody;
 
 class Transform : public ComponentBase {
     friend class Entity;
+    friend class boost::serialization::access;
 
    public:
     Transform() = default;
@@ -37,5 +38,34 @@ class Transform : public ComponentBase {
     RigidBody* m_rigidBody = nullptr;
 
     void setParent(Transform* parent);
+
+    template <class Archive>
+    void save(Archive& ar, unsigned int /*version*/) const {
+        // ar& BOOST_SERIALIZATION_NVP(m_parent);
+        ar& boost::serialization::make_nvp("ComponentBase",
+                                           boost::serialization::base_object<ComponentBase>(*this));
+
+        // // Scale
+        // float scale[3]{m_scale.x, m_scale.y, m_scale.z};
+        // ar& BOOST_SERIALIZATION_NVP(scale);
+
+        // ar& BOOST_SERIALIZATION_NVP(m_rigidBody);
+    }
+
+    template <class Archive>
+    void load(Archive& ar, unsigned int /*version*/) {
+        // ar& BOOST_SERIALIZATION_NVP(m_parent);
+
+        ar& boost::serialization::make_nvp("ComponentBase",
+                                           boost::serialization::base_object<ComponentBase>(*this));
+
+        // // Scale
+        // float scale[3];
+        // ar& BOOST_SERIALIZATION_NVP(scale);
+        // m_scale = glm::vec3(scale[0], scale[1], scale[2]);
+
+        // ar& BOOST_SERIALIZATION_NVP(m_rigidBody);
+    }
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
 };
 }  // namespace v3d

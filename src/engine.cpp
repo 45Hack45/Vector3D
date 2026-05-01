@@ -6,9 +6,9 @@
 #include <plog/Log.h>
 
 #include <atomic>
-#include <boost/stacktrace.hpp>
 #include <boost/archive/xml_iarchive.hpp>
 #include <boost/archive/xml_oarchive.hpp>
+#include <boost/stacktrace.hpp>
 #include <cassert>
 #include <csignal>
 #include <fstream>
@@ -73,8 +73,7 @@ void signalHandler(int signal) {
     msg_ss << boost::stacktrace::stacktrace() << "\n";
     msg_ss << "Exiting...\n";
     recieved_forced_close_signal = true;
-    PLOG(severity) << "Signal (" << signal_str << ") recieved:\n"
-                   << msg_ss.str() << "\n";
+    PLOG(severity) << "Signal (" << signal_str << ") recieved:\n" << msg_ss.str() << "\n";
     std::_Exit(EXIT_FAILURE);  // exit immediately
 }
 
@@ -97,11 +96,9 @@ void initImgui(GLFWwindow* window, float mainScale, bool darkMode = true) {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     (void)io;
-    io.ConfigFlags |=
-        ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
-    io.ConfigFlags |=
-        ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
-    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;  // Enable Docking
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;      // Enable Docking
     // io.ConfigFlags |=
     //     ImGuiConfigFlags_ViewportsEnable;  // Enable Multi-Viewport /
     //     Platform
@@ -115,14 +112,12 @@ void initImgui(GLFWwindow* window, float mainScale, bool darkMode = true) {
 
     // Setup scaling
     ImGuiStyle& style = ImGui::GetStyle();
-    style.ScaleAllSizes(
-        mainScale);  // Bake a fixed style scale. (until we have a solution for
-                     // dynamic style scaling, changing this requires resetting
-                     // Style + calling this again)
-    style.FontScaleDpi =
-        mainScale;  // Set initial font scale. (using
-                    // io.ConfigDpiScaleFonts=true makes this unnecessary. We
-                    // leave both here for documentation purpose)
+    style.ScaleAllSizes(mainScale);  // Bake a fixed style scale. (until we have a solution for
+                                     // dynamic style scaling, changing this requires resetting
+                                     // Style + calling this again)
+    style.FontScaleDpi = mainScale;  // Set initial font scale. (using
+                                     // io.ConfigDpiScaleFonts=true makes this unnecessary. We
+                                     // leave both here for documentation purpose)
 
     const char* glsl_version = "#version 130";
 
@@ -158,38 +153,32 @@ Engine::Engine(uint32_t width, uint32_t height,
     if (!glfwInit()) throw std::runtime_error("Failed initializing GLFW!");
 
     m_gBackendType = graphicsBackendType;
-    float mainScale =
-        ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor());
+    float mainScale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor());
 
     switch (m_gBackendType) {
         case v3d::rendering::GraphicsBackendType::NONE:
-            m_window = std::make_unique<Window>(
-                "Vector3D Headless", rendering::WindowBackendHint::NONE, width,
-                height, mainScale, true);
+            m_window =
+                std::make_unique<Window>("Vector3D Headless", rendering::WindowBackendHint::NONE,
+                                         width, height, mainScale, true);
 
-            m_graphicsBackend =
-                std::make_unique<rendering::NullGraphicsBackend>(
-                    m_window.get());
+            m_graphicsBackend = std::make_unique<rendering::NullGraphicsBackend>(m_window.get());
             break;
         case rendering::GraphicsBackendType::VULKAN_API:
-            m_window = std::make_unique<Window>(
-                "Vector3D Vulkan", rendering::WindowBackendHint::VULKAN_API,
-                width, height, mainScale, true);
+            m_window = std::make_unique<Window>("Vector3D Vulkan",
+                                                rendering::WindowBackendHint::VULKAN_API, width,
+                                                height, mainScale, true);
 
-            m_graphicsBackend =
-                std::make_unique<rendering::VulkanBackend>(m_window.get());
+            m_graphicsBackend = std::make_unique<rendering::VulkanBackend>(m_window.get());
             break;
         case rendering::GraphicsBackendType::OPENGL_API:
-            m_window = std::make_unique<Window>(
-                "Vector3D OpenGL", rendering::WindowBackendHint::OPENGL_API,
-                width, height, mainScale, true);
+            m_window = std::make_unique<Window>("Vector3D OpenGL",
+                                                rendering::WindowBackendHint::OPENGL_API, width,
+                                                height, mainScale, true);
 
-            m_graphicsBackend =
-                std::make_unique<rendering::OpenGlBackend>(m_window.get());
+            m_graphicsBackend = std::make_unique<rendering::OpenGlBackend>(m_window.get());
             break;
         default:
-            throw std::runtime_error(
-                "Failed to initialize engine, invalid graphics backend type!");
+            throw std::runtime_error("Failed to initialize engine, invalid graphics backend type!");
             break;
     }
 
@@ -243,8 +232,7 @@ Engine::~Engine() {
 
 void Engine::start() {
     engineStartPre();
-    m_scene->m_components.for_each(
-        [](ComponentBase& component) { component.start(); });
+    m_scene->m_components.for_each([](ComponentBase& component) { component.start(); });
     engineStart();
 }
 
@@ -300,8 +288,7 @@ void Engine::mainLoop() {
 
         // Render GUI
         editorGUIFrameUpdatePre();
-        m_editor->renderGui(last_frame_dt, &m_scene->m_root.get(),
-                            m_scene.get());
+        m_editor->renderGui(last_frame_dt, &m_scene->m_root.get(), m_scene.get());
         editorGUIFrameUpdate();
 
         // Render debbug window
@@ -335,8 +322,8 @@ void Engine::initDefaultInput() {
     keyboardProfile.bind(input::action::IAct_SteerRight, input::key::IK_L);
     keyboardProfile.bind(input::action::IAct_Clutch, input::key::IK_C);
 
-    m_inputManager.addDevice(std::make_unique<input::KeyboardDevice>(
-        m_window.get(), keyboardProfile));
+    m_inputManager.addDevice(
+        std::make_unique<input::KeyboardDevice>(m_window.get(), keyboardProfile));
 }
 
 void Engine::processInput(GLFWwindow* window) {}
@@ -352,6 +339,10 @@ void Engine::renderEngineDebugGui(double delta) {
     if (ImGui::Button("Test save keyboard bindings")) {
         m_inputManager.storeDevice(0, "testSerialization/KeyboardConfig.txt");
     }
+    // if (ImGui::Button("Test Load keyboard bindings")) {
+    //     m_inputManager.loadDevice("testSerialization/KeyboardConfig.txt", m_window.get());
+    // }
+    ImGui::Spacing();
     if (ImGui::Button("Test save scene")) {
         saveScene("testSerialization/testSceneSave.xml");
     }
@@ -374,37 +365,32 @@ void Engine::renderEngineDebugGui(double delta) {
     ImGui::End();
 }
 
-void Engine::registerComponents(
-    Scene* scene, ComponentRegistry* componentRegistry) {
-    std::vector<const ComponentRegistrationInfo*> componentsInfo =
-        componentRegistry->getAllInfo();
+void Engine::registerComponents(Scene* scene, ComponentRegistry* componentRegistry) {
+    std::vector<const ComponentRegistrationInfo*> componentsInfo = componentRegistry->getAllInfo();
     for (auto info : componentsInfo) {
-        scene->m_components.registerType(info->componentType,
-                                         info->componentCollectionFactory());
+        scene->m_components.registerType(info->componentType, info->componentCollectionFactory(),
+                                         info->name);
     }
 }
 
 void Engine::saveScene(std::string filename, bool xml) {
     std::ofstream ofs(filename);
     assert(ofs.good());
- 
-    if (xml){
 
+    if (xml) {
         boost::archive::xml_oarchive oa(ofs);
         oa << boost::serialization::make_nvp("scene", m_scene);
-    } else{
+    } else {
         boost::archive::text_oarchive oa(ofs);
         oa << boost::serialization::make_nvp("scene", m_scene);
     }
 }
 
 void Engine::loadScene(std::string filename, bool xml) {
-
     std::ifstream ifs(filename);
     assert(ifs.good());
     assert(ifs.is_open());
-    if (!ifs.is_open())
-        std::cout << "failed to open " << filename << '\n';
+    if (!ifs.is_open()) std::cout << "failed to open " << filename << '\n';
 
     std::shared_ptr<Scene> scene;
 

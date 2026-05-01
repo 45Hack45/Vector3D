@@ -76,10 +76,8 @@ class Entity : public IEditorGUISelectable {
     // }
 
     Entity() = default;
-    Entity(Scene* scene, entityID_t uuid)
-        : m_scene(scene), m_id(uuid), m_parent() {};
-    Entity(Scene* scene, entityID_t uuid, entity_ptr parent)
-        : m_scene(scene), m_id(uuid) {
+    Entity(Scene* scene, entityID_t uuid) : m_scene(scene), m_id(uuid), m_parent() {};
+    Entity(Scene* scene, entityID_t uuid, entity_ptr parent) : m_scene(scene), m_id(uuid) {
         setParent(parent);
     };
     //    Entity(Entity&&) = default;
@@ -114,9 +112,10 @@ class Entity : public IEditorGUISelectable {
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int version) {
-        ar & BOOST_SERIALIZATION_NVP(m_id);
-        ar & BOOST_SERIALIZATION_NVP(m_name);
-        ar & BOOST_SERIALIZATION_NVP(m_parent);
+        ar& BOOST_SERIALIZATION_NVP(m_id);
+        ar& BOOST_SERIALIZATION_NVP(m_name);
+        ar& BOOST_SERIALIZATION_NVP(m_parent);
+        ar& BOOST_SERIALIZATION_NVP(m_components);
         // m_childs is reconstructed in Scene::load from m_parent references
         // m_scene is restored in Scene::load
     }

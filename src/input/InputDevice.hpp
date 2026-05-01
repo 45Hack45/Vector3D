@@ -128,6 +128,8 @@ class InputDevice {
         return InputDeviceType::Undefined;
     }
 
+    void setWindow(Window* w) { m_window = w; }
+
    protected:
     Window* m_window;
     InputProfile m_profile;
@@ -136,7 +138,8 @@ class InputDevice {
     template <class Archive>
     void serialize(Archive& ar, const unsigned int version) {
         ar & m_profile;
-        ar & m_profile;
+        ar & muted;
+        // m_window is not serialized; call reconnectWindows() after loading
     }
 };
 
