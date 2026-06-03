@@ -25,6 +25,7 @@ class Vehicle : public ComponentBase {
 
     chrono::ChVector3d m_initPos{0, .5, 0};
     chrono::ChQuaterniond m_initRot{1, 0, 0, 0};
+    double m_initSpeed = 0;
 
     void loadVehicleModelJSON();
 
@@ -32,19 +33,26 @@ class Vehicle : public ComponentBase {
     void save(Archive& ar, unsigned int /*version*/) const {
         ar& boost::serialization::make_nvp("ComponentBase",
                                            boost::serialization::base_object<ComponentBase>(*this));
+        auto vehicle = m_vehicleHandle.get().vehicle;
+
         ar& BOOST_SERIALIZATION_NVP(m_vehicleModelPath);
         ar& BOOST_SERIALIZATION_NVP(m_parkingBrake);
-        double initPosX = m_initPos.x(), initPosY = m_initPos.y(),
-               initPosZ = m_initPos.z();
-        ar& BOOST_SERIALIZATION_NVP(initPosX);
-        ar& BOOST_SERIALIZATION_NVP(initPosY);
-        ar& BOOST_SERIALIZATION_NVP(initPosZ);
-        double initRotE0 = m_initRot.e0(), initRotE1 = m_initRot.e1(),
-               initRotE2 = m_initRot.e2(), initRotE3 = m_initRot.e3();
-        ar& BOOST_SERIALIZATION_NVP(initRotE0);
-        ar& BOOST_SERIALIZATION_NVP(initRotE1);
-        ar& BOOST_SERIALIZATION_NVP(initRotE2);
-        ar& BOOST_SERIALIZATION_NVP(initRotE3);
+
+        // Initial physics state
+        double speed = vehicle->GetSpeed();
+        ar& boost::serialization::make_nvp("speed", speed);
+
+        chrono::ChVector3d position = vehicle->GetPos();
+        ar& boost::serialization::make_nvp("positionX", position.x());
+        ar& boost::serialization::make_nvp("positionY", position.y());
+        ar& boost::serialization::make_nvp("positionZ", position.z());
+
+        chrono::ChQuaterniond rotation = vehicle->GetRot();
+        ar& boost::serialization::make_nvp("rotationE0", rotation.e0());
+        ar& boost::serialization::make_nvp("rotationE1", rotation.e1());
+        ar& boost::serialization::make_nvp("rotationE2", rotation.e2());
+        ar& boost::serialization::make_nvp("rotationE3", rotation.e3());
+
         // m_vehicleHandle, m_rigidBody, m_isLoaded are runtime state rebuilt
         // by start() using the restored m_vehicleModelPath and init pose.
     }
@@ -55,18 +63,26 @@ class Vehicle : public ComponentBase {
                                            boost::serialization::base_object<ComponentBase>(*this));
         ar& BOOST_SERIALIZATION_NVP(m_vehicleModelPath);
         ar& BOOST_SERIALIZATION_NVP(m_parkingBrake);
+
+        // Load initial physics state
+
+        double initSpeed = 0;
+        ar& boost::serialization::make_nvp("speed", initSpeed);
+        m_initSpeed = initSpeed;
+
         double initPosX, initPosY, initPosZ;
-        ar& BOOST_SERIALIZATION_NVP(initPosX);
-        ar& BOOST_SERIALIZATION_NVP(initPosY);
-        ar& BOOST_SERIALIZATION_NVP(initPosZ);
+        ar& boost::serialization::make_nvp("positionX", initPosX);
+        ar& boost::serialization::make_nvp("positionY", initPosY);
+        ar& boost::serialization::make_nvp("positionZ", initPosZ);
         m_initPos = chrono::ChVector3d(initPosX, initPosY, initPosZ);
+
         double initRotE0, initRotE1, initRotE2, initRotE3;
-        ar& BOOST_SERIALIZATION_NVP(initRotE0);
-        ar& BOOST_SERIALIZATION_NVP(initRotE1);
-        ar& BOOST_SERIALIZATION_NVP(initRotE2);
-        ar& BOOST_SERIALIZATION_NVP(initRotE3);
-        m_initRot = chrono::ChQuaterniond(initRotE0, initRotE1,
-                                          initRotE2, initRotE3);
+        ar& boost::serialization::make_nvp("rotationE0", initRotE0);
+        ar& boost::serialization::make_nvp("rotationE1", initRotE1);
+        ar& boost::serialization::make_nvp("rotationE2", initRotE2);
+        ar& boost::serialization::make_nvp("rotationE3", initRotE3);
+        m_initRot = chrono::ChQuaterniond(initRotE0, initRotE1, initRotE2, initRotE3);
+
         m_vehicleModelPathDirty = true;
         m_isLoaded = false;
     }
