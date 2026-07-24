@@ -26,9 +26,9 @@ class Editor {
     Editor(Engine* engine) : m_engine(engine) {};
     ~Editor() {};
 
-    void renderGui(float deltaTime, Entity* root, Scene* scene);
-    void renderHierarchyGui(Entity* entity);
-    void renderEntityEditorPropertiesGui(Entity* entity, Scene* scene);
+    void renderGui(float deltaTime, entity_ptr root, Scene* scene);
+    void renderHierarchyGui(entity_ptr entity);
+    void renderEntityEditorPropertiesGui(entity_ptr entity, Scene* scene);
     // void renderAssetsGui();
 
     // static Mesh* GUI_PropertySelector(const char* propName, Mesh*
@@ -42,7 +42,7 @@ class Editor {
 
     // Variables-----------------------------------
     bool showImGui_Demo = false;
-    IEditorGUISelectable* selected = nullptr;
+    IEditorGUISelectable* selected = nullptr;  // TODO: improve, if the selected element is deleted the ptr is left dangling
 };
 }  // namespace editor
 
