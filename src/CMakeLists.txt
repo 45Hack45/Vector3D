@@ -225,9 +225,10 @@ target_include_directories(vector_3d PUBLIC
 
 # Set properties for the executable target
 target_compile_definitions(vector_3d PUBLIC "CHRONO_DATA_DIR=\"${CMAKE_SOURCE_DIR}/resources\"")
+target_compile_definitions(vector_3d PUBLIC BOOST_STACKTRACE_USE_ADDR2LINE)
 
 if(MSVC)
     set_target_properties(vector_3d PROPERTIES MSVC_RUNTIME_LIBRARY "${CHRONO_MSVC_RUNTIME_LIBRARY}")
 endif()
 
-target_link_libraries(vector_3d PUBLIC ${vector_3d_LIBS})
+target_link_libraries(vector_3d PUBLIC ${vector_3d_LIBS} ${CMAKE_DL_LIBS})
