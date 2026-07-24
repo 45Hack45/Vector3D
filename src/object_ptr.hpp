@@ -13,8 +13,8 @@ class Scene;
 
 template <typename Container, typename T, typename key = boost::uuids::uuid>
 class object_ptr {
-   public:
-    object_ptr() : m_vec(nullptr) {}
+public:
+    object_ptr() : m_vec(nullptr), m_index(key{}) {}
     object_ptr(Container& vec, key index) : m_vec(&vec), m_index(index) {
         // assert(index < static_cast<key>(m_vec->size()) && "object_ptr: index
         // out of bounds at construction");
@@ -44,7 +44,7 @@ class object_ptr {
         if (other == boost::uuids::nil_uuid()) {
             reset();
         } else {
-            m_index = other.m_index;
+            m_index = other;
         }
         return *this;
     }
@@ -89,14 +89,12 @@ class object_ptr {
 
     // Accessors
     T& get() {
-        // assert(valid() && "object_ptr: accessing an invalid or out-of-bounds
-        // index");
+        assert(m_vec && "object_ptr: dereferencing a null object_ptr");
         return (*m_vec)[m_index];
     }
 
     const T& get() const {
-        // assert(valid() && "object_ptr: accessing an invalid or out-of-bounds
-        // index");
+        assert(m_vec && "object_ptr: dereferencing a null object_ptr");
         return (*m_vec)[m_index];
     }
 

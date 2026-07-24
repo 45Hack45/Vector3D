@@ -29,8 +29,8 @@ MeshOpenGL::MeshOpenGL(void* vertexDataBuffer, size_t vertexDataBufferSize,
 
     m_numIndices = indicesBufferSize;
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesBufferSize * sizeof(size_t),
-                 indicesBuffer, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indicesBufferSize * sizeof(*indicesBuffer),
+             indicesBuffer, GL_STATIC_DRAW);
 
     // Set the vertex attribute pointers
     // Vertex Positions
