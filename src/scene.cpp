@@ -52,9 +52,29 @@ void Scene::onLoad() {
     // Entity::m_components stores IDs in the order they were added, so
     // RigidBody always precedes Transform, satisfying dependency ordering.
     for (auto& [id, entity] : m_entities) {
+#ifndef NDEBUG
+        PLOGV << "[GIZMOS.pass2] visit entity=" << boost::uuids::to_string(id)
+              << " name=" << entity.m_name
+              << " nComponents=" << entity.m_components.size();
+#endif
         for (auto& componentId : entity.m_components) {
             auto* component = m_components.get(componentId);
-            if (!component) continue;
+            if (!component){
+#ifndef NDEBUG
+                PLOGW << "[GIZMOS.pass2] componentId="
+                        << boost::uuids::to_string(componentId)
+                        << " -> null (skipped)";
+#endif
+                continue;                
+            }
+
+#ifndef NDEBUG
+            assert(component->m_id == componentId &&
+                   "onLoad: component id mismatch; archive handle aliasing. "
+                   "Corrupt save file; regenerate it.");
+#endif
+            if (component->m_id != componentId) continue;  // release-build safety net
+
             component->_init();
             component->init();
             component->start();

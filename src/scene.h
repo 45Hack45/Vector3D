@@ -95,11 +95,10 @@ class Scene {
         assert(component && "Null component");
 
         // Add Component
-        ComponentBase* componentRef = component.get();
         m_components.insert(uuid, std::move(component));
 
         // Assign entity to component and vice versa
-        // auto component = m_components.get(uuid);
+        ComponentBase* componentRef = m_components.get(uuid);
         componentRef->m_scene = this;
         componentRef->m_entity = entity.index();
         entity->m_components.push_back(uuid);

@@ -12,7 +12,6 @@
 #include <cassert>
 #include <deque>
 #include <functional>
-#include <iostream>
 #include <memory>
 #include <typeindex>
 #include <unordered_map>
@@ -123,11 +122,15 @@ class KeyedStableCollection {
         static_assert(std::is_base_of<Base, Derived>::value);
         auto& derivedStorage = getStorage<Derived>();
 
+        if (derivedStorage.entries.empty()) return nullptr;
         return &derivedStorage.entries.front();
     }
 
     // Erase the object associated with the given key, if it exists.
     bool erase(const Key& key) {
+        assert(false &&
+               "erase()/compact() move live components; registration will not survive the move."
+               " Do not wire this up without first making registration move-safe.");
         auto it = m_keyToHandle.find(key);
         if (it == m_keyToHandle.end()) return false;
 
@@ -147,6 +150,9 @@ class KeyedStableCollection {
 
     // Compact all internal storage to remove gaps left by deleted entries.
     void compact() {
+        assert(false &&
+               "erase()/compact() move live components; registration will not survive the move."
+               " Do not wire this up without first making registration move-safe.");
         for (auto& [type, storage] : m_derivedStorage) {
             storage->compact();
         }
@@ -210,8 +216,7 @@ class KeyedStableCollection {
         }
 
         void push_back(std::unique_ptr<Base> derived) override {
-            Derived* ptr = static_cast<Derived*>(derived.release());
-            entries.push_back(std::move(*ptr));
+            entries.push_back(std::move(*static_cast<Derived*>(derived.get())));
         }
 
         // Remove unused entries and update generations vector accordingly.
@@ -282,9 +287,17 @@ class KeyedStableCollection {
     /// @param tag Stable human-readable identifier
     void registerType(std::type_index typeIndex, std::unique_ptr<TypedVectorBase> typeVector,
                       std::string tag) {
-        m_derivedStorage[typeIndex] = std::move(typeVector);
+        // Keep existing storage if the type is already registered (mirrors the
+        // template overload). Replacing a live TypedVector destroys every
+        // object it holds while their keys stay in m_keyToHandle, leaving
+        // stale handles that alias whatever is inserted next.
+        if (m_derivedStorage.find(typeIndex) == m_derivedStorage.end()) {
+            m_derivedStorage[typeIndex] = std::move(typeVector);
+        }
 
-        // Store type <-> tag mapping
+        // Always refresh the tag mapping: storage auto-created by
+        // getStorage<Derived>() registers the demangled type name as tag, but
+        // serialization matches storages by this canonical tag.
         registerTypeTag(typeIndex, tag);
     }
 
@@ -375,7 +388,7 @@ class KeyedStableCollection {
 
     template <class Archive>
     void save(Archive& ar, unsigned int /*version*/) const {
-        // Save elements — count must match what is actually written below
+        // Save elements count must match what is actually written below
         size_t numStorages = m_derivedStorage.size();
         ar& BOOST_SERIALIZATION_NVP(numStorages);
         for (auto& [typeIndex, storage] : m_derivedStorage) {
@@ -415,7 +428,6 @@ class KeyedStableCollection {
     template <class Archive>
     void load(Archive& ar, unsigned int /*version*/) {
         // Load elements
-        std::cout << "1";
         size_t numStorages;
         ar& BOOST_SERIALIZATION_NVP(numStorages);
         for (size_t i = 0; i < numStorages; i++) {
@@ -424,15 +436,11 @@ class KeyedStableCollection {
             ar& BOOST_SERIALIZATION_NVP(storageTypeTag);
             ar& BOOST_SERIALIZATION_NVP(generations);
 
-            std::cout << "A";
             if (storageTypeTag != SERIALIZATION_MISSING_TYPE_TAG) {
-                std::cout << "B";
                 auto typeIt = m_tagToType.find(storageTypeTag);
                 if (typeIt != m_tagToType.end()) {
-                    std::cout << "C";
                     auto storageIt = m_derivedStorage.find(typeIt->second);
                     if (storageIt != m_derivedStorage.end()) {
-                        std::cout << "D";
                         storageIt->second->generations = std::move(generations);
                         storageIt->second->loadEntries(ar);
                     }

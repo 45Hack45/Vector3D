@@ -11,6 +11,7 @@
 #include <boost/stacktrace.hpp>
 #include <cassert>
 #include <csignal>
+#include <cstdlib>
 #include <fstream>
 #include <ostream>
 #include <sstream>
@@ -138,6 +139,12 @@ void imgui_RenderFrame() {
 }
 
 namespace v3d {
+
+#ifndef NDEBUG
+// Load counter for [GIZMOS.*] diagnostics; 0 = pre-first-load.
+static int s_gizmosLoadGeneration = 0;
+#endif
+
 Engine::Engine(uint32_t width, uint32_t height,
                rendering::GraphicsBackendType graphicsBackendType) {
     m_engineStartTime = std::chrono::steady_clock::now();
@@ -199,6 +206,11 @@ Engine::Engine(uint32_t width, uint32_t height,
     PLOGV << "Initializing Scene" << std::endl;
     // Initialize the scene and add entities
     m_scene = Scene::create(this, &m_phSystem);
+
+#ifndef NDEBUG
+    PLOGV << "[GIZMOS.count] gen=" << s_gizmosLoadGeneration
+          << " point=startup-after-Scene::init count=" << m_graphicsBackend->gizmosTargetCount();
+#endif
 
     // Pre-initialize scene component vectors, required to be able to add
     // components dynamically (not known at compile-time, for example adding a
@@ -387,6 +399,14 @@ void Engine::saveScene(std::string filename, bool xml) {
 }
 
 void Engine::loadScene(std::string filename, bool xml) {
+#ifndef NDEBUG
+    // Gizmos count checkpoint: loadScene entry. The generation increments
+    // once per call; the same value tags the later checkpoints of this load.
+    ++s_gizmosLoadGeneration;
+    PLOGV << "[GIZMOS.count] gen=" << s_gizmosLoadGeneration
+          << " point=loadScene-entry count=" << m_graphicsBackend->gizmosTargetCount();
+#endif
+
     std::ifstream ifs(filename);
     assert(ifs.good());
     assert(ifs.is_open());
@@ -406,16 +426,44 @@ void Engine::loadScene(std::string filename, bool xml) {
         scene->m_engine = this;
         scene->m_phSystem = &m_phSystem;
 
+        // Reset editor selection before the selected element is destroyed
+        m_editor->selected = nullptr;
+
         // Destroy the current scene before initialising the new one
         m_scene.reset();
+
+#ifndef NDEBUG
+        PLOGV << "[GIZMOS.count] gen=" << s_gizmosLoadGeneration
+              << " point=after-scene-reset count=" << m_graphicsBackend->gizmosTargetCount();
+        m_graphicsBackend->debugDumpGizmosTargets("after-old-scene-destroyed");
+#endif
 
         // Clear accumulated vehicle state that Physics owns across loads.
         m_phSystem.clearVehicles();
 
         // Now safe to add new bodies and vehicles.
         scene->onLoad();
+
+#ifndef NDEBUG
+        PLOGV << "[GIZMOS.count] gen=" << s_gizmosLoadGeneration
+              << " point=after-onLoad count=" << m_graphicsBackend->gizmosTargetCount();
+#endif
+
         scene->printEntities();
         m_scene = scene;
+
+#ifndef NDEBUG
+        // gizmos target count must match live component count after every load.
+        size_t liveComponents = 0;
+        m_scene->m_components.for_each([&](ComponentBase&) { liveComponents++; });
+        size_t gizmosTargets = m_graphicsBackend->gizmosTargetCount();
+        PLOGV << "[GIZMOS.check] gen=" << s_gizmosLoadGeneration
+              << " liveComponents=" << liveComponents
+              << " gizmosTargets=" << gizmosTargets
+              << (gizmosTargets == liveComponents ? " OK" : " MISMATCH");
+        assert(gizmosTargets == liveComponents &&
+               "gizmos target count diverged from live component count after load");
+#endif
     } else {
         // TODO: Improve error
         throw std::runtime_error("Failed to load scene");

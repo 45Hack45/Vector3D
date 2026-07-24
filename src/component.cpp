@@ -2,6 +2,7 @@
 #include "component.h"
 
 #include <iostream>
+#include <typeinfo>
 
 #include "ComponentRegistry.h"
 #include "engine.h"
@@ -20,7 +21,15 @@ REGISTER_COMPONENT(TestComponent);
 REGISTER_COMPONENT(TestDataComponent);
 
 ComponentBase::~ComponentBase() {
-    if (m_scene != nullptr) m_scene->getEngine()->unregisterGizmosTarget(this);
+#ifndef NDEBUG
+    // type= is always ComponentBase here ([class.cdtor]); match by this=.
+    PLOGV << "[GIZMOS] dtor this=" << (void*)this
+          << " type=" << typeid(*this).name()
+          << " componentId=" << boost::uuids::to_string(m_id)
+          << " scene=" << (void*)m_scene
+          << " willUnregister=" << (m_scene != nullptr);
+#endif
+    if (m_scene) m_scene->getEngine()->unregisterGizmosTarget(this);
 }
 
 entity_ptr ComponentBase::getEntityPtr() {
@@ -32,7 +41,15 @@ std::string ComponentBase::getEntityName() {
 }
 
 void ComponentBase::_init() {
-    if (m_scene != nullptr) m_scene->getEngine()->registerGizmosTarget(this);
+#ifndef NDEBUG
+    PLOGV << "[GIZMOS] init this=" << (void*)this
+          << " type=" << getComponentName()
+          << " componentId=" << boost::uuids::to_string(m_id)
+          << " entityId=" << boost::uuids::to_string(m_entity)
+          << " scene=" << (void*)m_scene
+          << " willRegister=" << (m_scene != nullptr);
+#endif
+    if (m_scene) m_scene->getEngine()->registerGizmosTarget(this);
 }
 
 const char* CINEMA_ART_IMAGE = R"(
