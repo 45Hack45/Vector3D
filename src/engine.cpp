@@ -300,7 +300,8 @@ void Engine::mainLoop() {
 
         // Render GUI
         editorGUIFrameUpdatePre();
-        m_editor->renderGui(last_frame_dt, &m_scene->m_root.get(), m_scene.get());
+        m_editor->renderGui(last_frame_dt, m_scene->m_root,
+                            m_scene.get());
         editorGUIFrameUpdate();
 
         // Render debbug window

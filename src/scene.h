@@ -200,7 +200,7 @@ class Scene {
         return found;
     }
 
-    void deleteEntity(Entity* entity) {
+    void deleteEntity(entity_ptr entity) {
         // TODO: Deleyed destroy, mark object as to be deleted and delete after
         // the frame update
     }

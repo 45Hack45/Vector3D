@@ -13,7 +13,7 @@
 namespace v3d {
 namespace editor {
 
-void Editor::renderHierarchyGui(Entity* entity) {
+void Editor::renderHierarchyGui(entity_ptr entity) {
     std::string name = entity->getName();
 
     std::string itemid = "##";
@@ -25,7 +25,7 @@ void Editor::renderHierarchyGui(Entity* entity) {
     if (entity->getChilds().size() <= 0)
         flags |= ImGuiTreeNodeFlags_::ImGuiTreeNodeFlags_Leaf;
 
-    if (entity == selected) flags |= ImGuiTreeNodeFlags_Selected;
+    if (&entity.get() == selected) flags |= ImGuiTreeNodeFlags_Selected;
 
     flags |= ImGuiTreeNodeFlags_SpanAvailWidth |
              ImGuiTreeNodeFlags_SpanFullWidth | ImGuiTreeNodeFlags_OpenOnArrow |
@@ -35,7 +35,7 @@ void Editor::renderHierarchyGui(Entity* entity) {
     bool clicked = ImGui::IsItemClicked();
 
     if (clicked && !ImGui::IsItemToggledOpen()) {
-        selected = entity;
+        selected = &entity.get();
     }
 
     // if (ImGui::BeginDragDropTarget()) {
@@ -85,14 +85,14 @@ void Editor::renderHierarchyGui(Entity* entity) {
 
     if (open) {
         for (auto child : entity->getChilds()) {
-            renderHierarchyGui(&child.get());
+            renderHierarchyGui(child);
         }
 
         ImGui::TreePop();
     }
 }
 
-void Editor::renderGui(float deltaTime, Entity* root, Scene* scene) {
+void Editor::renderGui(float deltaTime, entity_ptr root, Scene* scene) {
     //-----------------------------Render
     // GUI------------------------------------------
 
@@ -131,7 +131,8 @@ void Editor::renderGui(float deltaTime, Entity* root, Scene* scene) {
         if (ImGui::BeginMenu("Scene")) {
             if (ImGui::BeginMenu("Entity")) {
                 if (ImGui::Button("Create Entity")) {
-                    scene->instantiateEntity("Entity");
+                    entity_ptr entity = scene->instantiateEntity("Entity");
+                    selected = &entity.get();
                 }
                 if (ImGui::Button("Create Entity From Model")) {
                     PLOGW << "Not implemented" << std::endl;
@@ -184,7 +185,7 @@ void Editor::renderGui(float deltaTime, Entity* root, Scene* scene) {
 
         // renderHierarchyGui(&scene->m_scene);
 
-        for (auto entity : root->getChilds()) renderHierarchyGui(&entity.get());
+        for (auto entity : root->getChilds()) renderHierarchyGui(entity);
     }
     ImGui::End();
 

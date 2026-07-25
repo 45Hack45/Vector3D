@@ -47,7 +47,7 @@ class object_ptr {
         if (other == boost::uuids::nil_uuid()) {
             reset();
         } else {
-            m_index = other.m_index;
+            m_index = other;
         }
         return *this;
     }
@@ -92,14 +92,12 @@ class object_ptr {
 
     // Accessors
     T& get() {
-        // assert(valid() && "object_ptr: accessing an invalid or out-of-bounds
-        // index");
+        assert(m_vec && "object_ptr: dereferencing a null object_ptr");
         return (*m_vec)[m_index];
     }
 
     const T& get() const {
-        // assert(valid() && "object_ptr: accessing an invalid or out-of-bounds
-        // index");
+        assert(m_vec && "object_ptr: dereferencing a null object_ptr");
         return (*m_vec)[m_index];
     }
 
