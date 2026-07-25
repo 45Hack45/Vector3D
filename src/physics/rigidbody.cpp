@@ -1,6 +1,8 @@
 
 #include "physics/rigidbody.h"
 
+#include <algorithm>
+
 #include "ComponentRegistry.h"
 #include "entity.h"
 #include "physics/collider.h"
@@ -15,6 +17,20 @@ namespace v3d {
 REGISTER_COMPONENT(RigidBody);
 
 RigidBody::~RigidBody() {
+    // Detach from the parent so it stops tracking this body
+    if (m_parent) {
+        m_parent->removeChildBody(this);
+        m_parent = nullptr;
+    }
+
+    // Clear the constraints of the children, they reference this body.
+    for (auto* child : m_children) {
+        if (!child) continue;
+        child->m_parentRelConstrain.reset();
+        child->m_parent = nullptr;
+    }
+    m_children.clear();
+
     if (m_body && m_scene) {
         // Ensure that the chBody is cleared.
         m_scene->getPhysics()->removeBody(*this);
@@ -74,19 +90,66 @@ void RigidBody::hardResetBody(std::shared_ptr<chrono::ChBody> newBody) {
     m_body.reset();
 
     m_body = newBody;
+
+    // The old body is gone, rebuild every constraint that referenced it
+    rebuildParentConstraint();
+    for (auto* child : m_children) {
+        if (child) child->rebuildParentConstraint();
+    }
 }
 
 void RigidBody::setParent(RigidBody* parent) {
+    // Stop the previous parent from tracking this body
+    if (m_parent) m_parent->removeChildBody(this);
+
+    m_parent = parent;
+
+    // Let the new parent track this body, so it can rebuild the constraint if
+    // its own body is replaced
+    if (m_parent) m_parent->addChildBody(this);
+
+    rebuildParentConstraint();
+}
+
+void RigidBody::rebuildParentConstraint() {
     // Remove the existing constraint from the physics system
     if (m_parentRelConstrain) m_parentRelConstrain.reset();
 
-    if (parent == nullptr) return;
+    if (!parentConstraintAllowed()) return;
 
     // Add the new constraint,
     // this constraint fixes the relative motion of the bodies
     Physics* phsystem = m_scene->getPhysics();
     m_parentRelConstrain =
-        std::make_unique<ConstraintParentChild>(phsystem, *parent, *this);
+        std::make_unique<ConstraintParentChild>(phsystem, *m_parent, *this);
+}
+
+bool RigidBody::parentConstraintAllowed() const {
+    if (m_parent == nullptr) return false;
+    if (!m_body || !m_parent->m_body) return false;
+
+    // The root is a hierarchy anchor and a fixed body. Constraining to it would
+    // weld the entity in place and remove it from the simulation
+    if (m_parent->isSceneRoot()) return false;
+
+    return true;
+}
+
+bool RigidBody::isSceneRoot() const {
+    if (m_scene == nullptr) return false;
+    return m_entity == m_scene->getRootId();
+}
+
+void RigidBody::addChildBody(RigidBody* child) {
+    if (child == nullptr) return;
+    const auto it = std::find(m_children.begin(), m_children.end(), child);
+    if (it != m_children.end()) return;
+    m_children.push_back(child);
+}
+
+void RigidBody::removeChildBody(RigidBody* child) {
+    const auto it = std::find(m_children.begin(), m_children.end(), child);
+    if (it != m_children.end()) m_children.erase(it);
 }
 
 void RigidBody::drawEditorGUI_Properties() {

@@ -221,6 +221,11 @@ class Scene {
     Engine* getEngine() { return m_engine; }
     Physics* getPhysics() { return m_phSystem; }
 
+    /// @brief Get the scene root entity.
+    /// The root is a hierarchy anchor and a fixed body
+    entity_ptr getRoot() { return m_root; }
+    entityID_t getRootId() const { return m_root.index(); }
+
    private:
     void printEntityHierarchy(entity_ptr entity, const std::string& prefix, bool isLast) {
         std::cout << prefix << (isLast ? "`-- " : "|-- ") << entity->m_name << "\n";

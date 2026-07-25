@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 
 #include "chrono/core/ChVector3.h"
 #include "chrono/physics/ChLinkMate.h"
@@ -91,9 +92,24 @@ class RigidBody : public ComponentBase {
     std::shared_ptr<chrono::ChBody> m_body = nullptr;
     RigidBody* m_parent = nullptr;
     std::unique_ptr<ConstraintParentChild> m_parentRelConstrain = nullptr;
+    // Bodies constrained to this one
+    std::vector<RigidBody*> m_children;
 
+    /// @brief Replace the underlying chrono body and rebuild the constraints
+    /// @param newBody chrono body to take ownership of
     void hardResetBody(std::shared_ptr<chrono::ChBody> newBody);
     void setParent(RigidBody* parent);
+
+    /// @brief Recreate the parent constraint from the current parent and body
+    void rebuildParentConstraint();
+
+    /// @brief Whether the body can be atached to the parent.
+    bool parentConstraintAllowed() const;
+
+    bool isSceneRoot() const;
+
+    void addChildBody(RigidBody* child);
+    void removeChildBody(RigidBody* child);
 
     // Body state persisted across save/load; populated in load(), applied in
     // init() after the ChBody is created.

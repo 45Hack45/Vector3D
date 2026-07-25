@@ -21,7 +21,7 @@ class Vehicle : public ComponentBase {
 
     RigidBody* m_rigidBody = nullptr;
     VehicleHandle m_vehicleHandle;
-    bool m_parkingBrake;  // Apply parking brake
+    bool m_parkingBrake = false;  // Apply parking brake
 
     chrono::ChVector3d m_initPos{0, .5, 0};
     chrono::ChQuaterniond m_initRot{1, 0, 0, 0};
