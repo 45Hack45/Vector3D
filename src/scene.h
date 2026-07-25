@@ -1,5 +1,6 @@
 #pragma once
 
+#include <boost/serialization/version.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 #include <boost/uuid/uuid_io.hpp>
 #include <cassert>
@@ -9,10 +10,12 @@
 #include <unordered_set>
 #include <vector>
 
+#include "ComponentRegistry.h"
 #include "DefinitionCore.hpp"
 #include "component.h"
 #include "entity.h"
 #include "object_ptr.hpp"
+#include "serialization.hpp"
 #include "utils/utils.hpp"
 
 namespace v3d {
@@ -23,6 +26,7 @@ const uint8_t MAX_ENTITY_NESTED_DEPTH = 255;
 
 class Scene {
     friend class Engine;
+    friend class boost::serialization::access;
 
     struct Private {
         explicit Private() = default;
@@ -34,6 +38,7 @@ class Scene {
      * @param
      */
     Scene(Private) {};
+    Scene() {};
     ~Scene() {};
 
     /**
@@ -49,15 +54,11 @@ class Scene {
     }
 
     entity_ptr instantiateEntity(std::string name, entity_ptr parent);
-    entity_ptr instantiateEntity(std::string name) {
-        return this->instantiateEntity(name, m_root);
-    }
+    entity_ptr instantiateEntity(std::string name) { return this->instantiateEntity(name, m_root); }
 
     template <typename T, typename... Args>
-    componentID_t instantiateEntityComponent(entity_ptr entity,
-                                             Args&&... args) {
-        static_assert(std::is_base_of_v<ComponentBase, T>,
-                      "T must inherit from ComponentBase");
+    componentID_t instantiateEntityComponent(entity_ptr entity, Args&&... args) {
+        static_assert(std::is_base_of_v<ComponentBase, T>, "T must inherit from ComponentBase");
 
         // Instantiate all unmet dependencies first
         instantiateComponentDependancies<T>(entity);
@@ -83,9 +84,8 @@ class Scene {
         return uuid;
     }
 
-    componentID_t insertEntityComponent(
-        entity_ptr entity, std::unique_ptr<ComponentBase> component,
-        componentID_t uuid) {
+    componentID_t insertEntityComponent(entity_ptr entity, std::unique_ptr<ComponentBase> component,
+                                        componentID_t uuid) {
         // TODO: Instantiate dependancies
         // // Instantiate all unmet dependencies first
         // instantiateComponentDependancies<T>(entity);
@@ -95,11 +95,10 @@ class Scene {
         assert(component && "Null component");
 
         // Add Component
-        ComponentBase* componentRef = component.get();
         m_components.insert(uuid, std::move(component));
 
         // Assign entity to component and vice versa
-        // auto component = m_components.get(uuid);
+        ComponentBase* componentRef = m_components.get(uuid);
         componentRef->m_scene = this;
         componentRef->m_entity = entity.index();
         entity->m_components.push_back(uuid);
@@ -114,16 +113,15 @@ class Scene {
         return uuid;
     }
 
-    componentID_t insertEntityComponent(
-        entity_ptr entity, std::unique_ptr<ComponentBase> component) {
+    componentID_t insertEntityComponent(entity_ptr entity,
+                                        std::unique_ptr<ComponentBase> component) {
         return insertEntityComponent(entity, std::move(component),
                                      boost::uuids::random_generator()());
     }
 
     template <typename T, typename... Args>
     T* createEntityComponentOfType(entity_ptr entity, Args&&... args) {
-        auto component_id =
-            instantiateEntityComponent<T>(entity, std::forward<Args>(args)...);
+        auto component_id = instantiateEntityComponent<T>(entity, std::forward<Args>(args)...);
         return getComponent<T>(component_id);
     }
 
@@ -184,8 +182,7 @@ class Scene {
         std::vector<ComponentBase*> componentList;
         for (auto const component : entity->m_components) {
             auto component_ptr = m_components.get(component);
-            if (component_ptr != nullptr)
-                componentList.push_back(component_ptr);
+            if (component_ptr != nullptr) componentList.push_back(component_ptr);
         }
         return componentList;
     }
@@ -209,37 +206,101 @@ class Scene {
     }
 
     void update(double delta) {
-        m_components.for_each(
-            [delta](ComponentBase& component) { component.update(delta); });
+        m_components.for_each([delta](ComponentBase& component) { component.update(delta); });
     }
 
-    void print_entities() {
-        for (auto [id, entity] : m_entities) {
-            if (entity.m_parent) {
-                std::cout << "Entity: " << entity.m_name
-                          << " Parent: " << entity.m_parent->m_name << "\n";
-            } else {
-                std::cout << "Entity: " << entity.m_name << "\n";
-            }
+    void printEntities() {
+        std::cout << "--- Entities (" << m_entities.size() << ") ---\n";
+        if (m_root) {
+            printEntityHierarchy(m_root, "", true);
+        } else {
+            std::cout << "(no root)\n";
         }
     }
 
     Engine* getEngine() { return m_engine; }
     Physics* getPhysics() { return m_phSystem; }
 
+    /// @brief Get the scene root entity.
+    /// The root is a hierarchy anchor and a fixed body
+    entity_ptr getRoot() { return m_root; }
+    entityID_t getRootId() const { return m_root.index(); }
+
    private:
+    void printEntityHierarchy(entity_ptr entity, const std::string& prefix, bool isLast) {
+        std::cout << prefix << (isLast ? "`-- " : "|-- ") << entity->m_name << "\n";
+        const auto& childs = entity->getChilds();
+        for (size_t i = 0; i < childs.size(); ++i) {
+            printEntityHierarchy(childs[i], prefix + (isLast ? "    " : "|   "),
+                                 i == childs.size() - 1);
+        }
+    }
+
     Engine* m_engine;
     Physics* m_phSystem;
     entity_ptr m_root;
     EntityMap m_entities;
     ComponentMap m_components;
 
+    template <class Archive>
+    void save(Archive& ar, unsigned int /*version*/) const {
+        // Root Entity
+        boost::uuids::uuid rootIdx = m_root.index();
+        ar& BOOST_SERIALIZATION_NVP(rootIdx);
+        // Entities
+        ar& BOOST_SERIALIZATION_NVP(m_entities);
+
+        // Components
+        ar& BOOST_SERIALIZATION_NVP(m_components);
+    }
+
+    template <class Archive>
+    void load(Archive& ar, unsigned int /*version*/) {
+        // Root Entity
+        boost::uuids::uuid rootIdx;
+        ar& BOOST_SERIALIZATION_NVP(rootIdx);
+
+        // Entities
+        ar& BOOST_SERIALIZATION_NVP(m_entities);
+        m_root.set(&m_entities, rootIdx);
+
+        // Restore m_scene and fix up m_parent pointers; rebuild m_childs
+        for (auto& [id, entity] : m_entities) {
+            entity.m_scene = this;
+            auto parentIdx = entity.m_parent.index();
+            if (parentIdx != boost::uuids::nil_uuid()) {
+                entity.m_parent.set(&m_entities, parentIdx);
+                m_entities[parentIdx].m_childs.push_back(entity_ptr(m_entities, id));
+            } else {
+                entity.m_parent.reset();
+            }
+        }
+
+        // Pre-register all known component types so KeyedStableCollection can
+        // find their typed storage containers during deserialization.
+        for (auto* info : ComponentRegistry::instance().getAllInfo()) {
+            m_components.registerType(info->componentType, info->componentCollectionFactory(),
+                                      info->name);
+        }
+
+        // Components
+        ar& BOOST_SERIALIZATION_NVP(m_components);
+        // Note: component m_scene pointers and init/start are deferred to
+        // onLoad(), which Engine calls after setting m_engine and m_phSystem.
+    }
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
+
     void init();
+
+    // Deserialization helper.
+    // Restores component m_scene pointers, calls init()/start() in
+    // dependency-safe order, and re-wires entity cached pointers and
+    // transform parent relationships.
+    void onLoad();
 
     entity_ptr createEntity() {
         entityID_t uuid = boost::uuids::random_generator()();
-        auto [entity_it, inserted] =
-            m_entities.emplace(uuid, Entity(this, uuid));
+        auto [entity_it, inserted] = m_entities.emplace(uuid, Entity(this, uuid));
         return entity_ptr(m_entities, uuid);
     };
     entity_ptr createEntity(entity_ptr parent) {
@@ -259,10 +320,10 @@ class Scene {
             if (this->hasComponent<Dep>(entity)) return;
 
             // Create component and its recursive dependancies
-            this->instantiateEntityComponent<Dep>(
-                entity);  // Each gets its own UUID
+            this->instantiateEntityComponent<Dep>(entity);  // Each gets its own UUID
         });
     }
 };
-
 }  // namespace v3d
+
+// BOOST_CLASS_VERSION(v3d::Scene, 1);

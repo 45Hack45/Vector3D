@@ -1,11 +1,18 @@
 #pragma once
 
+#include <fstream>
+
 #include "input/InputDevice.hpp"
+#include "input/KeyboardDevice.h"
+#include <boost/archive/text_iarchive.hpp>
+#include <boost/serialization/unique_ptr.hpp>
+#include <boost/serialization/vector.hpp>
 
 namespace v3d {
 class Engine;
 class InputManager {
     friend class Engine;
+    friend class boost::serialization::access;
 
    private:
     std::vector<std::unique_ptr<input::InputDevice>> m_devices;
@@ -51,6 +58,35 @@ class InputManager {
 
     inline std::size_t getNumDevices() const noexcept {
         return m_devices.size();
+    }
+
+    void storeDevice(uint8_t deviceId, std::string filename) {
+        std::ofstream ofs(filename);
+        boost::archive::text_oarchive oa(ofs);
+        oa.register_type<v3d::input::KeyboardDevice>();
+        oa << m_devices[deviceId];
+
+    }
+
+    // void loadDevice(std::string filename, Window* window) {
+    //     std::ifstream ifs(filename);
+    //     boost::archive::text_iarchive ia(ifs);
+    //     ia.register_type<v3d::input::KeyboardDevice>();
+    //     std::unique_ptr<input::InputDevice> device;
+    //     ia >> device;
+    //     m_devices.push_back(std::move(device));
+    // }
+
+    // After loading the manager from archive, call this to restore Window*
+    // on all devices (Window* is not serialized).
+    void reconnectWindows(Window* window) {
+        for (auto& d : m_devices) d->setWindow(window);
+    }
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int version) {
+        ar & muted;
+        ar & m_devices;
     }
 };
 }  // namespace v3d

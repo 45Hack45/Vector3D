@@ -5,8 +5,13 @@
 #include "input/InputKeys.hpp"
 #include "physics/Vehicle.h"
 #include "scene.h"
+#include "ComponentRegistry.h"
+
+Serializable(v3d::VehicleInteractiveController,
+             "v3d::VehicleInteractiveController");
 
 namespace v3d {
+REGISTER_COMPONENT(VehicleInteractiveController);
 void VehicleInteractiveController::init() {
     // Set the vehicle to this instance
     auto vehicle = m_scene->getComponentOfType<Vehicle>(m_entity);

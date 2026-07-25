@@ -1,5 +1,7 @@
 #pragma once
 
+#include <boost/uuid/string_generator.hpp>
+#include <boost/uuid/uuid_io.hpp>
 #include <memory>
 #include <string>
 #include <typeinfo>
@@ -15,10 +17,10 @@ class ComponentBase;
 
 using ComponentMap = utils::KeyedStableCollection<componentID_t, ComponentBase>;
 
-class ComponentBase : public rendering::IGizmosRenderable,
-                      public IEditorGUISelectable {
+class ComponentBase : public rendering::IGizmosRenderable, public IEditorGUISelectable {
     friend class Entity;
     friend class Scene;
+    friend class boost::serialization::access;
 
    public:
     ComponentBase() = default;
@@ -40,11 +42,32 @@ class ComponentBase : public rendering::IGizmosRenderable,
     virtual void drawEditorGUI_Properties() {
         // log_error("ERROR::COMPONENT::BASE_CLASS_VIRTUAL_METHOD_CALLED:
         // drawEditorGUI_Properties\n");
-        ImGui::Text("No editor GUI available for %s",
-                    getComponentName().c_str());
+        ImGui::Text("No editor GUI available for %s", getComponentName().c_str());
     };
 
    private:
+    template <class Archive>
+    void save(Archive& ar, unsigned int /*version*/) const {
+        std::string componentId = boost::uuids::to_string(m_id);
+        std::string entityId = boost::uuids::to_string(m_entity);
+
+        ar& BOOST_SERIALIZATION_NVP(componentId);
+        ar& BOOST_SERIALIZATION_NVP(entityId);
+    }
+
+    template <class Archive>
+    void load(Archive& ar, unsigned int /*version*/) {
+        std::string componentId;
+        std::string entityId;
+
+        ar& BOOST_SERIALIZATION_NVP(componentId);
+        ar& BOOST_SERIALIZATION_NVP(entityId);
+
+        m_id = boost::uuids::string_generator()(componentId);
+        m_entity = boost::uuids::string_generator()(entityId);
+    }
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
+
    protected:
     componentID_t m_id;
     entityID_t m_entity;
@@ -64,6 +87,7 @@ class DataComponent : public ComponentBase {
 };
 
 class TestComponent : public ComponentBase {
+    friend class boost::serialization::access;
    public:
     TestComponent() = default;
     TestComponent(int value) : testVariable(value) {};
@@ -76,10 +100,18 @@ class TestComponent : public ComponentBase {
     static std::string getName() { return "TestComponent"; };
 
    private:
-    int testVariable;
+    int testVariable = 0;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int /*version*/) {
+        ar& boost::serialization::make_nvp("ComponentBase",
+                                           boost::serialization::base_object<ComponentBase>(*this));
+        ar& BOOST_SERIALIZATION_NVP(testVariable);
+    }
 };
 
 class AbsoluteASCIIComponent : public ComponentBase {
+    friend class boost::serialization::access;
    public:
     AbsoluteASCIIComponent() = default;
     AbsoluteASCIIComponent(int value) : testVariable(value) {};
@@ -88,16 +120,22 @@ class AbsoluteASCIIComponent : public ComponentBase {
     void start() override {};
     void update(double deltaTime) override;
 
-    std::string getComponentName() override {
-        return "AbsoluteASCIIComponent";
-    };
+    std::string getComponentName() override { return "AbsoluteASCIIComponent"; };
     static std::string getName() { return "AbsoluteASCIIComponent"; };
 
    private:
-    int testVariable;
+    int testVariable = 0;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int /*version*/) {
+        ar& boost::serialization::make_nvp("ComponentBase",
+                                           boost::serialization::base_object<ComponentBase>(*this));
+        ar& BOOST_SERIALIZATION_NVP(testVariable);
+    }
 };
 
 class CinemaASCIIComponent : public ComponentBase {
+    friend class boost::serialization::access;
    public:
     CinemaASCIIComponent() = default;
     CinemaASCIIComponent(int value) : testVariable(value) {};
@@ -111,18 +149,36 @@ class CinemaASCIIComponent : public ComponentBase {
     static std::string getName() { return "CinemaASCIIComponent"; };
 
    private:
-    int testVariable;
+    int testVariable = 0;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int /*version*/) {
+        ar& boost::serialization::make_nvp("ComponentBase",
+                                           boost::serialization::base_object<ComponentBase>(*this));
+        ar& BOOST_SERIALIZATION_NVP(testVariable);
+    }
 };
 
 class TestDataComponent : public DataComponent {
+    friend class boost::serialization::access;
    public:
     TestDataComponent() = default;
     void start() override {};
     void update(double deltaTime) override {};
 
     std::string getComponentName() override { return "TestDataComponent"; };
+    static std::string getName() { return "TestDataComponent"; };
 
-    int testDataComponentField;
+    int testDataComponentField = 0;
+
+   private:
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int /*version*/) {
+        ar& boost::serialization::make_nvp("ComponentBase",
+                                           boost::serialization::base_object<ComponentBase>(*this));
+        ar& BOOST_SERIALIZATION_NVP(testDataComponentField);
+    }
 };
 
 }  // namespace v3d
+

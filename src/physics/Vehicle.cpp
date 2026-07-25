@@ -3,7 +3,10 @@
 
 #include <plog/Log.h>
 
+#include "ComponentRegistry.h"
 #include "Vehicle.h"
+
+Serializable(v3d::Vehicle, "v3d::Vehicle");
 #include "chrono_vehicle/ChVehicleModelData.h"
 #include "chrono_vehicle/utils/ChUtilsJSON.h"
 #include "chrono_vehicle/wheeled_vehicle/vehicle/WheeledTrailer.h"
@@ -15,6 +18,7 @@
 #include "scene.h"
 
 namespace v3d {
+REGISTER_COMPONENT(Vehicle);
 
 void Vehicle::init() {
     m_vehicleModelPathDirty = true;
@@ -115,10 +119,8 @@ void Vehicle::loadVehicleModelJSON() {
            "Tried to load Vehicle JSON but vehicleModelPath not defined");
     // assert(!m_vehicle.vehicle && "Tried to load Vehicle JSON has already been
     // loaded");  // Can only load once
-    assert(
-        m_rigidBody &&
-        "Tried to load Vehicle JSON but rigidbody not defined");  // Can only
-                                                                  // load once
+    assert(m_rigidBody && "Tried to load Vehicle JSON but rigidbody not defined");  // Can only
+                                                                                    // load once
 
     if (m_isLoaded && !m_vehicleModelPathDirty) {
         PLOGW << "Tried to load Vehicle JSON it has already been loaded";
@@ -135,14 +137,15 @@ void Vehicle::loadVehicleModelJSON() {
     m_vehicleHandle = physics->createVehicle(m_vehicleModelPath);
 
     auto vehicle = m_vehicleHandle->vehicle;
-    vehicle->Initialize(chrono::ChCoordsys<>(m_initPos, m_initRot));
+    // Restore pose and speed
+    vehicle->Initialize(chrono::ChCoordsys<>(m_initPos, m_initRot), m_initSpeed);
     vehicle->GetChassisBody()->SetFixed(false);
+    vehicle->ApplyParkingBrake(m_parkingBrake);
 
     // Register vehicle
 
     // Set rigidbody internal body to vehicle chasis body
-    m_rigidBody->hardResetBody(
-        (std::shared_ptr<chrono::ChBody>)vehicle->GetChassisBody());
+    m_rigidBody->hardResetBody((std::shared_ptr<chrono::ChBody>)vehicle->GetChassisBody());
 
     m_vehicleModelPathDirty = false;
     m_isLoaded = true;

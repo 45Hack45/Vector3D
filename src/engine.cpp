@@ -6,9 +6,13 @@
 #include <plog/Log.h>
 
 #include <atomic>
+#include <boost/archive/xml_iarchive.hpp>
+#include <boost/archive/xml_oarchive.hpp>
 #include <boost/stacktrace.hpp>
 #include <cassert>
 #include <csignal>
+#include <cstdlib>
+#include <fstream>
 #include <ostream>
 #include <sstream>
 #include <string>
@@ -16,7 +20,7 @@
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
 #include "imgui.h"
-#include "input/KeyboardDevice.hpp"
+#include "input/KeyboardDevice.h"
 #include "physics/Vehicle.h"
 #include "physics/VehicleInteractiveController.h"
 #include "physics/collider.h"
@@ -24,6 +28,7 @@
 #include "plog/Severity.h"
 #include "rendering/mesh_renderer.h"
 #include "rendering/null_graphics_backend.hpp"
+#include "serialization.hpp"
 #include "transform.h"
 
 // ------------------------------- TEMP ----------------------------------
@@ -69,8 +74,7 @@ void signalHandler(int signal) {
     msg_ss << boost::stacktrace::stacktrace() << "\n";
     msg_ss << "Exiting...\n";
     recieved_forced_close_signal = true;
-    PLOG(severity) << "Signal (" << signal_str << ") recieved:\n"
-                   << msg_ss.str() << "\n";
+    PLOG(severity) << "Signal (" << signal_str << ") recieved:\n" << msg_ss.str() << "\n";
     std::_Exit(EXIT_FAILURE);  // exit immediately
 }
 
@@ -93,11 +97,9 @@ void initImgui(GLFWwindow* window, float mainScale, bool darkMode = true) {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     (void)io;
-    io.ConfigFlags |=
-        ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
-    io.ConfigFlags |=
-        ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
-    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;  // Enable Docking
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;      // Enable Docking
     // io.ConfigFlags |=
     //     ImGuiConfigFlags_ViewportsEnable;  // Enable Multi-Viewport /
     //     Platform
@@ -111,14 +113,12 @@ void initImgui(GLFWwindow* window, float mainScale, bool darkMode = true) {
 
     // Setup scaling
     ImGuiStyle& style = ImGui::GetStyle();
-    style.ScaleAllSizes(
-        mainScale);  // Bake a fixed style scale. (until we have a solution for
-                     // dynamic style scaling, changing this requires resetting
-                     // Style + calling this again)
-    style.FontScaleDpi =
-        mainScale;  // Set initial font scale. (using
-                    // io.ConfigDpiScaleFonts=true makes this unnecessary. We
-                    // leave both here for documentation purpose)
+    style.ScaleAllSizes(mainScale);  // Bake a fixed style scale. (until we have a solution for
+                                     // dynamic style scaling, changing this requires resetting
+                                     // Style + calling this again)
+    style.FontScaleDpi = mainScale;  // Set initial font scale. (using
+                                     // io.ConfigDpiScaleFonts=true makes this unnecessary. We
+                                     // leave both here for documentation purpose)
 
     const char* glsl_version = "#version 130";
 
@@ -139,6 +139,12 @@ void imgui_RenderFrame() {
 }
 
 namespace v3d {
+
+#ifndef NDEBUG
+// Load counter for [GIZMOS.*] diagnostics; 0 = pre-first-load.
+static int s_gizmosLoadGeneration = 0;
+#endif
+
 Engine::Engine(uint32_t width, uint32_t height,
                rendering::GraphicsBackendType graphicsBackendType) {
     m_engineStartTime = std::chrono::steady_clock::now();
@@ -154,38 +160,32 @@ Engine::Engine(uint32_t width, uint32_t height,
     if (!glfwInit()) throw std::runtime_error("Failed initializing GLFW!");
 
     m_gBackendType = graphicsBackendType;
-    float mainScale =
-        ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor());
+    float mainScale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor());
 
     switch (m_gBackendType) {
         case v3d::rendering::GraphicsBackendType::NONE:
-            m_window = std::make_unique<Window>(
-                "Vector3D Headless", rendering::WindowBackendHint::NONE, width,
-                height, mainScale, true);
+            m_window =
+                std::make_unique<Window>("Vector3D Headless", rendering::WindowBackendHint::NONE,
+                                         width, height, mainScale, true);
 
-            m_graphicsBackend =
-                std::make_unique<rendering::NullGraphicsBackend>(
-                    m_window.get());
+            m_graphicsBackend = std::make_unique<rendering::NullGraphicsBackend>(m_window.get());
             break;
         case rendering::GraphicsBackendType::VULKAN_API:
-            m_window = std::make_unique<Window>(
-                "Vector3D Vulkan", rendering::WindowBackendHint::VULKAN_API,
-                width, height, mainScale, true);
+            m_window = std::make_unique<Window>("Vector3D Vulkan",
+                                                rendering::WindowBackendHint::VULKAN_API, width,
+                                                height, mainScale, true);
 
-            m_graphicsBackend =
-                std::make_unique<rendering::VulkanBackend>(m_window.get());
+            m_graphicsBackend = std::make_unique<rendering::VulkanBackend>(m_window.get());
             break;
         case rendering::GraphicsBackendType::OPENGL_API:
-            m_window = std::make_unique<Window>(
-                "Vector3D OpenGL", rendering::WindowBackendHint::OPENGL_API,
-                width, height, mainScale, true);
+            m_window = std::make_unique<Window>("Vector3D OpenGL",
+                                                rendering::WindowBackendHint::OPENGL_API, width,
+                                                height, mainScale, true);
 
-            m_graphicsBackend =
-                std::make_unique<rendering::OpenGlBackend>(m_window.get());
+            m_graphicsBackend = std::make_unique<rendering::OpenGlBackend>(m_window.get());
             break;
         default:
-            throw std::runtime_error(
-                "Failed to initialize engine, invalid graphics backend type!");
+            throw std::runtime_error("Failed to initialize engine, invalid graphics backend type!");
             break;
     }
 
@@ -207,13 +207,18 @@ Engine::Engine(uint32_t width, uint32_t height,
     // Initialize the scene and add entities
     m_scene = Scene::create(this, &m_phSystem);
 
+#ifndef NDEBUG
+    PLOGV << "[GIZMOS.count] gen=" << s_gizmosLoadGeneration
+          << " point=startup-after-Scene::init count=" << m_graphicsBackend->gizmosTargetCount();
+#endif
+
     // Pre-initialize scene component vectors, required to be able to add
     // components dynamically (not known at compile-time, for example adding a
     // component through the GUI)
     registerComponents(m_scene.get(), m_componentRegistry);
     PLOGV << "Scene Initialized" << std::endl;
 
-    m_scene->print_entities();
+    m_scene->printEntities();
 };
 
 Engine::~Engine() {
@@ -239,8 +244,7 @@ Engine::~Engine() {
 
 void Engine::start() {
     engineStartPre();
-    m_scene->m_components.for_each(
-        [](ComponentBase& component) { component.start(); });
+    m_scene->m_components.for_each([](ComponentBase& component) { component.start(); });
     engineStart();
 }
 
@@ -331,8 +335,8 @@ void Engine::initDefaultInput() {
     keyboardProfile.bind(input::action::IAct_SteerRight, input::key::IK_L);
     keyboardProfile.bind(input::action::IAct_Clutch, input::key::IK_C);
 
-    m_inputManager.addDevice(std::make_unique<input::KeyboardDevice>(
-        m_window.get(), keyboardProfile));
+    m_inputManager.addDevice(
+        std::make_unique<input::KeyboardDevice>(m_window.get(), keyboardProfile));
 }
 
 void Engine::processInput(GLFWwindow* window) {}
@@ -344,19 +348,129 @@ void Engine::renderEngineDebugGui(double delta) {
         m_targetFrameRate = targetFPS;
     }
     ImGui::Spacing();
+
+    if (ImGui::Button("Test save keyboard bindings")) {
+        m_inputManager.storeDevice(0, "testSerialization/KeyboardConfig.txt");
+    }
+    // if (ImGui::Button("Test Load keyboard bindings")) {
+    //     m_inputManager.loadDevice("testSerialization/KeyboardConfig.txt", m_window.get());
+    // }
+    ImGui::Spacing();
+    if (ImGui::Button("Test save scene")) {
+        saveScene("testSerialization/testSceneSave.xml");
+    }
+    if (ImGui::Button("Test load scene")) {
+        loadScene("testSerialization/testSceneSave.xml");
+    }
+
+    ImGui::Spacing();
+    if (ImGui::Button("Test save scene XML")) {
+        saveScene("testSerialization/testSceneSave.xml", true);
+    }
+    if (ImGui::Button("Test load scene XML")) {
+        loadScene("testSerialization/testSceneSave.xml", true);
+    }
+
+    ImGui::Spacing();
     if (ImGui::CollapsingHeader("Physics")) m_phSystem.renderDebbugGUI();
     ImGui::Spacing();
 
     ImGui::End();
 }
 
-void Engine::registerComponents(
-    Scene* scene, ComponentRegistry* componentRegistry) {
-    std::vector<const ComponentRegistrationInfo*> componentsInfo =
-        componentRegistry->getAllInfo();
+void Engine::registerComponents(Scene* scene, ComponentRegistry* componentRegistry) {
+    std::vector<const ComponentRegistrationInfo*> componentsInfo = componentRegistry->getAllInfo();
     for (auto info : componentsInfo) {
-        scene->m_components.registerType(info->componentType,
-                                         info->componentCollectionFactory());
+        scene->m_components.registerType(info->componentType, info->componentCollectionFactory(),
+                                         info->name);
+    }
+}
+
+void Engine::saveScene(std::string filename, bool xml) {
+    std::ofstream ofs(filename);
+    assert(ofs.good());
+
+    if (xml) {
+        boost::archive::xml_oarchive oa(ofs);
+        oa << boost::serialization::make_nvp("scene", m_scene);
+    } else {
+        boost::archive::text_oarchive oa(ofs);
+        oa << boost::serialization::make_nvp("scene", m_scene);
+    }
+}
+
+void Engine::loadScene(std::string filename, bool xml) {
+#ifndef NDEBUG
+    // Gizmos count checkpoint: loadScene entry. The generation increments
+    // once per call; the same value tags the later checkpoints of this load.
+    ++s_gizmosLoadGeneration;
+    PLOGV << "[GIZMOS.count] gen=" << s_gizmosLoadGeneration
+          << " point=loadScene-entry count=" << m_graphicsBackend->gizmosTargetCount();
+#endif
+
+    std::ifstream ifs(filename);
+    assert(ifs.good());
+    assert(ifs.is_open());
+    if (!ifs.is_open()) std::cout << "failed to open " << filename << '\n';
+
+    std::shared_ptr<Scene> scene;
+
+    if (xml) {
+        boost::archive::xml_iarchive ia(ifs);
+        ia >> boost::serialization::make_nvp("scene", scene);
+    } else {
+        boost::archive::text_iarchive ia(ifs);
+        ia >> boost::serialization::make_nvp("scene", scene);
+    }
+
+    if (scene) {
+        scene->m_engine = this;
+        scene->m_phSystem = &m_phSystem;
+
+        // Reset editor selection before the selected element is destroyed
+        m_editor->selected = nullptr;
+
+        // Destroy the current scene before initialising the new one
+        m_scene.reset();
+
+#ifndef NDEBUG
+        PLOGV << "[GIZMOS.count] gen=" << s_gizmosLoadGeneration
+              << " point=after-scene-reset count=" << m_graphicsBackend->gizmosTargetCount();
+        m_graphicsBackend->debugDumpGizmosTargets("after-old-scene-destroyed");
+#endif
+
+        // Clear accumulated vehicle state that Physics owns across loads.
+        // TODO: This leaks. WheeledVehicle::Initialize registered the chassis,
+        // spindles, links and shafts in the chrono system, destroying the WheeledVehicle does not
+        // remove them. Every load leaves behind a ghost vehicle that keeps simulating. Chrono has
+        // no vehicle teardown, so the parts have to be removed one by one
+        m_phSystem.clearVehicles();
+
+        // Now safe to add new bodies and vehicles.
+        scene->onLoad();
+
+#ifndef NDEBUG
+        PLOGV << "[GIZMOS.count] gen=" << s_gizmosLoadGeneration
+              << " point=after-onLoad count=" << m_graphicsBackend->gizmosTargetCount();
+#endif
+
+        scene->printEntities();
+        m_scene = scene;
+
+#ifndef NDEBUG
+        // gizmos target count must match live component count after every load.
+        size_t liveComponents = 0;
+        m_scene->m_components.for_each([&](ComponentBase&) { liveComponents++; });
+        size_t gizmosTargets = m_graphicsBackend->gizmosTargetCount();
+        PLOGV << "[GIZMOS.check] gen=" << s_gizmosLoadGeneration
+              << " liveComponents=" << liveComponents << " gizmosTargets=" << gizmosTargets
+              << (gizmosTargets == liveComponents ? " OK" : " MISMATCH");
+        assert(gizmosTargets == liveComponents &&
+               "gizmos target count diverged from live component count after load");
+#endif
+    } else {
+        // TODO: Improve error
+        throw std::runtime_error("Failed to load scene");
     }
 }
 

@@ -1,11 +1,15 @@
 #pragma once
 
 #include "input/InputKeys.hpp"
+#include <boost/serialization/export.hpp>
 
 namespace v3d {
 namespace input {
 class KeyboardDevice : public InputDevice {
+    friend class boost::serialization::access;
+
    public:
+    KeyboardDevice() : InputDevice(nullptr, InputProfile()) {}
     KeyboardDevice(Window* window, InputProfile profile)
         : InputDevice(window, profile) {}
     void update() override {
@@ -48,6 +52,12 @@ class KeyboardDevice : public InputDevice {
 
    private:
     // std::unordered_map<InputKey, InputKeyState> m_keyStates;
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int version) {
+        // serialize base class information
+        ar& boost::serialization::base_object<InputDevice>(*this);
+    }
 };
 }  // namespace input
 

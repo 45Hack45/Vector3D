@@ -14,7 +14,12 @@ option(VECTOR_3D_SHARED "Build Vector3D as shared lib" ON)
 add_subdirectory(include/plog EXCLUDE_FROM_ALL)
 
 add_definitions(-DBOOST_ALL_NO_LIB)
-find_package(Boost REQUIRED)
+set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_DEBUG_LIBS OFF)
+set(Boost_USE_RELEASE_LIBS ON)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+find_package(Boost REQUIRED COMPONENTS serialization)
 
 # Vulkan
 set(Vulkan_ROOT "$ENV{VULKAN_SDK}")
@@ -70,7 +75,7 @@ endif()
 # ENDIF()
 
 SET(ENGINE_INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/include ${CMAKE_CURRENT_SOURCE_DIR}/src ${CMAKE_CURRENT_SOURCE_DIR}/include/OBJ-Loader-master/Source ${CMAKE_CURRENT_SOURCE_DIR}/src/thirdparty/imgui ${Boost_INCLUDE_DIRS} ${Chrono_INCLUDE_DIR} ${EiGEN3_INCLUDE_DIR} ${CHRONO_INCLUDE_DIRS})
-set(vector_3d_LIBS glfw ${GLFW_LIBRARIES} ${OPENGL_LIBRARIES} Vulkan::Vulkan glm::glm plog ${CHRONO_TARGETS} ${WINMM_LIB_PATH} ${CHRONO_LIBRARIES} ${X11_X11_LIB} assimp OpenMP::OpenMP_CXX)
+set(vector_3d_LIBS glfw ${GLFW_LIBRARIES} ${OPENGL_LIBRARIES} Vulkan::Vulkan glm::glm plog ${CHRONO_TARGETS} ${WINMM_LIB_PATH} ${CHRONO_LIBRARIES} ${X11_X11_LIB} assimp OpenMP::OpenMP_CXX ${Boost_LIBRARIES})
 
 set(RESOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/resources)
 

@@ -2,19 +2,34 @@
 #include "component.h"
 
 #include <iostream>
+#include <typeinfo>
 
 #include "ComponentRegistry.h"
 #include "engine.h"
 #include "scene.h"
+
+Serializable(v3d::TestComponent, "v3d::TestComponent");
+Serializable(v3d::AbsoluteASCIIComponent, "v3d::AbsoluteASCIIComponent");
+Serializable(v3d::CinemaASCIIComponent, "v3d::CinemaASCIIComponent");
+Serializable(v3d::TestDataComponent, "v3d::TestDataComponent");
 
 namespace v3d {
 
 REGISTER_COMPONENT(AbsoluteASCIIComponent);
 REGISTER_COMPONENT(CinemaASCIIComponent);
 REGISTER_COMPONENT(TestComponent);
+REGISTER_COMPONENT(TestDataComponent);
 
 ComponentBase::~ComponentBase() {
-    if (m_scene != nullptr) m_scene->getEngine()->unregisterGizmosTarget(this);
+#ifndef NDEBUG
+    // type= is always ComponentBase here ([class.cdtor]); match by this=.
+    PLOGV << "[GIZMOS] dtor this=" << (void*)this
+          << " type=" << typeid(*this).name()
+          << " componentId=" << boost::uuids::to_string(m_id)
+          << " scene=" << (void*)m_scene
+          << " willUnregister=" << (m_scene != nullptr);
+#endif
+    if (m_scene) m_scene->getEngine()->unregisterGizmosTarget(this);
 }
 
 entity_ptr ComponentBase::getEntityPtr() {
@@ -26,7 +41,15 @@ std::string ComponentBase::getEntityName() {
 }
 
 void ComponentBase::_init() {
-    if (m_scene != nullptr) m_scene->getEngine()->registerGizmosTarget(this);
+#ifndef NDEBUG
+    PLOGV << "[GIZMOS] init this=" << (void*)this
+          << " type=" << getComponentName()
+          << " componentId=" << boost::uuids::to_string(m_id)
+          << " entityId=" << boost::uuids::to_string(m_entity)
+          << " scene=" << (void*)m_scene
+          << " willRegister=" << (m_scene != nullptr);
+#endif
+    if (m_scene) m_scene->getEngine()->registerGizmosTarget(this);
 }
 
 const char* CINEMA_ART_IMAGE = R"(

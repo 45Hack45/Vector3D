@@ -2,9 +2,13 @@
 #include "physics/collider.h"
 
 #include "collider.h"
+#include "ComponentRegistry.h"
 #include "physics/physics.h"
 
+Serializable(v3d::ColliderBox, "v3d::ColliderBox");
+
 namespace v3d {
+REGISTER_COMPONENT(ColliderBox);
 void ColliderBase::init() {
     // Set the rigidbody
     auto rigidBody = m_scene->getComponentOfType<RigidBody>(m_entity);
