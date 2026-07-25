@@ -43,8 +43,10 @@ class RigidBody : public ComponentBase {
     RigidBody() = default;
     ~RigidBody() override;
 
-    RigidBody(RigidBody&&) = default;
-    RigidBody& operator=(RigidBody&&) = default;
+    // Moving relocates the body, the parent and the children still hold the
+    // old address so they are repointed. Defaulting these would dangle
+    RigidBody(RigidBody&& other) noexcept;
+    RigidBody& operator=(RigidBody&& other) noexcept;
 
     std::string getComponentName() override { return RigidBody::getName(); };
     static std::string getName() { return "RigidBody"; };
@@ -110,6 +112,14 @@ class RigidBody : public ComponentBase {
 
     void addChildBody(RigidBody* child);
     void removeChildBody(RigidBody* child);
+
+    /// @brief Drop this body out of the parent-child tree and clear the
+    /// constraints that reference it
+    void detachConstraintTree();
+
+    /// @brief Repoint the parent and the children at this body after a move
+    /// @param previous address this body was moved from
+    void atachConstraintTree(RigidBody* previous);
 
     // Body state persisted across save/load; populated in load(), applied in
     // init() after the ChBody is created.

@@ -33,21 +33,26 @@ class Vehicle : public ComponentBase {
     void save(Archive& ar, unsigned int /*version*/) const {
         ar& boost::serialization::make_nvp("ComponentBase",
                                            boost::serialization::base_object<ComponentBase>(*this));
-        auto vehicle = m_vehicleHandle.get().vehicle;
-
         ar& BOOST_SERIALIZATION_NVP(m_vehicleModelPath);
         ar& BOOST_SERIALIZATION_NVP(m_parkingBrake);
 
         // Initial physics state
-        double speed = vehicle->GetSpeed();
+        double speed = m_initSpeed;
+        chrono::ChVector3d position = m_initPos;
+        chrono::ChQuaterniond rotation = m_initRot;
+        if (m_isLoaded) {
+            auto vehicle = m_vehicleHandle.get().vehicle;
+            speed = vehicle->GetSpeed();
+            position = vehicle->GetPos();
+            rotation = vehicle->GetRot();
+        }
+
         ar& boost::serialization::make_nvp("speed", speed);
 
-        chrono::ChVector3d position = vehicle->GetPos();
         ar& boost::serialization::make_nvp("positionX", position.x());
         ar& boost::serialization::make_nvp("positionY", position.y());
         ar& boost::serialization::make_nvp("positionZ", position.z());
 
-        chrono::ChQuaterniond rotation = vehicle->GetRot();
         ar& boost::serialization::make_nvp("rotationE0", rotation.e0());
         ar& boost::serialization::make_nvp("rotationE1", rotation.e1());
         ar& boost::serialization::make_nvp("rotationE2", rotation.e2());

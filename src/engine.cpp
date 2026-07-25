@@ -439,6 +439,10 @@ void Engine::loadScene(std::string filename, bool xml) {
 #endif
 
         // Clear accumulated vehicle state that Physics owns across loads.
+        // TODO: This leaks. WheeledVehicle::Initialize registered the chassis,
+        // spindles, links and shafts in the chrono system, destroying the WheeledVehicle does not
+        // remove them. Every load leaves behind a ghost vehicle that keeps simulating. Chrono has
+        // no vehicle teardown, so the parts have to be removed one by one
         m_phSystem.clearVehicles();
 
         // Now safe to add new bodies and vehicles.
@@ -458,8 +462,7 @@ void Engine::loadScene(std::string filename, bool xml) {
         m_scene->m_components.for_each([&](ComponentBase&) { liveComponents++; });
         size_t gizmosTargets = m_graphicsBackend->gizmosTargetCount();
         PLOGV << "[GIZMOS.check] gen=" << s_gizmosLoadGeneration
-              << " liveComponents=" << liveComponents
-              << " gizmosTargets=" << gizmosTargets
+              << " liveComponents=" << liveComponents << " gizmosTargets=" << gizmosTargets
               << (gizmosTargets == liveComponents ? " OK" : " MISMATCH");
         assert(gizmosTargets == liveComponents &&
                "gizmos target count diverged from live component count after load");

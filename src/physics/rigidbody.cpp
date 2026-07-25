@@ -16,20 +16,41 @@ Serializable(v3d::RigidBody, "v3d::RigidBody");
 namespace v3d {
 REGISTER_COMPONENT(RigidBody);
 
-RigidBody::~RigidBody() {
-    // Detach from the parent so it stops tracking this body
-    if (m_parent) {
-        m_parent->removeChildBody(this);
-        m_parent = nullptr;
-    }
+RigidBody::RigidBody(RigidBody&& other) noexcept
+    : ComponentBase(std::move(other)),
+      m_body(std::move(other.m_body)),
+      m_parent(other.m_parent),
+      m_parentRelConstrain(std::move(other.m_parentRelConstrain)),
+      m_children(std::move(other.m_children)),
+      m_savedBodyState(other.m_savedBodyState) {
+    other.m_parent = nullptr;
+    other.m_children.clear();
 
-    // Clear the constraints of the children, they reference this body.
-    for (auto* child : m_children) {
-        if (!child) continue;
-        child->m_parentRelConstrain.reset();
-        child->m_parent = nullptr;
-    }
-    m_children.clear();
+    atachConstraintTree(&other);
+}
+
+RigidBody& RigidBody::operator=(RigidBody&& other) noexcept {
+    if (this == &other) return *this;
+
+    // This body is being overwritten, take it out of its own tree first
+    detachConstraintTree();
+
+    ComponentBase::operator=(std::move(other));
+    m_body = std::move(other.m_body);
+    m_parent = other.m_parent;
+    m_parentRelConstrain = std::move(other.m_parentRelConstrain);
+    m_children = std::move(other.m_children);
+    m_savedBodyState = other.m_savedBodyState;
+
+    other.m_parent = nullptr;
+    other.m_children.clear();
+
+    atachConstraintTree(&other);
+    return *this;
+}
+
+RigidBody::~RigidBody() {
+    detachConstraintTree();
 
     if (m_body && m_scene) {
         // Ensure that the chBody is cleared.
@@ -150,6 +171,35 @@ void RigidBody::addChildBody(RigidBody* child) {
 void RigidBody::removeChildBody(RigidBody* child) {
     const auto it = std::find(m_children.begin(), m_children.end(), child);
     if (it != m_children.end()) m_children.erase(it);
+}
+
+void RigidBody::detachConstraintTree() {
+    // Stop the parent from tracking this body
+    if (m_parent) {
+        m_parent->removeChildBody(this);
+        m_parent = nullptr;
+    }
+
+    // Clear the constraints of the children, they reference this body.
+    // Done here because component destruction order is not defined
+    for (auto* child : m_children) {
+        if (!child) continue;
+        child->m_parentRelConstrain.reset();
+        child->m_parent = nullptr;
+    }
+    m_children.clear();
+}
+
+void RigidBody::atachConstraintTree(RigidBody* previous) {
+    // The chrono bodies moved with us, only the raw back pointers of the
+    // neighbours still hold the old address
+    if (m_parent) {
+        std::replace(m_parent->m_children.begin(), m_parent->m_children.end(),
+                     previous, this);
+    }
+    for (auto* child : m_children) {
+        if (child && child->m_parent == previous) child->m_parent = this;
+    }
 }
 
 void RigidBody::drawEditorGUI_Properties() {
