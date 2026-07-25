@@ -73,13 +73,18 @@ set(Vector3D_editor_FILES
 
 message(STATUS "-- INPUT")
 
-set(vector_3d_input_SOURCES
-    ${CMAKE_SOURCE_DIR}/src/input/KeyboardDevice.cpp
+set(Vector3D_input_SOURCES
+    ${CMAKE_SOURCE_DIR}/src/input/InputActionRegistry.cpp
+    ${CMAKE_SOURCE_DIR}/src/input/InputConfig.cpp
+    ${CMAKE_SOURCE_DIR}/src/input/InputKeyCodes.cpp
+    ${CMAKE_SOURCE_DIR}/src/input/InputManager.cpp
 )
 
-set(vector_3d_input_HEADERS
+set(Vector3D_input_HEADERS
+    ${CMAKE_SOURCE_DIR}/src/input/InputActionRegistry.h
+    ${CMAKE_SOURCE_DIR}/src/input/InputConfig.hpp
     ${CMAKE_SOURCE_DIR}/src/input/InputDevice.hpp
-    ${CMAKE_SOURCE_DIR}/src/input/InputKeyCodes.hpp
+    ${CMAKE_SOURCE_DIR}/src/input/InputKeyCodes.h
     ${CMAKE_SOURCE_DIR}/src/input/InputKeys.hpp
     ${CMAKE_SOURCE_DIR}/src/input/InputManager.h
     ${CMAKE_SOURCE_DIR}/src/input/KeyboardDevice.h

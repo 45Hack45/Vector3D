@@ -12,6 +12,7 @@
 #include <cassert>
 #include <csignal>
 #include <cstdlib>
+#include <filesystem>
 #include <fstream>
 #include <ostream>
 #include <sstream>
@@ -327,16 +328,53 @@ void Engine::mainLoop() {
 }
 
 void Engine::initDefaultInput() {
-    input::InputProfile keyboardProfile;
-    keyboardProfile.bind(input::action::IAct_Accelerate, input::key::IK_I);
-    keyboardProfile.bind(input::action::IAct_Back, input::key::IK_K);
-    keyboardProfile.bind(input::action::IAct_Break, input::key::IK_SPACE);
-    keyboardProfile.bind(input::action::IAct_SteerLeft, input::key::IK_J);
-    keyboardProfile.bind(input::action::IAct_SteerRight, input::key::IK_L);
-    keyboardProfile.bind(input::action::IAct_Clutch, input::key::IK_C);
+    // Register before loading so the built-in bindings resolve on first apply.
+    input::registerBuiltinActions();
 
-    m_inputManager.addDevice(
-        std::make_unique<input::KeyboardDevice>(m_window.get(), keyboardProfile));
+    // Defaults live in the store, not bound on the device directly: the store
+    // is the source of truth and a first save must write them out.
+    input::DeviceConfig keyboard;
+    keyboard.deviceKind = input::deviceKindName(input::InputDeviceType::Keyboard);
+    keyboard.guid = std::string(input::kKeyboardDeviceGuid);
+    keyboard.lastKnownName = std::string(input::kKeyboardDeviceName);
+    keyboard.activeProfile = std::string(input::kDefaultProfileName);
+    keyboard.profiles = {
+        input::DeviceProfile{std::string(input::kDefaultProfileName),
+                          {
+                              {"Accelerate", "I"},
+                              {"Back", "K"},
+                              {"Brake", "SPACE"},
+                              {"SteerLeft", "J"},
+                              {"SteerRight", "L"},
+                              {"Clutch", "C"},
+                          }},
+        input::DeviceProfile{"WASD",
+                          {
+                              {"Accelerate", "W"},
+                              {"Back", "S"},
+                              {"Brake", "SPACE"},
+                              {"SteerLeft", "A"},
+                              {"SteerRight", "D"},
+                              {"Clutch", "LEFT_SHIFT"},
+                          }},
+    };
+    m_inputManager.setDeviceConfig(std::move(keyboard));
+
+    m_inputManager.addDevice(std::make_unique<input::KeyboardDevice>(m_window.get()));
+
+    // A missing config is the normal first run, defaults are applied.
+    const std::filesystem::path configPath = InputManager::defaultConfigPath();
+    if (std::filesystem::exists(configPath)) {
+        const input::InputConfigResult result = m_inputManager.loadConfig(configPath);
+        if (result.ok) {
+            PLOGI << "Input config: " << result.message;
+        } else {
+            PLOGW << "Input config: " << result.message;
+        }
+    } else {
+        PLOGI << "Input config: no config at " << configPath.string()
+              << ", using built-in defaults";
+    }
 }
 
 void Engine::processInput(GLFWwindow* window) {}
@@ -349,13 +387,6 @@ void Engine::renderEngineDebugGui(double delta) {
     }
     ImGui::Spacing();
 
-    if (ImGui::Button("Test save keyboard bindings")) {
-        m_inputManager.storeDevice(0, "testSerialization/KeyboardConfig.txt");
-    }
-    // if (ImGui::Button("Test Load keyboard bindings")) {
-    //     m_inputManager.loadDevice("testSerialization/KeyboardConfig.txt", m_window.get());
-    // }
-    ImGui::Spacing();
     if (ImGui::Button("Test save scene")) {
         saveScene("testSerialization/testSceneSave.xml");
     }

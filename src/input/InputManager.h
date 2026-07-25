@@ -1,21 +1,25 @@
 #pragma once
 
-#include <fstream>
+#include <algorithm>
+#include <filesystem>
+#include <memory>
+#include <string_view>
+#include <vector>
 
+#include "input/InputConfig.hpp"
 #include "input/InputDevice.hpp"
-#include "input/KeyboardDevice.h"
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/serialization/unique_ptr.hpp>
-#include <boost/serialization/vector.hpp>
 
 namespace v3d {
 class Engine;
+
+/// @brief Owns the connected devices and the stored input config.
 class InputManager {
     friend class Engine;
-    friend class boost::serialization::access;
 
    private:
     std::vector<std::unique_ptr<input::InputDevice>> m_devices;
+    input::InputConfigStore m_configStore;
+
     bool muted = false;
 
     void muteInput(bool mute) { muted = mute; }
@@ -23,16 +27,17 @@ class InputManager {
    public:
     InputManager() = default;
     ~InputManager() = default;
-    void addDevice(std::unique_ptr<input::InputDevice> device) {
-        m_devices.push_back(std::move(device));
-    }
+
+    /// @brief Take ownership of a device and apply any profile saved for its GUID
+    /// @param device Must have a valid Window.
+    void addDevice(std::unique_ptr<input::InputDevice> device);
 
     void update() {
         if (muted) return;
         for (auto& d : m_devices) d->update();
     }
 
-    bool isMuted() { return muted; }
+    bool isMuted() const noexcept { return muted; }
 
     float getAction(input::InputAction action) const {
         if (muted) return 0;
@@ -43,50 +48,61 @@ class InputManager {
         return value;  // "OR" behavior, or blend differently
     }
 
-    input::InputDevice* getDevice(uint8_t deviceId) {
-        return m_devices[deviceId].get();
-    }
-    input::InputDevice* getDevice(input::InputDeviceType deviceType) {
-        auto it = std::find_if(
-            m_devices.begin(), m_devices.end(),
-            [deviceType](const std::unique_ptr<input::InputDevice>& device) {
-                return device->getDeviceType() == deviceType;
-            });
-        // Dereference iterator and get a pointer
-        return (*it).get();
-    }
+    /// @brief Get a connected device by index, or nullptr if out of range.
+    input::InputDevice* getDevice(uint8_t deviceId);
+
+    /// @brief Get the first connected device of a kind, or nullptr.
+    input::InputDevice* getDevice(input::InputDeviceType deviceType);
+
+    /// @brief Get a connected device by identity, or nullptr if not connected.
+    input::InputDevice* findDeviceByGuid(std::string_view guid);
 
     inline std::size_t getNumDevices() const noexcept {
         return m_devices.size();
     }
 
-    void storeDevice(uint8_t deviceId, std::string filename) {
-        std::ofstream ofs(filename);
-        boost::archive::text_oarchive oa(ofs);
-        oa.register_type<v3d::input::KeyboardDevice>();
-        oa << m_devices[deviceId];
+    /// @brief Write the config file, including profiles of devices that are not
+    /// currently connected.
+    input::InputConfigResult saveConfig(const std::filesystem::path& path);
 
-    }
+    /// @brief Read a config file and apply it to the connected devices. On
+    /// failure the in-memory config is left untouched.
+    input::InputConfigResult loadConfig(const std::filesystem::path& path);
 
-    // void loadDevice(std::string filename, Window* window) {
-    //     std::ifstream ifs(filename);
-    //     boost::archive::text_iarchive ia(ifs);
-    //     ia.register_type<v3d::input::KeyboardDevice>();
-    //     std::unique_ptr<input::InputDevice> device;
-    //     ia >> device;
-    //     m_devices.push_back(std::move(device));
-    // }
+    /// @brief Compile each device's active profile onto the connected devices,
+    /// matching by GUID. A connected device with no stored config keeps the
+    /// bindings it already has.
+    void applyConfig();
 
-    // After loading the manager from archive, call this to restore Window*
-    // on all devices (Window* is not serialized).
-    void reconnectWindows(Window* window) {
-        for (auto& d : m_devices) d->setWindow(window);
-    }
+    /// @brief Insert or replace the stored config for a device identity and
+    /// apply it immediately.
+    void setDeviceConfig(input::DeviceConfig config);
 
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int version) {
-        ar & muted;
-        ar & m_devices;
-    }
+    /// @brief Switch which profile a device uses and apply it immediately.
+    /// @return false if the device or the profile does not exist.
+    bool setActiveProfile(std::string_view guid, std::string_view profileName);
+
+    /// @brief Copy a device profile under a new, unused name. Note the copy is
+    /// not activated
+    /// @param newName Made unique if already taken.
+    /// @return Name the copy was stored under, empty if the source was missing.
+    std::string duplicateProfile(std::string_view guid,
+                                 std::string_view sourceName,
+                                 std::string newName);
+
+    /// @brief Delete a profile. Refuses the device's last one; removing the
+    /// active profile activates the first remaining.
+    /// @return false if it was not found or was the device's only profile.
+    bool removeProfile(std::string_view guid, std::string_view profileName);
+
+    const input::InputConfigStore& configStore() const { return m_configStore; }
+
+    /// @brief Whether the config holds changes not yet written to disk.
+    bool isConfigDirty() const { return m_configStore.isDirty(); }
+
+    /// @brief Per-user config file location.
+    /// @return $XDG_CONFIG_HOME/Vector3D/input_config.xml, or the %APPDATA%
+    ///         equivalent on Windows.
+    static std::filesystem::path defaultConfigPath();
 };
 }  // namespace v3d

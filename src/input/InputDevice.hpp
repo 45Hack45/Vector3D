@@ -1,11 +1,13 @@
 #pragma once
 
+#include <cassert>
 #include <functional>
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <utility>
+#include <vector>
 
-#include "serialization.hpp"
 #include "utils/utils.hpp"
 #include "window.h"
 
@@ -19,11 +21,6 @@ struct InputKey {
     }
     constexpr bool operator!=(const InputKey& other) const noexcept {
         return code != other.code;
-    }
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int version) {
-        ar & code;
     }
 };
 
@@ -47,11 +44,6 @@ struct InputAction {
     constexpr bool operator!=(const InputAction& other) const noexcept {
         return code != other.code;
     }
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int version) {
-        ar & code;
-    }
 };
 
 struct InputActionHasher {
@@ -65,39 +57,32 @@ inline constexpr InputAction makeInputActionID(std::string_view name) {
     return InputAction{utils::fnv1a_64(name)};
 }
 
-struct InputMap {
-    InputAction m_action;
-    InputKey m_key;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int version) {
-        ar & m_key;
-        ar & m_action;
-    }
-};
-
+/// @brief Runtime binding table compiled from a persisted DeviceProfile
 class InputProfile {
-    friend class boost::serialization::access;
-
    public:
     InputProfile() = default;
     ~InputProfile() = default;
+
+    /// @brief Bind an additional key to an action; any bound key being down
+    /// drives it.
+    /// @param key Ignored if already bound to this action.
     void bind(InputAction action, InputKey key) {
-        m_mappings[action] = InputMap{action, key};
+        std::vector<InputKey>& keys = m_bindings[action];
+        for (const InputKey& bound : keys) {
+            if (bound == key) return;
+        }
+        keys.push_back(key);
     }
 
-    const InputMap* getMapping(InputAction action) const {
-        auto it = m_mappings.find(action);
-        return (it != m_mappings.end()) ? &it->second : nullptr;
+    /// @brief Keys bound to an action, or nullptr if unbound.
+    const std::vector<InputKey>* getKeys(InputAction action) const {
+        auto it = m_bindings.find(action);
+        return (it != m_bindings.end()) ? &it->second : nullptr;
     }
 
    private:
-    std::unordered_map<InputAction, InputMap, InputActionHasher> m_mappings;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int version) {
-        ar & m_mappings;
-    }
+    std::unordered_map<InputAction, std::vector<InputKey>, InputActionHasher>
+        m_bindings;
 };
 
 enum InputDeviceType {
@@ -107,12 +92,20 @@ enum InputDeviceType {
     Joystick,
 };
 
+/// @brief Base of every physical input device.
 class InputDevice {
-    friend class boost::serialization::access;
-
    public:
-    InputDevice(Window* window, InputProfile profile)
-        : m_window(window), m_profile(std::move(profile)) {};
+    /// @brief Construct a device bound to a window and a stable identity.
+    /// @param window Must outlive the device.
+    /// @param guid Must survive replug and reboot; saved profiles match on it.
+    InputDevice(Window* window, std::string guid, std::string name,
+                InputProfile profile = InputProfile())
+        : m_window(window),
+          m_profile(std::move(profile)),
+          m_guid(std::move(guid)),
+          m_name(std::move(name)) {
+        assert(m_window != nullptr && "InputDevice requires a valid Window");
+    };
     virtual ~InputDevice() = default;
 
     virtual void update() = 0;  // poll the hardware state
@@ -124,23 +117,24 @@ class InputDevice {
     // Key state
     virtual InputKeyResult getKey(InputKey key) const = 0;
 
-    virtual InputDeviceType getDeviceType() {
+    virtual InputDeviceType getDeviceType() const {
         return InputDeviceType::Undefined;
     }
 
-    void setWindow(Window* w) { m_window = w; }
+    /// @brief Stable identity.
+    const std::string& getGuid() const { return m_guid; }
+    /// @brief Human readable device name
+    const std::string& getName() const { return m_name; }
+
+    /// @brief Replace the binding table.
+    void setProfile(InputProfile profile) { m_profile = std::move(profile); }
+    const InputProfile& getProfile() const { return m_profile; }
 
    protected:
     Window* m_window;
     InputProfile m_profile;
-    bool muted = false;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int version) {
-        ar & m_profile;
-        ar & muted;
-        // m_window is not serialized; call reconnectWindows() after loading
-    }
+    std::string m_guid;
+    std::string m_name;
 };
 
 }  // namespace input

@@ -1,43 +1,44 @@
 #pragma once
 
+#include <string_view>
+
 #include "input/InputKeys.hpp"
-#include <boost/serialization/export.hpp>
 
 namespace v3d {
 namespace input {
-class KeyboardDevice : public InputDevice {
-    friend class boost::serialization::access;
 
+// GLFW exposes no keyboard identity, so the single system keyboard gets a fixed
+// GUID, matched by string equality like any joystick GUID.
+constexpr std::string_view kKeyboardDeviceGuid = "v3d-keyboard";
+constexpr std::string_view kKeyboardDeviceName = "Keyboard";
+
+class KeyboardDevice : public InputDevice {
    public:
-    KeyboardDevice() : InputDevice(nullptr, InputProfile()) {}
-    KeyboardDevice(Window* window, InputProfile profile)
-        : InputDevice(window, profile) {}
+    KeyboardDevice(Window* window, InputProfile profile = InputProfile())
+        : InputDevice(window, std::string(kKeyboardDeviceGuid),
+                      std::string(kKeyboardDeviceName), std::move(profile)) {}
+
     void update() override {
         // TODO: poll GLFW keys, store current state, for statefull processed
         // input
     }
 
     float getInput(InputAction action) const override {
-        if (muted) return 0;
-        if (auto mapping = m_profile.getMapping(action)) {
-            return glfwGetKey(m_window->getWindow(), mapping->m_key.code)
-                       ? 1.0f
-                       : 0.0f;
-        }
-        return 0.0f;
-    }
-    float getRawInput(InputAction action) const override {
-        if (muted) return 0;
-        if (auto mapping = m_profile.getMapping(action)) {
-            return glfwGetKey(m_window->getWindow(), mapping->m_key.code)
-                       ? 1.0f
-                       : 0.0f;
+        if (auto keys = m_profile.getKeys(action)) {
+            for (const InputKey& key : *keys) {
+                if (glfwGetKey(m_window->getWindow(), key.code) == GLFW_PRESS)
+                    return 1.0f;
+            }
         }
         return 0.0f;
     }
 
+    float getRawInput(InputAction action) const override {
+        // TODO: return the unprocessed value once update() keeps key state.
+        return getInput(action);
+    }
+
     InputKeyResult getKey(InputKey key) const override {
-        if (muted) return IKey_None;
         int res = glfwGetKey(m_window->getWindow(), key.code);
         if (res == GLFW_PRESS) {
             return IKey_Press;
@@ -46,17 +47,8 @@ class KeyboardDevice : public InputDevice {
         }
     }
 
-    InputDeviceType getDeviceType() override {
+    InputDeviceType getDeviceType() const override {
         return input::InputDeviceType::Keyboard;
-    }
-
-   private:
-    // std::unordered_map<InputKey, InputKeyState> m_keyStates;
-
-    template <class Archive>
-    void serialize(Archive& ar, const unsigned int version) {
-        // serialize base class information
-        ar& boost::serialization::base_object<InputDevice>(*this);
     }
 };
 }  // namespace input
