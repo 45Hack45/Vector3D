@@ -18,30 +18,45 @@ constexpr uint32_t kInputConfigFormatVersion = 1;
 
 constexpr std::string_view kDefaultProfileName = "Default";
 
+// Applied to axis bindings that do not say otherwise.
+constexpr float kDefaultAxisDeadzone = 0.15f;
+
 /// @brief Outcome of a config save or load.
 struct InputConfigResult {
     bool ok = false;
     std::string message;
 };
 
-/// @brief Whether a binding resolves against the registries.
+/// @brief Whether a binding resolves against the registry.
 enum class BindingStatus {
     Resolved,
     UnknownAction,
     UnknownKey,
 };
 
-/// @brief Key binding.
+/// @brief Key binding. direction and deadzone describe the axis half this
+/// binding reads and are ignored when the key is not an axis.
 struct KeyBinding {
-    std::string action;  // action registry name, e.g. "Accelerate"
-    std::string key;     // key table name, e.g. "SPACE"
+    std::string action;     // action registry name, e.g. "Accelerate"
+    std::string key;        // key table name, e.g. "SPACE"
+    std::string direction;  // "positive" or "negative"
+    float deadzone = kDefaultAxisDeadzone;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int /*version*/) {
         ar& boost::serialization::make_nvp("action", action);
         ar& boost::serialization::make_nvp("key", key);
+        ar& boost::serialization::make_nvp("direction", direction);
+        ar& boost::serialization::make_nvp("deadzone", deadzone);
     }
 };
+
+/// @brief Persisted name of an axis direction.
+const char* axisDirectionName(AxisDirection direction);
+
+/// @brief Axis direction for a persisted name. Anything unrecognised, including
+/// the empty string a button binding carries, reads as positive.
+AxisDirection axisDirectionFromName(std::string_view name);
 
 /// @brief Named set of key bindings.
 struct DeviceProfile {
@@ -55,7 +70,7 @@ struct DeviceProfile {
     }
 };
 
-/// @brief Device configuration, profiles and key bindings
+/// @brief Device configuration, profiles and key bindings.
 struct DeviceConfig {
     std::string deviceKind;     // "keyboard", "joystick", ...
     std::string guid;           // matched against InputDevice::getGuid()
@@ -117,6 +132,9 @@ class InputConfigStore {
 
 /// @brief Persisted name of a device kind, e.g. "keyboard".
 const char* deviceKindName(InputDeviceType type);
+
+/// @brief Built-in bindings for a gamepad with nothing saved for its GUID.
+DeviceProfile makeDefaultGamepadProfile();
 
 /// @brief Whether a binding resolves against the registry.
 BindingStatus bindingStatus(const KeyBinding& binding);

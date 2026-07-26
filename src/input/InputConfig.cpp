@@ -166,7 +166,7 @@ InputConfigResult InputConfigStore::saveTo(const std::filesystem::path& path) {
             oa << boost::serialization::make_nvp("formatVersion",
                                                  formatVersion);
             oa << boost::serialization::make_nvp("devices", m_devices);
-            // The archive writes closing tags on destruction; it must go out of
+            // The archive writes closing tags on destruction; it must leave
             // scope before the sync and rename.
         }
     } catch (const std::exception& e) {
@@ -210,6 +210,31 @@ const char* deviceKindName(InputDeviceType type) {
             break;
     }
     return "unknown";
+}
+
+DeviceProfile makeDefaultGamepadProfile() {
+    const std::string positive = axisDirectionName(AxisDirection::Positive);
+    const std::string negative = axisDirectionName(AxisDirection::Negative);
+
+    DeviceProfile profile;
+    profile.name = std::string(kDefaultProfileName);
+    profile.bindings = {
+        {"Accelerate", "GP_AXIS_RIGHT_TRIGGER", positive, kDefaultAxisDeadzone},
+        {"Back", "GP_AXIS_LEFT_TRIGGER", positive, kDefaultAxisDeadzone},
+        {"Brake", "GP_B", positive, kDefaultAxisDeadzone},
+        {"SteerLeft", "GP_AXIS_LEFT_X", negative, kDefaultAxisDeadzone},
+        {"SteerRight", "GP_AXIS_LEFT_X", positive, kDefaultAxisDeadzone},
+        {"Clutch", "GP_A", positive, kDefaultAxisDeadzone},
+    };
+    return profile;
+}
+
+const char* axisDirectionName(AxisDirection direction) {
+    return direction == AxisDirection::Negative ? "negative" : "positive";
+}
+
+AxisDirection axisDirectionFromName(std::string_view name) {
+    return name == "negative" ? AxisDirection::Negative : AxisDirection::Positive;
 }
 
 BindingStatus bindingStatus(const KeyBinding& binding) {

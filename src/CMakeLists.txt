@@ -74,6 +74,7 @@ set(Vector3D_editor_FILES
 message(STATUS "-- INPUT")
 
 set(Vector3D_input_SOURCES
+    ${CMAKE_SOURCE_DIR}/src/input/GamepadDevice.cpp
     ${CMAKE_SOURCE_DIR}/src/input/InputActionRegistry.cpp
     ${CMAKE_SOURCE_DIR}/src/input/InputConfig.cpp
     ${CMAKE_SOURCE_DIR}/src/input/InputKeyCodes.cpp
@@ -81,6 +82,7 @@ set(Vector3D_input_SOURCES
 )
 
 set(Vector3D_input_HEADERS
+    ${CMAKE_SOURCE_DIR}/src/input/GamepadDevice.h
     ${CMAKE_SOURCE_DIR}/src/input/InputActionRegistry.h
     ${CMAKE_SOURCE_DIR}/src/input/InputConfig.hpp
     ${CMAKE_SOURCE_DIR}/src/input/InputDevice.hpp

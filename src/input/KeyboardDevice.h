@@ -7,7 +7,7 @@
 namespace v3d {
 namespace input {
 
-// GLFW exposes no keyboard identity, so the single system keyboard gets a fixed
+// GLFW exposes no keyboard identity; the single system keyboard gets a fixed
 // GUID, matched by string equality like any joystick GUID.
 constexpr std::string_view kKeyboardDeviceGuid = "v3d-keyboard";
 constexpr std::string_view kKeyboardDeviceName = "Keyboard";
@@ -24,18 +24,19 @@ class KeyboardDevice : public InputDevice {
     }
 
     float getInput(InputAction action) const override {
-        if (auto keys = m_profile.getKeys(action)) {
-            for (const InputKey& key : *keys) {
-                if (glfwGetKey(m_window->getWindow(), key.code) == GLFW_PRESS)
+        // TODO: apply smoothing and other processing.
+        return getRawInput(action);
+    }
+
+    float getRawInput(InputAction action) const override {
+        if (auto inputs = m_profile.getInputs(action)) {
+            for (const BoundInput& input : *inputs) {
+                if (input.key.kind != InputKeyKind::Keyboard) continue;
+                if (glfwGetKey(m_window->getWindow(), input.key.code) == GLFW_PRESS)
                     return 1.0f;
             }
         }
         return 0.0f;
-    }
-
-    float getRawInput(InputAction action) const override {
-        // TODO: return the unprocessed value once update() keeps key state.
-        return getInput(action);
     }
 
     InputKeyResult getKey(InputKey key) const override {

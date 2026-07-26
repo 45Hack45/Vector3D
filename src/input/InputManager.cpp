@@ -4,6 +4,7 @@
 
 #include <cstdlib>
 
+#include "input/GamepadDevice.h"
 #include "input/InputActionRegistry.h"
 #include "input/InputKeyCodes.h"
 
@@ -27,13 +28,16 @@ input::InputProfile compileProfile(const input::DeviceProfile& profile) {
             input::keyFromName(binding.key);
         if (!key) continue;
 
-        compiled.bind(*action, *key);
+        compiled.bind(*action,
+                      input::BoundInput{*key,
+                                        input::axisDirectionFromName(binding.direction),
+                                        binding.deadzone});
     }
 
     return compiled;
 }
 
-// Report what this build cannot resolve. Called when a config enters the store.
+// Warn about bindings this build cannot resolve.
 void logConfigProblems(const input::DeviceConfig& device) {
     for (const input::DeviceProfile& profile : device.profiles) {
         for (const input::KeyBinding& binding : profile.bindings) {
@@ -62,7 +66,6 @@ void logConfigProblems(const input::DeviceConfig& device) {
     }
 }
 
-// Make name unique within a device by suffixing a counter.
 std::string uniqueProfileName(const input::DeviceConfig& device,
                               std::string name) {
     if (name.empty()) name = std::string(input::kDefaultProfileName);
@@ -79,6 +82,66 @@ std::string uniqueProfileName(const input::DeviceConfig& device,
 void InputManager::addDevice(std::unique_ptr<input::InputDevice> device) {
     m_devices.push_back(std::move(device));
     applyConfig();
+}
+
+void InputManager::update() {
+    refreshGamepads();
+    if (muted) return;
+    for (auto& d : m_devices) d->update();
+}
+
+void InputManager::refreshGamepads() {
+    if (!m_window) return;
+
+    // Drop devices whose joystick slot is gone or unmapped. Their DeviceConfig
+    // stays in the store, so replugging restores bindings.
+    for (auto it = m_devices.begin(); it != m_devices.end();) {
+        auto* pad = dynamic_cast<input::GamepadDevice*>(it->get());
+        if (pad && !glfwJoystickIsGamepad(pad->getJoystickId())) {
+            PLOGI << "Gamepad disconnected: " << pad->getName() << " ("
+                  << pad->getGuid() << ")";
+            it = m_devices.erase(it);
+        } else {
+            ++it;
+        }
+    }
+
+    for (int jid = GLFW_JOYSTICK_1; jid <= GLFW_JOYSTICK_LAST; jid++) {
+        // GamepadDevice reads through glfwGetGamepadState, which only works for
+        // mapped controllers.
+        if (!glfwJoystickIsGamepad(jid)) continue;
+
+        bool alreadyKnown = false;
+        for (auto& device : m_devices) {
+            auto* pad = dynamic_cast<input::GamepadDevice*>(device.get());
+            if (pad && pad->getJoystickId() == jid) {
+                alreadyKnown = true;
+                break;
+            }
+        }
+        if (alreadyKnown) continue;
+
+        const char* guid = glfwGetJoystickGUID(jid);
+        if (!guid) continue;
+
+        const char* name = glfwGetGamepadName(jid);
+        if (!name) name = glfwGetJoystickName(jid);
+        if (!name) name = "Gamepad";
+
+        // A controller with nothing saved gets the built-in bindings.
+        if (!m_configStore.findDevice(guid)) {
+            input::DeviceConfig config;
+            config.deviceKind = input::deviceKindName(input::InputDeviceType::Joystick);
+            config.guid = guid;
+            config.lastKnownName = name;
+            config.activeProfile = std::string(input::kDefaultProfileName);
+            config.profiles = {input::makeDefaultGamepadProfile()};
+            m_configStore.upsertDevice(std::move(config));
+        }
+
+        PLOGI << "Gamepad connected: " << name << " (" << guid << ")";
+        addDevice(std::make_unique<input::GamepadDevice>(m_window, jid, guid, name));
+    }
 }
 
 input::InputDevice* InputManager::getDevice(uint8_t deviceId) {
@@ -125,8 +188,8 @@ void InputManager::applyConfig() {
         input::InputDevice* device = findDeviceByGuid(config.guid);
         if (!device) continue;
 
-        // The device is authoritative about its own name and kind. Not a
-        // binding change, so it does not by itself make the config dirty.
+        // Name and kind come from the device; not a binding change, so it does
+        // not dirty the config.
         config.lastKnownName = device->getName();
         config.deviceKind = input::deviceKindName(device->getDeviceType());
 

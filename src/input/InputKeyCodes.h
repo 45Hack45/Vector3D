@@ -8,9 +8,9 @@
 namespace v3d {
 namespace input {
 
-// Source of truth for bindable keys: each entry emits the constexpr
-// constant and the name-table entry. The argument is the GLFW_KEY_* suffix and
-// the persisted name.
+// Source of truth for bindable keys: each entry emits the constexpr constant
+// and the name-table entry. The argument is both the GLFW_KEY_* suffix and the
+// persisted name.
 #define V3D_INPUT_KEYS(V3D_X)                                                  \
     V3D_X(SPACE) V3D_X(APOSTROPHE) V3D_X(COMMA) V3D_X(MINUS) V3D_X(PERIOD)     \
     V3D_X(SLASH)                                                               \
@@ -41,23 +41,57 @@ namespace input {
     V3D_X(RIGHT_SUPER)                                                         \
     V3D_X(MENU)
 
+// Persisted names need the GP_ / GP_AXIS_ prefix: gamepad codes overlap
+// keyboard codes. CROSS/CIRCLE/SQUARE/TRIANGLE stay out, they alias A/B/X/Y.
+#define V3D_GAMEPAD_BUTTONS(V3D_X)                                             \
+    V3D_X(A) V3D_X(B) V3D_X(X) V3D_X(Y)                                        \
+    V3D_X(LEFT_BUMPER) V3D_X(RIGHT_BUMPER) V3D_X(BACK) V3D_X(START)            \
+    V3D_X(GUIDE) V3D_X(LEFT_THUMB) V3D_X(RIGHT_THUMB)                          \
+    V3D_X(DPAD_UP) V3D_X(DPAD_RIGHT) V3D_X(DPAD_DOWN) V3D_X(DPAD_LEFT)
+
+#define V3D_GAMEPAD_AXES(V3D_X)                                                \
+    V3D_X(LEFT_X) V3D_X(LEFT_Y) V3D_X(RIGHT_X) V3D_X(RIGHT_Y)                  \
+    V3D_X(LEFT_TRIGGER) V3D_X(RIGHT_TRIGGER)
+
 namespace key {
 
-#define V3D_INPUT_KEY_CONSTANT(name) constexpr InputKey IK_##name{GLFW_KEY_##name};
+#define V3D_INPUT_KEY_CONSTANT(name) \
+    constexpr InputKey IK_##name{InputKeyKind::Keyboard, GLFW_KEY_##name};
 V3D_INPUT_KEYS(V3D_INPUT_KEY_CONSTANT)
 #undef V3D_INPUT_KEY_CONSTANT
 
 // Outside V3D_INPUT_KEYS, not bindable
-constexpr InputKey IK_UnknownKey{GLFW_KEY_UNKNOWN};
-constexpr InputKey IK_LAST{GLFW_KEY_LAST};
+constexpr InputKey IK_UnknownKey{InputKeyKind::Keyboard, GLFW_KEY_UNKNOWN};
+constexpr InputKey IK_LAST{InputKeyKind::Keyboard, GLFW_KEY_LAST};
 
 };  // namespace key
 
-/// @brief Persisted name of a key, e.g. "SPACE", or nullptr if not bindable.
+namespace gamepad {
+
+#define V3D_GAMEPAD_BUTTON_CONSTANT(name)  \
+    constexpr InputKey IB_##name{InputKeyKind::GamepadButton, \
+                                 GLFW_GAMEPAD_BUTTON_##name};
+V3D_GAMEPAD_BUTTONS(V3D_GAMEPAD_BUTTON_CONSTANT)
+#undef V3D_GAMEPAD_BUTTON_CONSTANT
+
+#define V3D_GAMEPAD_AXIS_CONSTANT(name) \
+    constexpr InputKey IA_##name{InputKeyKind::GamepadAxis, \
+                                 GLFW_GAMEPAD_AXIS_##name};
+V3D_GAMEPAD_AXES(V3D_GAMEPAD_AXIS_CONSTANT)
+#undef V3D_GAMEPAD_AXIS_CONSTANT
+
+};  // namespace gamepad
+
+/// @brief Persisted name of a key, e.g. "SPACE" or "GP_AXIS_LEFT_X", or nullptr
+/// if not bindable.
 const char* keyName(InputKey key);
 
 /// @brief Key for a persisted name, the inverse of keyName(). Empty if unknown.
 std::optional<InputKey> keyFromName(std::string_view name);
+
+/// @brief Whether an axis rests at -1 rather than 0. True for the two gamepad
+/// triggers, whose value needs rescaling to [0, 1].
+bool isTriggerAxis(InputKey key);
 
 };  // namespace input
 

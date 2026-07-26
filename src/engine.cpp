@@ -280,6 +280,10 @@ void Engine::mainLoop() {
             processInput(m_window->getWindow());
         }
 
+        // Must run before anything reads input: refreshes cached device state
+        // and the gamepad list.
+        m_inputManager.update();
+
         // Start the Dear ImGui frame
         imgui_beginFrame_();
 
@@ -331,8 +335,10 @@ void Engine::initDefaultInput() {
     // Register before loading so the built-in bindings resolve on first apply.
     input::registerBuiltinActions();
 
-    // Defaults live in the store, not bound on the device directly: the store
-    // is the source of truth and a first save must write them out.
+    // Hotplug-created gamepads need the window they will poll.
+    m_inputManager.setWindow(m_window.get());
+
+    // Defaults go through the store so the first save writes them out.
     input::DeviceConfig keyboard;
     keyboard.deviceKind = input::deviceKindName(input::InputDeviceType::Keyboard);
     keyboard.guid = std::string(input::kKeyboardDeviceGuid);
@@ -362,7 +368,7 @@ void Engine::initDefaultInput() {
 
     m_inputManager.addDevice(std::make_unique<input::KeyboardDevice>(m_window.get()));
 
-    // A missing config is the normal first run, defaults are applied.
+    // No config is the normal first run; the built-in defaults stand.
     const std::filesystem::path configPath = InputManager::defaultConfigPath();
     if (std::filesystem::exists(configPath)) {
         const input::InputConfigResult result = m_inputManager.loadConfig(configPath);

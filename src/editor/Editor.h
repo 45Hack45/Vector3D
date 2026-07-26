@@ -18,7 +18,7 @@ class Editor {
     // Variables-----------------------------------
     Engine* m_engine;
 
-    // Last input config save/load outcome, kept until the next one.
+    // Last save/load outcome, shown until the next one.
     std::string m_lastInputConfigMessage;
     bool m_lastInputConfigOk = true;
 
@@ -35,7 +35,7 @@ class Editor {
     void renderGui(float deltaTime, entity_ptr root, Scene* scene);
     void renderHierarchyGui(entity_ptr entity);
     void renderEntityEditorPropertiesGui(entity_ptr entity, Scene* scene);
-    /// @brief Input config panel: save/load, config path, and device profiles
+    /// @brief Input config panel: save/load, config path, and device profiles.
     void renderInputConfigGui();
     // void renderAssetsGui();
 

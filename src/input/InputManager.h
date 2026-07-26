@@ -20,6 +20,8 @@ class InputManager {
     std::vector<std::unique_ptr<input::InputDevice>> m_devices;
     input::InputConfigStore m_configStore;
 
+    Window* m_window = nullptr;
+
     bool muted = false;
 
     void muteInput(bool mute) { muted = mute; }
@@ -28,14 +30,19 @@ class InputManager {
     InputManager() = default;
     ~InputManager() = default;
 
-    /// @brief Take ownership of a device and apply any profile saved for its GUID
+    void setWindow(Window* window) { m_window = window; }
+
+    /// @brief Take ownership of a device and apply any profile saved for its
+    /// GUID.
     /// @param device Must have a valid Window.
     void addDevice(std::unique_ptr<input::InputDevice> device);
 
-    void update() {
-        if (muted) return;
-        for (auto& d : m_devices) d->update();
-    }
+    /// @brief Reconcile the gamepad list with what is plugged in, then poll
+    /// every connected device.
+    void update();
+
+    /// @brief Add gamepads that appeared and drop those that went away.
+    void refreshGamepads();
 
     bool isMuted() const noexcept { return muted; }
 
@@ -70,8 +77,7 @@ class InputManager {
     input::InputConfigResult loadConfig(const std::filesystem::path& path);
 
     /// @brief Compile each device's active profile onto the connected devices,
-    /// matching by GUID. A connected device with no stored config keeps the
-    /// bindings it already has.
+    /// matching by GUID. A device with no stored config keeps its bindings.
     void applyConfig();
 
     /// @brief Insert or replace the stored config for a device identity and
@@ -82,8 +88,8 @@ class InputManager {
     /// @return false if the device or the profile does not exist.
     bool setActiveProfile(std::string_view guid, std::string_view profileName);
 
-    /// @brief Copy a device profile under a new, unused name. Note the copy is
-    /// not activated
+    /// @brief Copy a device profile under a new, unused name. The copy is not
+    /// activated.
     /// @param newName Made unique if already taken.
     /// @return Name the copy was stored under, empty if the source was missing.
     std::string duplicateProfile(std::string_view guid,

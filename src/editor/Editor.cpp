@@ -119,7 +119,8 @@ std::size_t countUnresolved(const input::DeviceConfig& device) {
     return unresolved;
 }
 
-// Ddeferred profile edits.
+// Deferred profile edits, applied after the widget loops
+// editing during them invalidates iteration.
 struct PendingProfileAction {
     enum class Kind { None, Activate, Duplicate, Remove };
 
