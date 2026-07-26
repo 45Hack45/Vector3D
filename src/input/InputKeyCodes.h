@@ -53,6 +53,25 @@ namespace input {
     V3D_X(LEFT_X) V3D_X(LEFT_Y) V3D_X(RIGHT_X) V3D_X(RIGHT_Y)                  \
     V3D_X(LEFT_TRIGGER) V3D_X(RIGHT_TRIGGER)
 
+// Persisted names need the MOUSE_ / MOUSE_AXIS_ prefix: mouse codes overlap
+// gamepad codes. Buttons 1/2/3 stay out, they alias LEFT/RIGHT/MIDDLE.
+#define V3D_MOUSE_BUTTONS(V3D_X)                                               \
+    V3D_X(LEFT) V3D_X(RIGHT) V3D_X(MIDDLE)                                     \
+    V3D_X(4) V3D_X(5) V3D_X(6) V3D_X(7) V3D_X(8)
+
+// CURSOR_Y and SCROLL_Y follow GLFW window coordinates: down and toward the
+// user are positive. DeviceSettings::invertY flips both.
+#define V3D_MOUSE_AXES(V3D_X)                                                  \
+    V3D_X(CURSOR_X) V3D_X(CURSOR_Y) V3D_X(SCROLL_X) V3D_X(SCROLL_Y)
+
+// GLFW names no mouse axis, so the codes are defined here.
+enum {
+#define V3D_MOUSE_AXIS_ENUM(name) V3D_MOUSE_AXIS_##name,
+    V3D_MOUSE_AXES(V3D_MOUSE_AXIS_ENUM)
+#undef V3D_MOUSE_AXIS_ENUM
+    V3D_MOUSE_AXIS_LAST = V3D_MOUSE_AXIS_SCROLL_Y,
+};
+
 namespace key {
 
 #define V3D_INPUT_KEY_CONSTANT(name) \
@@ -82,6 +101,22 @@ V3D_GAMEPAD_AXES(V3D_GAMEPAD_AXIS_CONSTANT)
 
 };  // namespace gamepad
 
+namespace mouse {
+
+#define V3D_MOUSE_BUTTON_CONSTANT(name)                     \
+    constexpr InputKey IB_##name{InputKeyKind::MouseButton, \
+                                 GLFW_MOUSE_BUTTON_##name};
+V3D_MOUSE_BUTTONS(V3D_MOUSE_BUTTON_CONSTANT)
+#undef V3D_MOUSE_BUTTON_CONSTANT
+
+#define V3D_MOUSE_AXIS_CONSTANT(name)                     \
+    constexpr InputKey IA_##name{InputKeyKind::MouseAxis, \
+                                 V3D_MOUSE_AXIS_##name};
+V3D_MOUSE_AXES(V3D_MOUSE_AXIS_CONSTANT)
+#undef V3D_MOUSE_AXIS_CONSTANT
+
+};  // namespace mouse
+
 /// @brief Persisted name of a key, e.g. "SPACE" or "GP_AXIS_LEFT_X", or nullptr
 /// if not bindable.
 const char* keyName(InputKey key);
@@ -92,6 +127,24 @@ std::optional<InputKey> keyFromName(std::string_view name);
 /// @brief Whether an axis rests at -1 rather than 0. True for the two gamepad
 /// triggers, whose value needs rescaling to [0, 1].
 bool isTriggerAxis(InputKey key);
+
+/// @brief Whether an axis reports movement since the last update rather than
+/// an absolute position.
+bool isRelativeAxis(InputKey key);
+
+/// @brief Rescale a non-negative value so it ramps from 0 at the deadzone edge.
+/// @param deadzone Fraction of full deflection, clamped to [0, 0.99].
+float applyDeadzone(float value, float deadzone);
+
+/// @brief Deadzone about zero: applied to the magnitude, with the sign of the
+/// input reapplied to the result.
+float applyDeadzoneSigned(float value, float deadzone);
+
+/// @brief Suppress a relative axis delta whose magnitude does not exceed the
+/// threshold. Deltas have no full-scale value to rescale against, so whatever
+/// passes is unchanged.
+/// @param threshold In the axis's own units, after sensitivity.
+float applyDeltaThreshold(float value, float threshold);
 
 };  // namespace input
 

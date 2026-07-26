@@ -9,6 +9,7 @@
 #include "input/GamepadDevice.h"
 #include "input/InputActionRegistry.h"
 #include "input/InputKeyCodes.h"
+#include "input/MouseDevice.h"
 
 namespace v3d {
 
@@ -32,7 +33,7 @@ input::InputProfile compileProfile(const input::DeviceProfile& profile) {
 
         compiled.bind(*action,
                       input::BoundInput{*key,
-                                        input::axisDirectionFromName(binding.direction),
+                                        input::axisRangeFromName(binding.range),
                                         binding.deadzone});
     }
 
@@ -88,9 +89,30 @@ std::string uniqueProfileName(const input::DeviceConfig& device,
 
 }  // namespace
 
+void InputManager::scrollCallback(GLFWwindow* window, double xoffset,
+                                  double yoffset) {
+    auto* manager = static_cast<InputManager*>(glfwGetWindowUserPointer(window));
+    if (!manager) return;
+
+    auto* mouse = dynamic_cast<input::MouseDevice*>(
+        manager->getDevice(input::InputDeviceType::Mouse));
+    if (!mouse) return;
+
+    mouse->accumulateScroll(static_cast<float>(xoffset),
+                            static_cast<float>(yoffset));
+}
+
 void InputManager::setWindow(Window* window) {
     m_window = window;
     glfwSetJoystickCallback(onJoystickEvent);
+
+    GLFWwindow* handle = m_window ? m_window->getWindow() : nullptr;
+    if (!handle) return;
+
+    // Set up before ImGui's callbacks so that ImGui chains to this one
+    // rather than replacing it.
+    glfwSetWindowUserPointer(handle, this);
+    glfwSetScrollCallback(handle, scrollCallback);
 }
 
 void InputManager::addDevice(std::unique_ptr<input::InputDevice> device) {
@@ -106,7 +128,12 @@ void InputManager::update() {
     }
     applyJoystickEvents();
 
-    for (auto& d : m_devices) d->update();
+    for (auto& d : m_devices) {
+        // A device that accumulates between updates has to know it is muted,
+        // so it can discard what it drains instead of holding it.
+        d->setMuted(isMuted(d->getDeviceType()));
+        d->update();
+    }
 }
 
 void InputManager::setMuted(input::InputDeviceType deviceType, bool mute) {
@@ -114,6 +141,10 @@ void InputManager::setMuted(input::InputDeviceType deviceType, bool mute) {
         m_mutedKinds |= kindBit(deviceType);
     } else {
         m_mutedKinds &= ~kindBit(deviceType);
+    }
+
+    for (auto& device : m_devices) {
+        if (device->getDeviceType() == deviceType) device->setMuted(mute);
     }
 }
 
@@ -267,6 +298,8 @@ void InputManager::applyConfig() {
         // not dirty the config.
         config.lastKnownName = device->getName();
         config.deviceKind = input::deviceKindName(device->getDeviceType());
+
+        device->setSettings(config.settings);
 
         if (const input::DeviceProfile* active = config.resolvedProfile()) {
             device->setProfile(compileProfile(*active));

@@ -79,6 +79,7 @@ set(Vector3D_input_SOURCES
     ${CMAKE_SOURCE_DIR}/src/input/InputConfig.cpp
     ${CMAKE_SOURCE_DIR}/src/input/InputKeyCodes.cpp
     ${CMAKE_SOURCE_DIR}/src/input/InputManager.cpp
+    ${CMAKE_SOURCE_DIR}/src/input/MouseDevice.cpp
 )
 
 set(Vector3D_input_HEADERS
@@ -90,6 +91,7 @@ set(Vector3D_input_HEADERS
     ${CMAKE_SOURCE_DIR}/src/input/InputKeys.hpp
     ${CMAKE_SOURCE_DIR}/src/input/InputManager.h
     ${CMAKE_SOURCE_DIR}/src/input/KeyboardDevice.h
+    ${CMAKE_SOURCE_DIR}/src/input/MouseDevice.h
 )
 
 set(Vector3D_input_FILES

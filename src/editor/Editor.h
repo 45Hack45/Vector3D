@@ -37,6 +37,9 @@ class Editor {
     void renderEntityEditorPropertiesGui(entity_ptr entity, Scene* scene);
     /// @brief Input config panel: save/load, config path, and device profiles.
     void renderInputConfigGui();
+    /// @brief Live mouse state: deltas as they are read, and the value every
+    /// bound action resolves to.
+    void renderMouseReadoutGui();
     // void renderAssetsGui();
 
     // static Mesh* GUI_PropertySelector(const char* propName, Mesh*

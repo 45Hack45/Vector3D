@@ -30,6 +30,9 @@ class InputManager {
         return 1u << static_cast<uint32_t>(deviceType);
     }
 
+    static void scrollCallback(GLFWwindow* window, double xoffset,
+                               double yoffset);
+
     // Apply the hotplug events GLFW recorded since the last update.
     void applyJoystickEvents();
 
@@ -74,6 +77,17 @@ class InputManager {
             value = std::max(value, d->getInput(action));
         }
         return value;  // "OR" behavior, or blend differently
+    }
+
+    /// @brief Signed value of an action, summed over the connected devices.
+    /// Opposed bindings cancel. A relative axis contributes a per-frame delta
+    float getAxis(input::InputAction action) const {
+        float value = 0.0f;
+        for (const auto& d : m_devices) {
+            if (isMuted(d->getDeviceType())) continue;
+            value += d->getAxis(action);
+        }
+        return value;
     }
 
     /// @brief Value of an action as the hardware reports it

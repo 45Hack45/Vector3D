@@ -27,12 +27,17 @@ class GamepadDevice : public InputDevice {
     /// released.
     float getRawInput(InputAction action) const override;
 
-    /// @brief Value of one binding with trigger rescaling and its deadzone
-    /// applied, clamped to [0, 1]. The half of an axis the binding does not
+    /// @brief Signed value of one binding, with trigger rescaling and its
+    /// deadzone applied, over [-1, 1]. The half of an axis the binding does not
     /// cover reads 0.
+    float readAxis(BoundInput input) const;
+
+    /// @brief Magnitude of one binding, over [0, 1].
     float readInput(BoundInput input) const;
 
     float getInput(InputAction action) const override;
+
+    float getAxis(InputAction action) const override;
 
     InputKeyResult getKey(InputKey key) const override;
 

@@ -85,6 +85,8 @@ class Engine {
 
     InputManager m_inputManager;
 
+    /// @brief Seed the built-in device configs, connect the always-present
+    /// devices and load the saved config. Must be called before initImgui().
     void initDefaultInput();
 
     Physics m_phSystem;

@@ -34,29 +34,29 @@ enum class BindingStatus {
     UnknownKey,
 };
 
-/// @brief Key binding. direction and deadzone describe the axis half this
+/// @brief Key binding. range and deadzone describe the portion of the axis this
 /// binding reads and are ignored when the key is not an axis.
 struct KeyBinding {
-    std::string action;     // action registry name, e.g. "Accelerate"
-    std::string key;        // key table name, e.g. "SPACE"
-    std::string direction;  // "positive" or "negative"
+    std::string action;  // action registry name, e.g. "Accelerate"
+    std::string key;     // key table name, e.g. "SPACE"
+    std::string range;   // "positive", "negative" or "full"
     float deadzone = kDefaultAxisDeadzone;
 
     template <class Archive>
     void serialize(Archive& ar, const unsigned int /*version*/) {
         ar& boost::serialization::make_nvp("action", action);
         ar& boost::serialization::make_nvp("key", key);
-        ar& boost::serialization::make_nvp("direction", direction);
+        ar& boost::serialization::make_nvp("range", range);
         ar& boost::serialization::make_nvp("deadzone", deadzone);
     }
 };
 
-/// @brief Persisted name of an axis direction.
-const char* axisDirectionName(AxisDirection direction);
+/// @brief Persisted name of an axis range.
+const char* axisRangeName(AxisRange range);
 
-/// @brief Axis direction for a persisted name. Anything unrecognised, including
+/// @brief Axis range for a persisted name. Anything unrecognised, including
 /// the empty string a button binding carries, reads as positive.
-AxisDirection axisDirectionFromName(std::string_view name);
+AxisRange axisRangeFromName(std::string_view name);
 
 /// @brief Named set of key bindings.
 struct DeviceProfile {
@@ -76,6 +76,7 @@ struct DeviceConfig {
     std::string guid;           // matched against InputDevice::getGuid()
     std::string lastKnownName;  // display only, refreshed when the device connects
     std::string activeProfile;  // name of the profile in use
+    DeviceSettings settings;    // survives a profile switch
     std::vector<DeviceProfile> profiles;
 
     /// @brief Find one of this device's profiles by name, or nullptr.
@@ -93,6 +94,7 @@ struct DeviceConfig {
         ar& boost::serialization::make_nvp("guid", guid);
         ar& boost::serialization::make_nvp("lastKnownName", lastKnownName);
         ar& boost::serialization::make_nvp("activeProfile", activeProfile);
+        ar& boost::serialization::make_nvp("settings", settings);
         ar& boost::serialization::make_nvp("profiles", profiles);
     }
 };

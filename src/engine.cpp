@@ -22,6 +22,7 @@
 #include "backends/imgui_impl_opengl3.h"
 #include "imgui.h"
 #include "input/KeyboardDevice.h"
+#include "input/MouseDevice.h"
 #include "physics/Vehicle.h"
 #include "physics/VehicleInteractiveController.h"
 #include "physics/collider.h"
@@ -190,6 +191,10 @@ Engine::Engine(uint32_t width, uint32_t height,
             break;
     }
 
+    // Instantiate default input devices and mappings. Must precede initImgui:
+    // ImGui's GLFW callbacks chain to whatever was installed before them
+    initDefaultInput();
+
     initImgui(m_window->getWindow(), mainScale, true);
 
     m_componentRegistry = &ComponentRegistry::instance();
@@ -198,9 +203,6 @@ Engine::Engine(uint32_t width, uint32_t height,
     // Init Model loader and manager
     std::unique_ptr<ModelLoader> modelLoader = makeModelLoader();
     m_modelManager = std::make_unique<ModelManager>(std::move(modelLoader));
-
-    // Instantiate default keyboard device and mappings
-    initDefaultInput();
 
     PLOGI << "Engine Initialized" << std::endl;
 
@@ -280,6 +282,9 @@ void Engine::mainLoop() {
             input::InputDeviceType::Joystick,
             io.WantCaptureKeyboard &&
                 (io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad) != 0);
+
+        m_inputManager.setMuted(input::InputDeviceType::Mouse,
+                                io.WantCaptureMouse);
 
         if (!io.WantCaptureMouse && !io.WantCaptureKeyboard) {
             processInput(m_window->getWindow());
@@ -372,6 +377,40 @@ void Engine::initDefaultInput() {
     m_inputManager.setDeviceConfig(std::move(keyboard));
 
     m_inputManager.addDevice(std::make_unique<input::KeyboardDevice>(m_window.get()));
+
+    const std::string positive = input::axisRangeName(input::AxisRange::Positive);
+    const std::string negative = input::axisRangeName(input::AxisRange::Negative);
+    const std::string full = input::axisRangeName(input::AxisRange::Full);
+
+    input::DeviceConfig mouse;
+    mouse.deviceKind = input::deviceKindName(input::InputDeviceType::Mouse);
+    mouse.guid = std::string(input::kMouseDeviceGuid);
+    mouse.lastKnownName = std::string(input::kMouseDeviceName);
+    mouse.activeProfile = std::string(input::kDefaultProfileName);
+    mouse.profiles = {
+        input::DeviceProfile{std::string(input::kDefaultProfileName),
+                          {
+                              {"Accelerate", "MOUSE_LEFT", positive, 0.f},
+                              {"Brake", "MOUSE_RIGHT", positive, 0.f},
+                              {"Clutch", "MOUSE_MIDDLE", positive, 0.f},
+                              {"Back", "MOUSE_AXIS_SCROLL_Y", negative, 0.f},
+                              {"SteerLeft", "MOUSE_AXIS_CURSOR_X", negative, 0.f},
+                              {"SteerRight", "MOUSE_AXIS_CURSOR_X", positive, 0.f},
+                          }},
+        // Steering off one signed axis instead of two halves. Only getAxis()
+        // resolves the sign; getInput() reports the magnitude either way.
+        input::DeviceProfile{"Full axis steering",
+                          {
+                              {"Accelerate", "MOUSE_LEFT", positive, 0.f},
+                              {"Brake", "MOUSE_RIGHT", positive, 0.f},
+                              {"Clutch", "MOUSE_MIDDLE", positive, 0.f},
+                              {"Back", "MOUSE_AXIS_SCROLL_Y", full, 0.f},
+                              {"SteerRight", "MOUSE_AXIS_CURSOR_X", full, 0.f},
+                          }},
+    };
+    m_inputManager.setDeviceConfig(std::move(mouse));
+
+    m_inputManager.addDevice(std::make_unique<input::MouseDevice>(m_window.get()));
 
     // No config is the normal first run; the built-in defaults stand.
     const std::filesystem::path configPath = InputManager::defaultConfigPath();

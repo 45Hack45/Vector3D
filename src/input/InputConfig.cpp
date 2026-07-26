@@ -215,6 +215,8 @@ const char* deviceKindName(InputDeviceType type) {
             return "keyboard";
         case InputDeviceType::Joystick:
             return "joystick";
+        case InputDeviceType::Mouse:
+            return "mouse";
         case InputDeviceType::Undefined:
             return "undefined";
         case InputDeviceType::Unknown:
@@ -224,8 +226,8 @@ const char* deviceKindName(InputDeviceType type) {
 }
 
 DeviceProfile makeDefaultGamepadProfile() {
-    const std::string positive = axisDirectionName(AxisDirection::Positive);
-    const std::string negative = axisDirectionName(AxisDirection::Negative);
+    const std::string positive = axisRangeName(AxisRange::Positive);
+    const std::string negative = axisRangeName(AxisRange::Negative);
 
     DeviceProfile profile;
     profile.name = std::string(kDefaultProfileName);
@@ -240,12 +242,22 @@ DeviceProfile makeDefaultGamepadProfile() {
     return profile;
 }
 
-const char* axisDirectionName(AxisDirection direction) {
-    return direction == AxisDirection::Negative ? "negative" : "positive";
+const char* axisRangeName(AxisRange range) {
+    switch (range) {
+        case AxisRange::Negative:
+            return "negative";
+        case AxisRange::Full:
+            return "full";
+        case AxisRange::Positive:
+            break;
+    }
+    return "positive";
 }
 
-AxisDirection axisDirectionFromName(std::string_view name) {
-    return name == "negative" ? AxisDirection::Negative : AxisDirection::Positive;
+AxisRange axisRangeFromName(std::string_view name) {
+    if (name == "negative") return AxisRange::Negative;
+    if (name == "full") return AxisRange::Full;
+    return AxisRange::Positive;
 }
 
 BindingStatus bindingStatus(const KeyBinding& binding) {

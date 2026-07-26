@@ -4,14 +4,20 @@
 
 #include <plog/Log.h>
 
+#include <algorithm>
 #include <filesystem>
+#include <optional>
 #include <string>
+#include <vector>
 
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
 #include "engine.h"
+#include "input/InputActionRegistry.h"
 #include "input/InputConfig.hpp"
+#include "input/InputKeyCodes.h"
 #include "input/InputManager.h"
+#include "input/MouseDevice.h"
 #include "scene.h"
 
 namespace v3d {
@@ -142,6 +148,84 @@ const char* bindingStatusName(input::BindingStatus status) {
 }
 }  // namespace
 
+void Editor::renderMouseReadoutGui() {
+    ImGui::SeparatorText("Mouse");
+
+    InputManager* inputManager = m_engine->getInputManager();
+    auto* mouse = dynamic_cast<input::MouseDevice*>(
+        inputManager->getDevice(input::InputDeviceType::Mouse));
+    if (!mouse) {
+        ImGui::TextDisabled("No mouse device");
+        return;
+    }
+
+    const bool muted = inputManager->isMuted(input::InputDeviceType::Mouse);
+    if (muted) {
+        ImGui::TextColored(kWarnColor, "Muted (ImGui holds the mouse)");
+    } else {
+        ImGui::TextColored(kOkColor, "Active");
+    }
+
+    ImGui::Text("Cursor delta: %8.2f %8.2f px", mouse->getCursorDeltaX(),
+                mouse->getCursorDeltaY());
+    ImGui::Text("Scroll delta: %8.2f %8.2f steps", mouse->getScrollDeltaX(),
+                mouse->getScrollDeltaY());
+
+    const input::DeviceConfig* config =
+        inputManager->configStore().findDevice(mouse->getGuid());
+    const input::DeviceProfile* profile =
+        config ? config->resolvedProfile() : nullptr;
+    if (!profile) {
+        ImGui::TextDisabled("No active profile");
+        return;
+    }
+
+    ImGui::Text("Sensitivity %.2f, invert Y %s",
+                mouse->getSettings().axisSensitivity,
+                mouse->getSettings().invertY ? "on" : "off");
+
+    const ImGuiTableFlags tableFlags = ImGuiTableFlags_Borders |
+                                       ImGuiTableFlags_RowBg |
+                                       ImGuiTableFlags_SizingStretchProp;
+
+    if (!ImGui::BeginTable("##mouseActionReadout", 5, tableFlags)) return;
+
+    ImGui::TableSetupColumn("Action");
+    ImGui::TableSetupColumn("Device axis");
+    ImGui::TableSetupColumn("Device input");
+    ImGui::TableSetupColumn("Summed axis");
+    ImGui::TableSetupColumn("Summed action");
+    ImGui::TableHeadersRow();
+
+    const input::InputActionRegistry& registry =
+        input::InputActionRegistry::instance();
+
+    std::vector<std::string> seen;
+    for (const input::KeyBinding& binding : profile->bindings) {
+        if (std::find(seen.begin(), seen.end(), binding.action) != seen.end())
+            continue;
+        seen.push_back(binding.action);
+
+        const std::optional<input::InputAction> action =
+            registry.find(binding.action);
+        if (!action) continue;
+
+        ImGui::TableNextRow();
+        ImGui::TableNextColumn();
+        ImGui::TextUnformatted(binding.action.c_str());
+        ImGui::TableNextColumn();
+        ImGui::Text("%8.3f", mouse->getAxis(*action));
+        ImGui::TableNextColumn();
+        ImGui::Text("%8.3f", mouse->getInput(*action));
+        ImGui::TableNextColumn();
+        ImGui::Text("%8.3f", inputManager->getAxis(*action));
+        ImGui::TableNextColumn();
+        ImGui::Text("%8.3f", inputManager->getAction(*action));
+    }
+
+    ImGui::EndTable();
+}
+
 void Editor::renderInputConfigGui() {
     InputManager* inputManager = m_engine->getInputManager();
     const std::filesystem::path configPath = InputManager::defaultConfigPath();
@@ -247,6 +331,9 @@ void Editor::renderInputConfigGui() {
         ImGui::EndTable();
     }
 
+    // ImGui::Spacing();
+    // renderMouseReadoutGui();
+
     ImGui::Spacing();
     ImGui::SeparatorText("Saved profiles");
 
@@ -306,9 +393,11 @@ void Editor::renderInputConfigGui() {
             ImGui::EndDisabled();
 
             const std::string bindingsId = "##bindings_" + config.guid + profile.name;
-            if (ImGui::BeginTable(bindingsId.c_str(), 3, tableFlags)) {
+            if (ImGui::BeginTable(bindingsId.c_str(), 5, tableFlags)) {
                 ImGui::TableSetupColumn("Action");
                 ImGui::TableSetupColumn("Key");
+                ImGui::TableSetupColumn("Range");
+                ImGui::TableSetupColumn("Deadzone");
                 ImGui::TableSetupColumn("Status");
                 ImGui::TableHeadersRow();
 
@@ -321,6 +410,13 @@ void Editor::renderInputConfigGui() {
                     ImGui::TextUnformatted(binding.action.c_str());
                     ImGui::TableNextColumn();
                     ImGui::TextUnformatted(binding.key.c_str());
+                    ImGui::TableNextColumn();
+                    // An empty range persists as positive, so show what the
+                    // binding actually resolves to.
+                    ImGui::TextUnformatted(input::axisRangeName(
+                        input::axisRangeFromName(binding.range)));
+                    ImGui::TableNextColumn();
+                    ImGui::Text("%.2f", binding.deadzone);
                     ImGui::TableNextColumn();
                     if (status == input::BindingStatus::Resolved) {
                         ImGui::TextUnformatted(bindingStatusName(status));

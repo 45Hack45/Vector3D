@@ -39,6 +39,22 @@ class KeyboardDevice : public InputDevice {
         return 0.0f;
     }
 
+    float getAxis(InputAction action) const override {
+        const std::vector<BoundInput>* inputs = m_profile.getInputs(action);
+        if (!inputs) return 0.0f;
+
+        // A key contributes the sign of the range it is bound to, opposed keys
+        // held together cancel.
+        float value = 0.0f;
+        for (const BoundInput& input : *inputs) {
+            if (input.key.kind != InputKeyKind::Keyboard) continue;
+            if (glfwGetKey(m_window->getWindow(), input.key.code) != GLFW_PRESS)
+                continue;
+            value += (input.range == AxisRange::Negative) ? -1.0f : 1.0f;
+        }
+        return value;
+    }
+
     InputKeyResult getKey(InputKey key) const override {
         if (key.kind != InputKeyKind::Keyboard) return IKey_None;
         // Codes overlap between input spaces, so an out-of-range code is a key

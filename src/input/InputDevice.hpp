@@ -1,5 +1,6 @@
 #pragma once
 
+#include <boost/serialization/nvp.hpp>
 #include <cassert>
 #include <functional>
 #include <string>
@@ -19,6 +20,8 @@ enum class InputKeyKind {
     Keyboard,
     GamepadButton,
     GamepadAxis,
+    MouseButton,
+    MouseAxis,
 };
 
 struct InputKey {
@@ -33,10 +36,13 @@ struct InputKey {
     }
 };
 
-/// @brief Half of an analog axis. Ignored for non-axis keys.
-enum class AxisDirection {
+/// @brief Portion of an analog axis a binding covers. Ignored for non-axis keys.
+/// A half-range binding reads 0 outside its half; Full covers both halves and
+/// keeps the sign.
+enum class AxisRange {
     Positive,
     Negative,
+    Full,
 };
 
 struct InputKeyResult {
@@ -72,15 +78,15 @@ inline constexpr InputAction makeInputActionID(std::string_view name) {
     return InputAction{utils::fnv1a_64(name)};
 }
 
-/// @brief One resolved control driving an action. direction and deadzone apply
+/// @brief One resolved control driving an action. range and deadzone apply
 /// only when the key is an axis.
 struct BoundInput {
     InputKey key;
-    AxisDirection direction = AxisDirection::Positive;
+    AxisRange range = AxisRange::Positive;
     float deadzone = 0.0f;
 
     constexpr bool operator==(const BoundInput& other) const noexcept {
-        return key == other.key && direction == other.direction;
+        return key == other.key && range == other.range;
     }
 };
 
@@ -91,7 +97,7 @@ class InputProfile {
     ~InputProfile() = default;
 
     /// @brief Bind an additional control to an action; the strongest bound
-    /// control drives it. Binding a key and direction that are already bound
+    /// control drives it. Binding a key and range that are already bound
     /// updates that binding's deadzone instead of adding a duplicate.
     void bind(InputAction action, BoundInput input) {
         std::vector<BoundInput>& inputs = m_bindings[action];
@@ -121,6 +127,19 @@ enum InputDeviceType {
     Unknown,
     Keyboard,
     Joystick,
+    Mouse,
+};
+
+/// @brief Per-device tuning, applied on top of whichever profile is active.
+struct DeviceSettings {
+    float axisSensitivity = 1.0f;  // scales relative axis deltas
+    bool invertY = false;          // negates vertical relative axes
+
+    template <class Archive>
+    void serialize(Archive& ar, const unsigned int /*version*/) {
+        ar& boost::serialization::make_nvp("axisSensitivity", axisSensitivity);
+        ar& boost::serialization::make_nvp("invertY", invertY);
+    }
 };
 
 /// @brief Base of every physical input device.
@@ -144,11 +163,19 @@ class InputDevice {
     // Action mapped key state
 
     /// @brief Value of an action after the device's processing: deadzone
-    /// rescaling, trigger remapping, any state update() keeps.
+    /// rescaling, trigger remapping, any state update() keeps. Non-negative;
+    /// a full-range binding reports its magnitude.
     virtual float getInput(InputAction action) const = 0;
     /// @brief Value of an action as the hardware reports it. For calibration
     /// and binding UI, not for gameplay.
     virtual float getRawInput(InputAction action) const = 0;
+    /// @brief Signed value of an action. A full-range binding reports both
+    /// halves of its axis; a half-range binding reports its own half carrying
+    /// that half's sign. Bindings sum, so opposed ones cancel.
+    ///
+    /// The result is not confined to [-1, 1]: a relative axis reports the delta
+    /// accumulated over one frame, in the axis's own units, which no scale normalises.
+    virtual float getAxis(InputAction action) const = 0;
 
     // Key state
     virtual InputKeyResult getKey(InputKey key) const = 0;
@@ -165,11 +192,21 @@ class InputDevice {
     void setProfile(InputProfile profile) { m_profile = std::move(profile); }
     const InputProfile& getProfile() const { return m_profile; }
 
+    /// @brief Replace the tuning applied on top of the bindings.
+    void setSettings(DeviceSettings settings) { m_settings = settings; }
+    const DeviceSettings& getSettings() const { return m_settings; }
+
+    /// @brief Silence the device.
+    void setMuted(bool muted) { m_muted = muted; }
+    bool isMuted() const noexcept { return m_muted; }
+
    protected:
     Window* m_window;
     InputProfile m_profile;
+    DeviceSettings m_settings;
     std::string m_guid;
     std::string m_name;
+    bool m_muted = false;
 };
 
 }  // namespace input

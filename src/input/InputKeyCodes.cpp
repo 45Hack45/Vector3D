@@ -1,5 +1,7 @@
 #include "input/InputKeyCodes.h"
 
+#include <algorithm>
+#include <cmath>
 #include <string>
 #include <unordered_map>
 
@@ -25,6 +27,14 @@ constexpr KeyNameEntry kKeyNames[] = {
 #define V3D_GAMEPAD_AXIS_NAME_ENTRY(name) {"GP_AXIS_" #name, gamepad::IA_##name},
     V3D_GAMEPAD_AXES(V3D_GAMEPAD_AXIS_NAME_ENTRY)
 #undef V3D_GAMEPAD_AXIS_NAME_ENTRY
+
+#define V3D_MOUSE_BUTTON_NAME_ENTRY(name) {"MOUSE_" #name, mouse::IB_##name},
+    V3D_MOUSE_BUTTONS(V3D_MOUSE_BUTTON_NAME_ENTRY)
+#undef V3D_MOUSE_BUTTON_NAME_ENTRY
+
+#define V3D_MOUSE_AXIS_NAME_ENTRY(name) {"MOUSE_AXIS_" #name, mouse::IA_##name},
+    V3D_MOUSE_AXES(V3D_MOUSE_AXIS_NAME_ENTRY)
+#undef V3D_MOUSE_AXIS_NAME_ENTRY
 };
 
 // Codes repeat across kinds, so the reverse table is keyed on the pair.
@@ -70,6 +80,24 @@ bool isTriggerAxis(InputKey key) {
     return key.kind == InputKeyKind::GamepadAxis &&
            (key.code == GLFW_GAMEPAD_AXIS_LEFT_TRIGGER ||
             key.code == GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER);
+}
+
+bool isRelativeAxis(InputKey key) {
+    return key.kind == InputKeyKind::MouseAxis;
+}
+
+float applyDeadzone(float value, float deadzone) {
+    deadzone = std::clamp(deadzone, 0.0f, 0.99f);
+    if (value <= deadzone) return 0.0f;
+    return (value - deadzone) / (1.0f - deadzone);
+}
+
+float applyDeadzoneSigned(float value, float deadzone) {
+    return std::copysign(applyDeadzone(std::abs(value), deadzone), value);
+}
+
+float applyDeltaThreshold(float value, float threshold) {
+    return std::abs(value) <= std::abs(threshold) ? 0.0f : value;
 }
 
 }  // namespace input
