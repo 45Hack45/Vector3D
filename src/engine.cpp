@@ -273,10 +273,15 @@ void Engine::mainLoop() {
 
         assert(last_frame_dt >= 0 && std::isfinite(last_frame_dt));
 
-        if (io.WantCaptureMouse or io.WantCaptureKeyboard) {
-            m_inputManager.muteInput(true);
-        } else {
-            m_inputManager.muteInput(false);
+        m_inputManager.setMuted(input::InputDeviceType::Keyboard,
+                                io.WantCaptureKeyboard);
+
+        m_inputManager.setMuted(
+            input::InputDeviceType::Joystick,
+            io.WantCaptureKeyboard &&
+                (io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad) != 0);
+
+        if (!io.WantCaptureMouse && !io.WantCaptureKeyboard) {
             processInput(m_window->getWindow());
         }
 

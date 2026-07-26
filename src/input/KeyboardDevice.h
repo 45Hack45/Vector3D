@@ -40,12 +40,15 @@ class KeyboardDevice : public InputDevice {
     }
 
     InputKeyResult getKey(InputKey key) const override {
-        int res = glfwGetKey(m_window->getWindow(), key.code);
-        if (res == GLFW_PRESS) {
-            return IKey_Press;
-        } else {
-            return IKey_Release;
+        if (key.kind != InputKeyKind::Keyboard) return IKey_None;
+        // Codes overlap between input spaces, so an out-of-range code is a key
+        // from another device. glfwGetKey would raise GLFW_INVALID_ENUM.
+        if (key.code < GLFW_KEY_SPACE || key.code > GLFW_KEY_LAST) {
+            return IKey_None;
         }
+        return glfwGetKey(m_window->getWindow(), key.code) == GLFW_PRESS
+                   ? IKey_Press
+                   : IKey_Release;
     }
 
     InputDeviceType getDeviceType() const override {

@@ -26,14 +26,12 @@ void VehicleInteractiveController::start() {}
 void VehicleInteractiveController::update(double deltaTime) {
     auto inputManager = m_scene->getEngine()->getInputManager();
 
-    if (!inputManager->isMuted()) {
-        accelerate = inputManager->getAction(input::action::IAct_Accelerate);
-        back = inputManager->getAction(input::action::IAct_Back);
-        brake = inputManager->getAction(input::action::IAct_Brake);
-        steerLeft = inputManager->getAction(input::action::IAct_SteerLeft);
-        steerRight = inputManager->getAction(input::action::IAct_SteerRight);
-        clutch = inputManager->getAction(input::action::IAct_Clutch);
-    }
+    accelerate = inputManager->getAction(input::action::IAct_Accelerate);
+    back = inputManager->getAction(input::action::IAct_Back);
+    brake = inputManager->getAction(input::action::IAct_Brake);
+    steerLeft = inputManager->getAction(input::action::IAct_SteerLeft);
+    steerRight = inputManager->getAction(input::action::IAct_SteerRight);
+    clutch = inputManager->getAction(input::action::IAct_Clutch);
 
     throtle = accelerate - back;
     steering = steerLeft - steerRight;

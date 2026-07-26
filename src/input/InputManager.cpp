@@ -2,7 +2,9 @@
 
 #include <plog/Log.h>
 
+#include <cmath>
 #include <cstdlib>
+#include <utility>
 
 #include "input/GamepadDevice.h"
 #include "input/InputActionRegistry.h"
@@ -66,6 +68,13 @@ void logConfigProblems(const input::DeviceConfig& device) {
     }
 }
 
+// Joystick events for hotplug support
+std::vector<std::pair<int, int>> g_pendingJoystickEvents;
+
+void onJoystickEvent(int joystickId, int event) {
+    g_pendingJoystickEvents.emplace_back(joystickId, event);
+}
+
 std::string uniqueProfileName(const input::DeviceConfig& device,
                               std::string name) {
     if (name.empty()) name = std::string(input::kDefaultProfileName);
@@ -79,22 +88,113 @@ std::string uniqueProfileName(const input::DeviceConfig& device,
 
 }  // namespace
 
+void InputManager::setWindow(Window* window) {
+    m_window = window;
+    glfwSetJoystickCallback(onJoystickEvent);
+}
+
 void InputManager::addDevice(std::unique_ptr<input::InputDevice> device) {
     m_devices.push_back(std::move(device));
     applyConfig();
 }
 
 void InputManager::update() {
-    refreshGamepads();
-    if (muted) return;
+    if (!m_gamepadsScanned) {
+        m_gamepadsScanned = true;
+        refreshGamepads();
+        g_pendingJoystickEvents.clear();
+    }
+    applyJoystickEvents();
+
     for (auto& d : m_devices) d->update();
+}
+
+void InputManager::setMuted(input::InputDeviceType deviceType, bool mute) {
+    if (mute) {
+        m_mutedKinds |= kindBit(deviceType);
+    } else {
+        m_mutedKinds &= ~kindBit(deviceType);
+    }
+}
+
+float InputManager::getRawAction(input::InputAction action) const {
+    float value = 0.0f;
+    for (const auto& device : m_devices) {
+        if (isMuted(device->getDeviceType())) continue;
+        const float raw = device->getRawInput(action);
+        if (std::abs(raw) > std::abs(value)) value = raw;
+    }
+    return value;
+}
+
+input::InputKeyResult InputManager::getKey(std::string_view guid,
+                                           input::InputKey key) const {
+    const input::InputDevice* device = findDeviceByGuid(guid);
+    if (!device) return input::IKey_None;
+    if (isMuted(device->getDeviceType())) return input::IKey_None;
+    return device->getKey(key);
+}
+
+void InputManager::applyJoystickEvents() {
+    for (const std::pair<int, int>& event : g_pendingJoystickEvents) {
+        if (event.second == GLFW_CONNECTED) {
+            addGamepad(event.first);
+        } else if (event.second == GLFW_DISCONNECTED) {
+            removeGamepad(event.first);
+        }
+    }
+    g_pendingJoystickEvents.clear();
+}
+
+void InputManager::addGamepad(int joystickId) {
+    if (!m_window) return;
+
+    // Currently only mapped controllers supported.
+    if (!glfwJoystickIsGamepad(joystickId)) return;
+
+    for (auto& device : m_devices) {
+        auto* pad = dynamic_cast<input::GamepadDevice*>(device.get());
+        if (pad && pad->getJoystickId() == joystickId) return;
+    }
+
+    const char* guid = glfwGetJoystickGUID(joystickId);
+    if (!guid) return;
+
+    const char* name = glfwGetGamepadName(joystickId);
+    if (!name) name = glfwGetJoystickName(joystickId);
+    if (!name) name = "Gamepad";
+
+    // set default profile
+    if (!m_configStore.findDevice(guid)) {
+        input::DeviceConfig config;
+        config.deviceKind = input::deviceKindName(input::InputDeviceType::Joystick);
+        config.guid = guid;
+        config.lastKnownName = name;
+        config.activeProfile = std::string(input::kDefaultProfileName);
+        config.profiles = {input::makeDefaultGamepadProfile()};
+        m_configStore.upsertDevice(std::move(config));
+    }
+
+    PLOGI << "Gamepad connected: " << name << " (" << guid << ")";
+    addDevice(
+        std::make_unique<input::GamepadDevice>(m_window, joystickId, guid, name));
+}
+
+void InputManager::removeGamepad(int joystickId) {
+    for (auto it = m_devices.begin(); it != m_devices.end(); ++it) {
+        auto* pad = dynamic_cast<input::GamepadDevice*>(it->get());
+        if (!pad || pad->getJoystickId() != joystickId) continue;
+
+        PLOGI << "Gamepad disconnected: " << pad->getName() << " ("
+              << pad->getGuid() << ")";
+        m_devices.erase(it);
+        return;
+    }
 }
 
 void InputManager::refreshGamepads() {
     if (!m_window) return;
 
-    // Drop devices whose joystick slot is gone or unmapped. Their DeviceConfig
-    // stays in the store, so replugging restores bindings.
     for (auto it = m_devices.begin(); it != m_devices.end();) {
         auto* pad = dynamic_cast<input::GamepadDevice*>(it->get());
         if (pad && !glfwJoystickIsGamepad(pad->getJoystickId())) {
@@ -107,40 +207,7 @@ void InputManager::refreshGamepads() {
     }
 
     for (int jid = GLFW_JOYSTICK_1; jid <= GLFW_JOYSTICK_LAST; jid++) {
-        // GamepadDevice reads through glfwGetGamepadState, which only works for
-        // mapped controllers.
-        if (!glfwJoystickIsGamepad(jid)) continue;
-
-        bool alreadyKnown = false;
-        for (auto& device : m_devices) {
-            auto* pad = dynamic_cast<input::GamepadDevice*>(device.get());
-            if (pad && pad->getJoystickId() == jid) {
-                alreadyKnown = true;
-                break;
-            }
-        }
-        if (alreadyKnown) continue;
-
-        const char* guid = glfwGetJoystickGUID(jid);
-        if (!guid) continue;
-
-        const char* name = glfwGetGamepadName(jid);
-        if (!name) name = glfwGetJoystickName(jid);
-        if (!name) name = "Gamepad";
-
-        // A controller with nothing saved gets the built-in bindings.
-        if (!m_configStore.findDevice(guid)) {
-            input::DeviceConfig config;
-            config.deviceKind = input::deviceKindName(input::InputDeviceType::Joystick);
-            config.guid = guid;
-            config.lastKnownName = name;
-            config.activeProfile = std::string(input::kDefaultProfileName);
-            config.profiles = {input::makeDefaultGamepadProfile()};
-            m_configStore.upsertDevice(std::move(config));
-        }
-
-        PLOGI << "Gamepad connected: " << name << " (" << guid << ")";
-        addDevice(std::make_unique<input::GamepadDevice>(m_window, jid, guid, name));
+        addGamepad(jid);
     }
 }
 
@@ -161,6 +228,14 @@ input::InputDevice* InputManager::getDevice(input::InputDeviceType deviceType) {
 
 input::InputDevice* InputManager::findDeviceByGuid(std::string_view guid) {
     for (auto& device : m_devices) {
+        if (device->getGuid() == guid) return device.get();
+    }
+    return nullptr;
+}
+
+const input::InputDevice* InputManager::findDeviceByGuid(
+    std::string_view guid) const {
+    for (const auto& device : m_devices) {
         if (device->getGuid() == guid) return device.get();
     }
     return nullptr;

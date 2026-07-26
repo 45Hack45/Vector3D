@@ -26,13 +26,13 @@ namespace {
 // Flush to storage before the rename, so a crash cannot leave an empty config.
 bool syncFile(const std::filesystem::path& path) {
 #ifdef _WIN32
-    int fd = _open(path.string().c_str(), _O_RDONLY | _O_BINARY);
+    int fd = _open(path.string().c_str(), _O_WRONLY | _O_BINARY);
     if (fd < 0) return false;
     const bool ok = _commit(fd) == 0;
     _close(fd);
     return ok;
 #else
-    int fd = ::open(path.c_str(), O_RDONLY);
+    int fd = ::open(path.c_str(), O_WRONLY);
     if (fd < 0) return false;
     const bool ok = ::fsync(fd) == 0;
     ::close(fd);
@@ -153,26 +153,37 @@ InputConfigResult InputConfigStore::saveTo(const std::filesystem::path& path) {
     std::filesystem::path tempPath = path;
     tempPath += ".tmp";
 
+    std::ofstream ofs(tempPath, std::ios::binary | std::ios::trunc);
+    if (!ofs) {
+        return {false,
+                "Could not open '" + tempPath.string() + "' for writing"};
+    }
+
     try {
         {
-            std::ofstream ofs(tempPath, std::ios::binary | std::ios::trunc);
-            if (!ofs) {
-                return {false, "Could not open '" + tempPath.string() +
-                                   "' for writing"};
-            }
-
             boost::archive::xml_oarchive oa(ofs);
             uint32_t formatVersion = kInputConfigFormatVersion;
             oa << boost::serialization::make_nvp("formatVersion",
                                                  formatVersion);
             oa << boost::serialization::make_nvp("devices", m_devices);
-            // The archive writes closing tags on destruction; it must leave
-            // scope before the sync and rename.
+            // The archive flushes and writes closing tags on destruction, it
+            // must leave scope before the stream state is checked.
         }
     } catch (const std::exception& e) {
         std::filesystem::remove(tempPath, ec);
         return {false,
                 "Failed to write '" + tempPath.string() + "': " + e.what()};
+    }
+
+    // Closing an already-failed stream can throw
+    try {
+        ofs.close();
+    } catch (const std::exception&) {
+    }
+
+    if (ofs.fail()) {
+        std::filesystem::remove(tempPath, ec);
+        return {false, "Failed to write '" + tempPath.string() + "'"};
     }
 
     if (!syncFile(tempPath)) {

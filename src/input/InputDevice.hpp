@@ -91,11 +91,16 @@ class InputProfile {
     ~InputProfile() = default;
 
     /// @brief Bind an additional control to an action; the strongest bound
-    /// control drives it. Ignored if the key and direction are already bound.
+    /// control drives it. Binding a key and direction that are already bound
+    /// updates that binding's deadzone instead of adding a duplicate.
     void bind(InputAction action, BoundInput input) {
         std::vector<BoundInput>& inputs = m_bindings[action];
-        for (const BoundInput& bound : inputs) {
-            if (bound == input) return;
+        for (BoundInput& bound : inputs) {
+            // operator== ignores the deadzone, so a match still has to take it.
+            if (bound == input) {
+                bound.deadzone = input.deadzone;
+                return;
+            }
         }
         inputs.push_back(input);
     }

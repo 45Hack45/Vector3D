@@ -10,50 +10,79 @@
 #include "input/InputDevice.hpp"
 
 namespace v3d {
-class Engine;
 
 /// @brief Owns the connected devices and the stored input config.
 class InputManager {
-    friend class Engine;
-
    private:
     std::vector<std::unique_ptr<input::InputDevice>> m_devices;
     input::InputConfigStore m_configStore;
 
     Window* m_window = nullptr;
 
-    bool muted = false;
+    // One bit per InputDeviceType. Applied when an action is read
+    uint32_t m_mutedKinds = 0;
 
-    void muteInput(bool mute) { muted = mute; }
+    // Whether the startup reconciliation pass has run. Hotplug is event-driven
+    // afterwards.
+    bool m_gamepadsScanned = false;
+
+    static constexpr uint32_t kindBit(input::InputDeviceType deviceType) {
+        return 1u << static_cast<uint32_t>(deviceType);
+    }
+
+    // Apply the hotplug events GLFW recorded since the last update.
+    void applyJoystickEvents();
+
+    void addGamepad(int joystickId);
+
+    // Drop the device on a joystick slot, if any. Its DeviceConfig stays in the
+    // store, so replugging restores bindings.
+    void removeGamepad(int joystickId);
 
    public:
     InputManager() = default;
     ~InputManager() = default;
 
-    void setWindow(Window* window) { m_window = window; }
+    /// @brief Set the window devices poll, and start listening for hotplug.
+    /// @param window Must outlive the manager.
+    void setWindow(Window* window);
 
     /// @brief Take ownership of a device and apply any profile saved for its
     /// GUID.
     /// @param device Must have a valid Window.
     void addDevice(std::unique_ptr<input::InputDevice> device);
 
-    /// @brief Reconcile the gamepad list with what is plugged in, then poll
-    /// every connected device.
+    /// @brief Apply pending hotplug events, then poll every connected device.
     void update();
 
-    /// @brief Add gamepads that appeared and drop those that went away.
+    /// @brief Reconcile the gamepad list against every joystick slot GLFW reports
     void refreshGamepads();
 
-    bool isMuted() const noexcept { return muted; }
+    /// @brief Silence reads from one kind of device.
+    void setMuted(input::InputDeviceType deviceType, bool mute);
 
+    /// @brief Whether reads from a kind of device return neutral.
+    bool isMuted(input::InputDeviceType deviceType) const noexcept {
+        return (m_mutedKinds & kindBit(deviceType)) != 0;
+    }
+
+    /// @brief Processed value of an action.
     float getAction(input::InputAction action) const {
-        if (muted) return 0;
         float value = 0.0f;
         for (auto& d : m_devices) {
+            if (isMuted(d->getDeviceType())) continue;
             value = std::max(value, d->getInput(action));
         }
         return value;  // "OR" behavior, or blend differently
     }
+
+    /// @brief Value of an action as the hardware reports it
+    float getRawAction(input::InputAction action) const;
+
+    /// @brief Key state from one device, or IKey_None if it is not connected or
+    /// it is muted.
+    input::InputKeyResult getKey(std::string_view guid,
+                                 input::InputKey key) const;
 
     /// @brief Get a connected device by index, or nullptr if out of range.
     input::InputDevice* getDevice(uint8_t deviceId);
@@ -63,6 +92,7 @@ class InputManager {
 
     /// @brief Get a connected device by identity, or nullptr if not connected.
     input::InputDevice* findDeviceByGuid(std::string_view guid);
+    const input::InputDevice* findDeviceByGuid(std::string_view guid) const;
 
     inline std::size_t getNumDevices() const noexcept {
         return m_devices.size();
