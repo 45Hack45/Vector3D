@@ -14,12 +14,14 @@
 #include "glm/glm.hpp"
 #include "rendering/shader.h"
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-    glViewport(0, 0, width, height);
-    // PLOGV << "Window resized to " << width << "x" << height << std::endl;
-}
 // Camera
 Camera cam = Camera(glm::vec3(0, 2.5, 10));
+
+// Projection matrix for the current window shape.
+static glm::mat4 cameraProjection(v3d::Window* window) {
+    cam.setAspectRatio(window->getAspectRatio());
+    return cam.GetProjectionMatrix();
+}
 bool moveCam = false;
 // timing
 float deltaTime = 0.0f;  // time between current frame and last frame
@@ -45,7 +47,7 @@ void processInput(GLFWwindow* window) {
     }
 }
 
-void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+void mouse_callback(double xpos, double ypos) {
     static bool firstMouse = true;
     // TODO: not hardcoded
     static float lastX = 800 / 2.0f;
@@ -85,7 +87,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action,
 
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
 // ----------------------------------------------------------------------
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+void scroll_callback(double xoffset, double yoffset) {
     if (moveCam) cam.ProcessMouseScroll(yoffset);
 }
 
@@ -113,12 +115,19 @@ OpenGlBackend::OpenGlBackend(Window* window) : GraphicsBackend(window) {
 
     glViewport(0, 0, m_window->getWidth(), m_window->getHeight());
 
-    glfwSetFramebufferSizeCallback(m_window->getWindow(),
-                                   framebuffer_size_callback);
+    m_framebufferSizeSub =
+        m_window->onFramebufferSize([this](int width, int height) {
+            glViewport(0, 0, width, height);
+            m_window->setFramebufferSize(width, height);
+        });
 
-    glfwSetCursorPosCallback(m_window->getWindow(), mouse_callback);
-    glfwSetScrollCallback(m_window->getWindow(), scroll_callback);
-    glfwSetMouseButtonCallback(m_window->getWindow(), mouse_button_callback);
+    GLFWwindow* handle = m_window->getWindow();
+    m_cursorPosSub = m_window->onCursorPos(mouse_callback);
+    m_scrollSub = m_window->onScroll(scroll_callback);
+    m_mouseButtonSub =
+        m_window->onMouseButton([handle](int button, int action, int mods) {
+            mouse_button_callback(handle, button, action, mods);
+        });
 
     shader = new Shader("resources/shaders/SimpleShader.glsl");
     shaderGrid = new Shader("resources/shaders/GridShader.glsl");
@@ -217,9 +226,7 @@ void v3d::rendering::OpenGlBackend::frameUpdate() {
     float camZ = cos(glfwGetTime() * frequency) * radius;
 
     view = cam.GetViewMatrix();
-    projection = glm::perspective(
-        glm::radians(cam.Zoom),
-        1.f * m_window->getWidth() / m_window->getHeight(), 0.1f, 100.0f);
+    projection = cameraProjection(m_window);
 
     shader->bind();
     shader->setMat4("view", view);
@@ -255,9 +262,7 @@ void v3d::rendering::OpenGlBackend::drawPrimitiveCube(glm::vec3 position,
                                                       glm::vec4 color,
                                                       bool wireframe) {
     view = cam.GetViewMatrix();
-    projection = glm::perspective(
-        glm::radians(cam.Zoom),
-        1.f * m_window->getWidth() / m_window->getHeight(), 0.1f, 100.0f);
+    projection = cameraProjection(m_window);
 
     shader->bind();
     shader->setMat4("view", view);
@@ -281,9 +286,7 @@ void v3d::rendering::OpenGlBackend::drawPrimitiveSphere(glm::vec3 position,
                                                         glm::vec4 color,
                                                         bool wireframe) {
     view = cam.GetViewMatrix();
-    projection = glm::perspective(
-        glm::radians(cam.Zoom),
-        1.f * m_window->getWidth() / m_window->getHeight(), 0.1f, 100.0f);
+    projection = cameraProjection(m_window);
 
     shader->bind();
     shader->setMat4("view", view);
