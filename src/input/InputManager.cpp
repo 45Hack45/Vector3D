@@ -89,13 +89,9 @@ std::string uniqueProfileName(const input::DeviceConfig& device,
 
 }  // namespace
 
-void InputManager::scrollCallback(GLFWwindow* window, double xoffset,
-                                  double yoffset) {
-    auto* manager = static_cast<InputManager*>(glfwGetWindowUserPointer(window));
-    if (!manager) return;
-
+void InputManager::onScroll(double xoffset, double yoffset) {
     auto* mouse = dynamic_cast<input::MouseDevice*>(
-        manager->getDevice(input::InputDeviceType::Mouse));
+        getDevice(input::InputDeviceType::Mouse));
     if (!mouse) return;
 
     mouse->accumulateScroll(static_cast<float>(xoffset),
@@ -106,13 +102,12 @@ void InputManager::setWindow(Window* window) {
     m_window = window;
     glfwSetJoystickCallback(onJoystickEvent);
 
-    GLFWwindow* handle = m_window ? m_window->getWindow() : nullptr;
-    if (!handle) return;
+    // Drops any listener registered against the previous window.
+    m_scrollSub = {};
+    if (!m_window || !m_window->getWindow()) return;
 
-    // Set up before ImGui's callbacks so that ImGui chains to this one
-    // rather than replacing it.
-    glfwSetWindowUserPointer(handle, this);
-    glfwSetScrollCallback(handle, scrollCallback);
+    m_scrollSub = m_window->onScroll(
+        [this](double xoffset, double yoffset) { onScroll(xoffset, yoffset); });
 }
 
 void InputManager::addDevice(std::unique_ptr<input::InputDevice> device) {

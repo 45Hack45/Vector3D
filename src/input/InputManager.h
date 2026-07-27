@@ -8,6 +8,7 @@
 
 #include "input/InputConfig.hpp"
 #include "input/InputDevice.hpp"
+#include "window.h"
 
 namespace v3d {
 
@@ -30,8 +31,9 @@ class InputManager {
         return 1u << static_cast<uint32_t>(deviceType);
     }
 
-    static void scrollCallback(GLFWwindow* window, double xoffset,
-                               double yoffset);
+    void onScroll(double xoffset, double yoffset);
+
+    Window::Subscription m_scrollSub;
 
     // Apply the hotplug events GLFW recorded since the last update.
     void applyJoystickEvents();

@@ -191,8 +191,7 @@ Engine::Engine(uint32_t width, uint32_t height,
             break;
     }
 
-    // Instantiate default input devices and mappings. Must precede initImgui:
-    // ImGui's GLFW callbacks chain to whatever was installed before them
+    // Instantiate default input devices and mappings.
     initDefaultInput();
 
     initImgui(m_window->getWindow(), mainScale, true);
