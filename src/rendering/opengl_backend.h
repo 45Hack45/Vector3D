@@ -30,6 +30,12 @@ class OpenGlBackend : public GraphicsBackend {
 
    private:
     std::vector<MeshOpenGL*> m_meshList;
+
+    // Window event listeners.
+    Window::Subscription m_framebufferSizeSub;
+    Window::Subscription m_cursorPosSub;
+    Window::Subscription m_scrollSub;
+    Window::Subscription m_mouseButtonSub;
 };
 }  // namespace rendering
 }  // namespace v3d

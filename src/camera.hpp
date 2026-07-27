@@ -37,12 +37,11 @@ class Camera {
 
     //	camera projection info
     bool isOrtographic = false;
-    float ortoFrustrum_Horizontal = 250;
     float ortoFrustrum_Vertical = 250;
 
-    float nearClip = 1.f;
-    float farClip = 1000;
-    float aspectRatio = 800 / 450;
+    float nearClip = 0.1f;
+    float farClip = 100.f;
+    float aspectRatio = 16.f / 9.f;
 
     // constructor with vectors
     Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f),
@@ -81,12 +80,11 @@ class Camera {
     }
 
     glm::mat4 GetProjectionMatrix() {
-        if (isOrtographic)
-            return glm::ortho(-(ortoFrustrum_Horizontal / 2),
-                              ortoFrustrum_Horizontal / 2,
-                              -(ortoFrustrum_Vertical / 2),
-                              ortoFrustrum_Vertical / 2, nearClip, farClip);
-        else
+        if (isOrtographic) {
+            float halfV = ortoFrustrum_Vertical / 2;
+            float halfH = halfV * aspectRatio;
+            return glm::ortho(-halfH, halfH, -halfV, halfV, nearClip, farClip);
+        } else
             return glm::perspective(glm::radians(Zoom), aspectRatio, nearClip,
                                     farClip);
     }
@@ -162,6 +160,8 @@ class Camera {
         Pitch = pitch;
         updateCameraVectors();
     }
+
+    void setAspectRatio(float aspect) { aspectRatio = aspect; }
 
     void rotate(float yaw, float pitch) {
         Yaw += yaw;
