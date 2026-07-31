@@ -389,22 +389,8 @@ void Engine::initDefaultInput() {
     mouse.profiles = {
         input::DeviceProfile{std::string(input::kDefaultProfileName),
                           {
-                              {"Accelerate", "MOUSE_LEFT", positive, 0.f},
-                              {"Brake", "MOUSE_RIGHT", positive, 0.f},
-                              {"Clutch", "MOUSE_MIDDLE", positive, 0.f},
-                              {"Back", "MOUSE_AXIS_SCROLL_Y", negative, 0.f},
-                              {"SteerLeft", "MOUSE_AXIS_CURSOR_X", negative, 0.f},
-                              {"SteerRight", "MOUSE_AXIS_CURSOR_X", positive, 0.f},
-                          }},
-        // Steering off one signed axis instead of two halves. Only getAxis()
-        // resolves the sign; getInput() reports the magnitude either way.
-        input::DeviceProfile{"Full axis steering",
-                          {
-                              {"Accelerate", "MOUSE_LEFT", positive, 0.f},
-                              {"Brake", "MOUSE_RIGHT", positive, 0.f},
-                              {"Clutch", "MOUSE_MIDDLE", positive, 0.f},
-                              {"Back", "MOUSE_AXIS_SCROLL_Y", full, 0.f},
-                              {"SteerRight", "MOUSE_AXIS_CURSOR_X", full, 0.f},
+                              {"Action_1", "MOUSE_LEFT", positive, 0.f},
+                              {"Action_2", "MOUSE_RIGHT", positive, 0.f},
                           }},
     };
     m_inputManager.setDeviceConfig(std::move(mouse));

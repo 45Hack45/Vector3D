@@ -15,7 +15,7 @@ constexpr InputKeyResult IKey_None{-1};
 // and the registry entry. The argument is the persisted name.
 #define V3D_INPUT_ACTIONS(V3D_X)                                      \
     V3D_X(Accelerate) V3D_X(Back) V3D_X(Brake) V3D_X(Clutch)          \
-    V3D_X(SteerLeft) V3D_X(SteerRight)
+    V3D_X(SteerLeft) V3D_X(SteerRight) V3D_X(Action_1) V3D_X(Action_2)
 
 namespace action {
 
