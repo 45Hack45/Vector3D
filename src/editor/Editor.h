@@ -1,4 +1,6 @@
 #pragma once
+#include <string>
+
 #include "DefinitionCore.hpp"
 
 namespace v3d {
@@ -16,6 +18,10 @@ class Editor {
     // Variables-----------------------------------
     Engine* m_engine;
 
+    // Last save/load outcome, shown until the next one.
+    std::string m_lastInputConfigMessage;
+    bool m_lastInputConfigOk = true;
+
     // Methods-------------------------------------
     Editor(Editor const&) = delete;
     Editor& operator=(Editor const&) = delete;
@@ -29,6 +35,11 @@ class Editor {
     void renderGui(float deltaTime, entity_ptr root, Scene* scene);
     void renderHierarchyGui(entity_ptr entity);
     void renderEntityEditorPropertiesGui(entity_ptr entity, Scene* scene);
+    /// @brief Input config panel: save/load, config path, and device profiles.
+    void renderInputConfigGui();
+    /// @brief Live mouse state: deltas as they are read, and the value every
+    /// bound action resolves to.
+    void renderMouseReadoutGui();
     // void renderAssetsGui();
 
     // static Mesh* GUI_PropertySelector(const char* propName, Mesh*

@@ -12,6 +12,7 @@
 #include <cassert>
 #include <csignal>
 #include <cstdlib>
+#include <filesystem>
 #include <fstream>
 #include <ostream>
 #include <sstream>
@@ -21,6 +22,7 @@
 #include "backends/imgui_impl_opengl3.h"
 #include "imgui.h"
 #include "input/KeyboardDevice.h"
+#include "input/MouseDevice.h"
 #include "physics/Vehicle.h"
 #include "physics/VehicleInteractiveController.h"
 #include "physics/collider.h"
@@ -189,6 +191,9 @@ Engine::Engine(uint32_t width, uint32_t height,
             break;
     }
 
+    // Instantiate default input devices and mappings.
+    initDefaultInput();
+
     initImgui(m_window->getWindow(), mainScale, true);
 
     m_componentRegistry = &ComponentRegistry::instance();
@@ -197,9 +202,6 @@ Engine::Engine(uint32_t width, uint32_t height,
     // Init Model loader and manager
     std::unique_ptr<ModelLoader> modelLoader = makeModelLoader();
     m_modelManager = std::make_unique<ModelManager>(std::move(modelLoader));
-
-    // Instantiate default keyboard device and mappings
-    initDefaultInput();
 
     PLOGI << "Engine Initialized" << std::endl;
 
@@ -272,12 +274,24 @@ void Engine::mainLoop() {
 
         assert(last_frame_dt >= 0 && std::isfinite(last_frame_dt));
 
-        if (io.WantCaptureMouse or io.WantCaptureKeyboard) {
-            m_inputManager.muteInput(true);
-        } else {
-            m_inputManager.muteInput(false);
+        m_inputManager.setMuted(input::InputDeviceType::Keyboard,
+                                io.WantCaptureKeyboard);
+
+        m_inputManager.setMuted(
+            input::InputDeviceType::Joystick,
+            io.WantCaptureKeyboard &&
+                (io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad) != 0);
+
+        m_inputManager.setMuted(input::InputDeviceType::Mouse,
+                                io.WantCaptureMouse);
+
+        if (!io.WantCaptureMouse && !io.WantCaptureKeyboard) {
             processInput(m_window->getWindow());
         }
+
+        // Must run before anything reads input: refreshes cached device state
+        // and the gamepad list.
+        m_inputManager.update();
 
         // Start the Dear ImGui frame
         imgui_beginFrame_();
@@ -327,16 +341,75 @@ void Engine::mainLoop() {
 }
 
 void Engine::initDefaultInput() {
-    input::InputProfile keyboardProfile;
-    keyboardProfile.bind(input::action::IAct_Accelerate, input::key::IK_I);
-    keyboardProfile.bind(input::action::IAct_Back, input::key::IK_K);
-    keyboardProfile.bind(input::action::IAct_Break, input::key::IK_SPACE);
-    keyboardProfile.bind(input::action::IAct_SteerLeft, input::key::IK_J);
-    keyboardProfile.bind(input::action::IAct_SteerRight, input::key::IK_L);
-    keyboardProfile.bind(input::action::IAct_Clutch, input::key::IK_C);
+    // Register before loading so the built-in bindings resolve on first apply.
+    input::registerBuiltinActions();
 
-    m_inputManager.addDevice(
-        std::make_unique<input::KeyboardDevice>(m_window.get(), keyboardProfile));
+    // Hotplug-created gamepads need the window they will poll.
+    m_inputManager.setWindow(m_window.get());
+
+    // Defaults go through the store so the first save writes them out.
+    input::DeviceConfig keyboard;
+    keyboard.deviceKind = input::deviceKindName(input::InputDeviceType::Keyboard);
+    keyboard.guid = std::string(input::kKeyboardDeviceGuid);
+    keyboard.lastKnownName = std::string(input::kKeyboardDeviceName);
+    keyboard.activeProfile = std::string(input::kDefaultProfileName);
+    keyboard.profiles = {
+        input::DeviceProfile{std::string(input::kDefaultProfileName),
+                          {
+                              {"Accelerate", "I"},
+                              {"Back", "K"},
+                              {"Brake", "SPACE"},
+                              {"SteerLeft", "J"},
+                              {"SteerRight", "L"},
+                              {"Clutch", "C"},
+                          }},
+        input::DeviceProfile{"WASD",
+                          {
+                              {"Accelerate", "W"},
+                              {"Back", "S"},
+                              {"Brake", "SPACE"},
+                              {"SteerLeft", "A"},
+                              {"SteerRight", "D"},
+                              {"Clutch", "LEFT_SHIFT"},
+                          }},
+    };
+    m_inputManager.setDeviceConfig(std::move(keyboard));
+
+    m_inputManager.addDevice(std::make_unique<input::KeyboardDevice>(m_window.get()));
+
+    const std::string positive = input::axisRangeName(input::AxisRange::Positive);
+    const std::string negative = input::axisRangeName(input::AxisRange::Negative);
+    const std::string full = input::axisRangeName(input::AxisRange::Full);
+
+    input::DeviceConfig mouse;
+    mouse.deviceKind = input::deviceKindName(input::InputDeviceType::Mouse);
+    mouse.guid = std::string(input::kMouseDeviceGuid);
+    mouse.lastKnownName = std::string(input::kMouseDeviceName);
+    mouse.activeProfile = std::string(input::kDefaultProfileName);
+    mouse.profiles = {
+        input::DeviceProfile{std::string(input::kDefaultProfileName),
+                          {
+                              {"Action_1", "MOUSE_LEFT", positive, 0.f},
+                              {"Action_2", "MOUSE_RIGHT", positive, 0.f},
+                          }},
+    };
+    m_inputManager.setDeviceConfig(std::move(mouse));
+
+    m_inputManager.addDevice(std::make_unique<input::MouseDevice>(m_window.get()));
+
+    // No config is the normal first run; the built-in defaults stand.
+    const std::filesystem::path configPath = InputManager::defaultConfigPath();
+    if (std::filesystem::exists(configPath)) {
+        const input::InputConfigResult result = m_inputManager.loadConfig(configPath);
+        if (result.ok) {
+            PLOGI << "Input config: " << result.message;
+        } else {
+            PLOGW << "Input config: " << result.message;
+        }
+    } else {
+        PLOGI << "Input config: no config at " << configPath.string()
+              << ", using built-in defaults";
+    }
 }
 
 void Engine::processInput(GLFWwindow* window) {}
@@ -349,13 +422,6 @@ void Engine::renderEngineDebugGui(double delta) {
     }
     ImGui::Spacing();
 
-    if (ImGui::Button("Test save keyboard bindings")) {
-        m_inputManager.storeDevice(0, "testSerialization/KeyboardConfig.txt");
-    }
-    // if (ImGui::Button("Test Load keyboard bindings")) {
-    //     m_inputManager.loadDevice("testSerialization/KeyboardConfig.txt", m_window.get());
-    // }
-    ImGui::Spacing();
     if (ImGui::Button("Test save scene")) {
         saveScene("testSerialization/testSceneSave.xml");
     }
